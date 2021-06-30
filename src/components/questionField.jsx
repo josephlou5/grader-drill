@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 class QuestionField extends Component {
     render() { 
         return (
-            <div className="question-field">
-                { this.props.question.questionText }
-            </div>
+            <ReactMarkdown className="question-field" children={this.props.question.questionText} />
         );
     }
 }

@@ -2,6 +2,16 @@
   font-family: Arial;
 }
 
+.question-field {
+  padding: 10px;
+  border: 2px solid black;
+  margin: 10px;
+}
+
+.question-field p {
+  margin: 0px;
+}
+
 .code-field {
   padding: 10px;
   border: 5px solid black;
@@ -24,14 +34,12 @@
   z-index: 10;
 }
 
-.question-field {
+.answer-field {
   padding: 10px;
   border: 2px solid black;
   margin: 10px;
 }
 
-.answer-field {
-  padding: 10px;
-  border: 2px solid black;
-  margin: 10px;
+.answer-field p {
+  margin: 0px;
 }

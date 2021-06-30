@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import ReactMarkdown from 'react-markdown';
 import AnswerInput from './answerInput';
 
 class AnswerField extends Component {
@@ -23,7 +24,9 @@ class AnswerField extends Component {
         return this.props.question.answerChoices.map((text, index) =>
             <div key={index} className="form-check">
                 <input className="form-check-input" type="radio" name="answer" id={"choice" + index}/>
-                <label className="form-check-label" htmlFor={"choice" + index}>{text}</label>
+                <label className="form-check-label" htmlFor={"choice" + index}>
+                    <ReactMarkdown children={text} />
+                </label>
             </div>
         );
     }

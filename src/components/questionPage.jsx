@@ -4,21 +4,7 @@ import QuestionField from './questionField';
 import AnswerField from './answerField';
 
 class QuestionPage extends Component {
-    // state = {
-    //     hasQuestionField: true,
-    //     hasCodeField: true,
-    //     hasAnswerField: true,
-    //     questionText: "What's wrong with this code?",
-    //     code: "public class Question {\n    public static void main(String[] args) {\n        System.out.println(\"Hello world\");\n    }\n}",
-    //     highlights: [
-    //         { 'startLine': 0, 'startChar': 14, 'endLine': 1, 'endChar': 5, 'byUser': true },
-    //         { 'startLine': 1, 'startChar': 8, 'endLine': 1, 'endChar': 11, 'byUser': true },
-    //     ],
-    //     // if empty, free response answers
-    //     answerChoices: [
-    //     ],
-    // };
-
+    
     constructor(props) {
         super(props);
 
