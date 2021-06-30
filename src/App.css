@@ -1,0 +1,37 @@
+.App {
+  font-family: Arial;
+}
+
+.code-field {
+  padding: 10px;
+  border: 5px solid black;
+  margin: 10px;
+}
+
+.code-line {
+  margin: 0px;
+  padding-top: 10px;
+  padding-left: 3px;
+  font-family: Monaco;
+}
+
+.highlight {
+  background-color: yellow;
+}
+
+.badge {
+  /* allow badge to sit on top of highlight */
+  z-index: 10;
+}
+
+.question-field {
+  padding: 10px;
+  border: 2px solid black;
+  margin: 10px;
+}
+
+.answer-field {
+  padding: 10px;
+  border: 2px solid black;
+  margin: 10px;
+}
