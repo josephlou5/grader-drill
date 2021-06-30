@@ -17,6 +17,7 @@ class CodeField extends Component {
         if (!range || range.collapsed) {
             return;
         }
+        // for debugging
         console.log('Range object:', range);
 
         function getTextOnly(element) {
@@ -66,12 +67,12 @@ class CodeField extends Component {
         let startChar = range.startOffset;
         let endChar = range.endOffset;
 
-        // case 1: parent container is text, which means start and end are valid
+        // case 1: parent container is text, which means start and end are on the same line and valid
         if (parentContainer.nodeType === Node.TEXT_NODE) {
             console.log("Common ancestor is text; same line highlight");
-            const length = getPrevTextLength(startContainer);
-            startChar += length;
-            endChar += length;
+            const offset = getPrevTextLength(startContainer);
+            startChar += offset;
+            endChar += offset;
         }
         // case 2: parent container is a line, which means start and end on the same line,
         // but completely encompass a highlight selection, which is invalid
@@ -151,7 +152,7 @@ class CodeField extends Component {
             }
         }
         else {
-            console.log("Unknown case:", range);
+            console.log("Error: Unknown case");
             return;
         }
 
@@ -176,35 +177,10 @@ class CodeField extends Component {
         range.collapse();
     };
 
-    createLine = (index, line) => {
-        // let inHighlight = new Array();
-
-        let elements = [];
-        // for (let i = 0; i < line.length; i++) {
-        //     if (inHighlight(i)) {
-        //         elements.push(<span className="highlight">{line.charAt(i)}</span>)
-        //     } else {
-        //         elements.push(line.charAt(i));
-        //     }
-        // }
-        elements.push(line);
-        return elements;
-    };
-
-    createCodeLine = (line, index) => {
-        const lineNum = index + 1;
-        return (
-            <pre className="code-line">
-                <span className="user-select-none" id={"linenum-" + lineNum}>{lineNum} </span>
-                {/* { this.createLine(index, line) } */}
-                <span id={"line-" + lineNum}>{this.createLine(index, line)}</span>
-            </pre>
-        );
-    };
-
-    render() {
-
+    createCodeLines = () => {
         const lines = this.props.question.code.split('\n');
+
+        // create inHighlight array, which determines where highlights are
         let inHighlight = new Array(lines.length);
         for (let i = 0; i < lines.length; i++) {
             inHighlight[i] = new Array(lines[i].length).fill(0);
@@ -228,6 +204,16 @@ class CodeField extends Component {
             }
         }
 
+        function createHighlight(lineNum, text, highlightNum, badge) {
+            // Creates a highlight with the appropriate line number, highlight number, and badge.
+            return (
+                <span className="highlight user-select-none position-relative" id={"line-" + lineNum + "-highlight-" + highlightNum}>
+                    {text}
+                    {badge && <span className="user-select-none position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">{highlightNum}</span>}
+                </span>
+            )
+        }
+
         let elements = [];
         let text = "";
         let prevHighlight = 0;
@@ -244,12 +230,7 @@ class CodeField extends Component {
                 if (prevHighlight === 0)
                     line.push(text);
                 else
-                    line.push(
-                        <span className="highlight user-select-none position-relative" id={"line-" + lineNum + "-highlight-" + prevHighlight}>
-                            {text}
-                            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">{prevHighlight}</span>
-                        </span>
-                    );
+                    line.push(createHighlight(lineNum, text, prevHighlight, true));
                 text = lines[i].charAt(j);
                 prevHighlight = currentHighlight;
             }
@@ -259,24 +240,15 @@ class CodeField extends Component {
                 else {
                     // see if next proper line's first character is the same highlight
                     let nextLine = i + 1;
-                    while (nextLine < lines.length && lines[nextLine.length] === 0) {
+                    while (nextLine < lines.length && lines[nextLine].length === 0) {
                         nextLine++;
                     }
                     if (nextLine < lines.length && inHighlight[nextLine][0] === prevHighlight) {
                         // if yes, don't add a badge
-                        line.push(
-                            <span className="highlight user-select-none" id={"line-" + lineNum + "-highlight-" + prevHighlight}>
-                                {text}
-                            </span>
-                        );
+                        line.push(createHighlight(lineNum, text, prevHighlight, false));
                     } else {
                         // otherwise, add the badge
-                        line.push(
-                            <span className="highlight user-select-none position-relative" id={"line-" + lineNum + "-highlight-" + prevHighlight}>
-                                {text}
-                                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">{prevHighlight}</span>
-                            </span>
-                        );
+                        line.push(createHighlight(lineNum, text, prevHighlight, true));
                         prevHighlight = 0;
                     }
                 }
@@ -291,9 +263,13 @@ class CodeField extends Component {
             );
         }
 
+        return elements;
+    };
+
+    render() {
         return (
             <div className="code-field" onMouseUp={this.handleMouseUp}>
-                { elements }
+                { this.createCodeLines() }
             </div>
         );
     }
