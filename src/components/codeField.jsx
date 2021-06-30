@@ -54,6 +54,8 @@ class CodeField extends Component {
 
         let parentContainer = range.commonAncestorContainer;
         const {startContainer, endContainer} = range;
+        console.log("start:", startContainer);
+        console.log("end:", endContainer);
 
         // containers should always be text, and `parentNode` will be the line span
         let startLine = parseInt(startContainer.parentNode.id.split("-")[1]);
@@ -177,7 +179,7 @@ class CodeField extends Component {
         range.collapse();
     };
 
-    createCodeLines = () => {
+    renderCodeLines = () => {
         const lines = this.props.question.code.split('\n');
 
         // create inHighlight array, which determines where highlights are
@@ -269,7 +271,7 @@ class CodeField extends Component {
     render() {
         return (
             <div className="code-field" onMouseUp={this.handleMouseUp}>
-                { this.createCodeLines() }
+                { this.renderCodeLines() }
             </div>
         );
     }
