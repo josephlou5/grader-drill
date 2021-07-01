@@ -4,10 +4,7 @@ class CodeField extends Component {
 
     handleMouseUp = () => {
 
-        // if multiple choice, no highlighting
-        if (this.props.question.answerChoices && this.props.question.answerChoices.length > 0) {
-            return;
-        }
+        const DEBUG = false;
 
         const selection = document.getSelection();
         if (!selection || selection.rangeCount !== 1) {
@@ -17,161 +14,163 @@ class CodeField extends Component {
         if (!range || range.collapsed) {
             return;
         }
-        // for debugging
-        console.log('Range object:', range);
+        if (DEBUG) console.log('Range object:', range);
 
-        function getTextOnly(element) {
-            // Gets only the text nodes of an element.
-            if (element.nodeType === Node.TEXT_NODE)
-                return [element.nodeValue];
-            let texts = [];
-            for (const child of element.childNodes) {
-                if (child.classList && child.classList.contains("badge")) continue;
-                if (child.nodeType === Node.TEXT_NODE) {
-                    texts.push(child.nodeValue);
-                } else {
-                    texts = texts.concat(getTextOnly(child));
-                }
-            }
-            return texts;
-        }
-
-        function getPrevTextLength(element) {
-            // Iterates through previous sibling linked list to get all text lengths.
-            let length = 0;
-            for (
-                let prevSibling = element.previousSibling;
-                prevSibling !== null;
-                prevSibling = prevSibling.previousSibling
-            ) {
-                const texts = getTextOnly(prevSibling);
-                for (const text of texts) {
-                    length += text.length;
-                }
-            }
-            return length;
-        }
-
-        let parentContainer = range.commonAncestorContainer;
-        const {startContainer, endContainer} = range;
-        console.log("start:", startContainer);
-        console.log("end:", endContainer);
-
-        // containers should always be text, and `parentNode` will be the line span
-        let startLine = parseInt(startContainer.parentNode.id.split("-")[1]);
-        let endLine = parseInt(endContainer.parentNode.id.split("-")[1]);
-        // check valid
-        if (isNaN(startLine) || isNaN(endLine)) {
-            console.log("NaN:", startLine, endLine);
-            return;
-        }
-
+        let {startContainer, endContainer} = range;
         let startChar = range.startOffset;
         let endChar = range.endOffset;
-
-        // case 1: parent container is text, which means start and end are on the same line and valid
-        if (parentContainer.nodeType === Node.TEXT_NODE) {
-            console.log("Common ancestor is text; same line highlight");
-            const offset = getPrevTextLength(startContainer);
-            startChar += offset;
-            endChar += offset;
+        if (DEBUG) {
+            console.log("start:", startContainer);
+            console.log("end:", endContainer);
+            console.log("offsets:", startChar, endChar);
         }
-        // case 2: parent container is a line, which means start and end on the same line,
-        // but completely encompass a highlight selection, which is invalid
-        else if (parentContainer.id.startsWith("line-")) {
-            console.log("Invalid same-line selection: overlaps another selection");
+
+        // shouldn't happen but just in case
+        if (startContainer.nodeType !== Node.TEXT_NODE) {
+            console.log("Error: start container is not text:", startContainer);
             return;
         }
-        // case 3: parent container is code-field, which means start and end on different lines
-        else if (parentContainer.className === "code-field") {
-            startChar += getPrevTextLength(startContainer);
-            let lineLengths = this.props.question.code.split('\n').map(line => line.length);
-
-            // case 3a: highlight went onto previous line's last char
-            if (startChar === lineLengths[startLine - 1]) {
-                console.log("case 3a");
-                startLine++;
-                startChar = 0;
-            }
-            // case 3b: highlight went onto next line's line number
-            if (endContainer.parentNode.id.startsWith("linenum-")) {
-                console.log("case 3b");
-                endLine--;
-                endChar = lineLengths[endLine - 1];
-                // subtract last node from line length if it's a highlight
-                const line = document.getElementById("line-" + endLine);
-                const {lastChild} = line;
-                if (lastChild.nodeType !== Node.TEXT_NODE && lastChild.id.includes("-highlight-")) {
-                    const texts = getTextOnly(lastChild);
-                    for (const text of texts) {
-                        endChar -= text.length;
-                    }
-                }
-            }
-
-            // start should be last node in start line
-            if (startContainer.nextSibling !== null) {
-                console.log("start container next is not null");
-                // case 3c: start's next sibling is a badge
-                if (startContainer.nextSibling.classList && startContainer.nextSibling.classList.contains("badge")) {
-                    console.log("case 3c");
-                    startLine++;
-                    startChar = 0;
-                } else {
-                    console.log("Invalid multi-line selection: start overlaps another selection");
-                    return;
-                }
-            }
-            // end should be first node in end line
-            if (endContainer.previousSibling !== null) {
-                console.log("end container previous is not null");
-                // case 3d: end's previous sibling is a highlight
-                if (endContainer.previousSibling.id.includes("-highlight-")) {
-                    console.log("case 3d");
-                    endLine--;
-                    endChar = lineLengths[endLine - 1];
-                    // subtract last node from line length if it's a highlight
-                    const line = document.getElementById("line-" + endLine);
-                    const {lastChild} = line;
-                    if (lastChild.nodeType !== Node.TEXT_NODE && lastChild.id.includes("-highlight-")) {
-                        const texts = getTextOnly(lastChild);
-                        for (const text of texts) {
-                            endChar -= text.length;
-                        }
-                    }
-                } else {
-                    console.log("Invalid multi-line selection: end overlaps another selection");
-                    return;
-                }
-            }
-            // all middle lines should not have any selections
-            for (let i = startLine + 1; i < endLine; i++) {
-                const line = document.getElementById("line-" + i);
-                if (line.childNodes.length > 1) {
-                    console.log("Invalid multi-line selection: middle line overlaps another selection");
-                    return;
-                }
-            }
-        }
-        else {
-            console.log("Error: Unknown case");
+        if (endContainer.nodeType !== Node.TEXT_NODE) {
+            console.log("Error: end container is not text:", endContainer);
             return;
         }
 
-        // check valid
-        if (isNaN(startChar) || isNaN(endChar)) {
-            console.log("NaN:", startChar, endChar);
+        // get line child nodes
+        const lines = this.props.question.code.split('\n');
+        const children = lines.map((temp, index) => {
+            const line = document.getElementById("line-" + (index + 1));
+            return [...line.childNodes];
+        })
+        if (DEBUG) console.log("children:", children);
+        const childrenFlat = children.flat();
+        const childrenText = childrenFlat.map(child => {
+            if (child.nodeType === Node.TEXT_NODE) return child;
+            // should be the text of the span
+            return child.firstChild;
+        });
+        if (DEBUG) console.log("flat:", childrenText.map(child => child.nodeValue));
+
+        // fix containers
+        // container is badge
+        if (startContainer.parentNode.id.endsWith("-badge")) {
+            // go up to highlight span
+            startContainer = startContainer.parentNode;
+        }
+        if (endContainer.parentNode.id.endsWith("-badge")) {
+            // go up to highlight span
+            endContainer = endContainer.parentNode;
+        }
+        // container is line number
+        if (endContainer.parentNode.id.startsWith("linenum-")) {
+            // when this happens, endOffset = 2, so need to reset that too
+            const lineNum = parseInt(endContainer.parentNode.id.split("-")[1]);
+            if (lineNum === 1) {
+                // already first line, so stay in this line instead
+                endContainer = children[lineNum - 1][0];
+                endChar = 0;
+            } else {
+                // go back to previous line
+                const prevLine = children[lineNum - 2];
+                endContainer = prevLine[prevLine.length - 1];
+                if (endContainer.nodeType === Node.TEXT_NODE) {
+                    endChar = endContainer.nodeValue.length;
+                } else {
+                    endChar = endContainer.firstChild.nodeValue.length;
+                }
+            }
+        }
+
+        let startIndex = childrenText.indexOf(startContainer);
+        let endIndex = childrenText.indexOf(endContainer);
+        // shouldn't happen but just in case
+        if (startIndex === -1 || endIndex === -1) {
+            console.log("start or end not found");
+            return;
+        }
+
+        // start is at the very end of a container
+        if (startChar === childrenText[startIndex].length) {
+            // shouldn't happen but just in case
+            if (startIndex === childrenFlat.length - 1) {
+                console.log("start is at the very last character");
+                return;
+            }
+            startIndex++;
+            startChar = 0;
+        }
+        // end is at the very beginning of a container
+        if (endChar === 0) {
+            // shouldn't happen but just in case
+            if (endIndex === 0) {
+                console.log("end is at the very first character");
+                return;
+            }
+            endIndex--;
+            endChar = childrenText[endIndex].length;
+        }
+
+        if (DEBUG) {
+            console.log("indices:", startIndex, endIndex);
+            console.log("chars:", startChar, endChar);
+        }
+
+        // shrink to text nodes
+        while (childrenFlat[startIndex].nodeType !== Node.TEXT_NODE) {
+            startIndex++;
+            startChar = 0;
+        }
+        while (childrenFlat[endIndex].nodeType !== Node.TEXT_NODE) {
+            endIndex--;
+            endChar = childrenText[endIndex].length;
+        }
+
+        if (DEBUG) console.log("Fixed indices:", startIndex, endIndex);
+
+        // make sure there are no highlights in the middle
+        for (let i = startIndex + 1; i < endIndex; i++) {
+            if (childrenFlat[i].nodeType !== Node.TEXT_NODE) {
+                console.log("Highlight at index " + i + "; invalid selection");
+                return;
+            }
+        }
+
+        // find bounds
+        let i = 0;
+        let startLine = -1, endLine = -1;
+        for (let lineNum = 0; lineNum < children.length; lineNum++) {
+            let lineOffset = 0;
+            if (DEBUG) console.log("line " + (lineNum + 1));
+            for (let j = 0; j < children[lineNum].length; j++) {
+                if (DEBUG) console.log("i =", i);
+                if (i === startIndex) {
+                    if (DEBUG) console.log("found start index");
+                    startLine = lineNum;
+                    startChar += lineOffset;
+                }
+                if (i === endIndex) {
+                    if (DEBUG) console.log("found end index");
+                    endLine = lineNum;
+                    endChar += lineOffset;
+                }
+                lineOffset += childrenText[i].length;
+                i++;
+            }
+            if (i > endIndex) break;
+        }
+        // shouldn't happen but just in case
+        if (startLine === -1 || endLine === -1) {
+            console.log("Error: start/end line not found:", startLine, endLine);
             return;
         }
 
         const highlight = {
-            startLine: startLine - 1, // lines need to be 0 indexed like chars
+            startLine: startLine,
             startChar: startChar,
-            endLine: endLine - 1,
+            endLine: endLine,
             endChar: endChar,
             byUser: true,
-        };
-        console.log(highlight);
+        }
+        if (DEBUG) console.log(highlight);
         this.props.onHighlight(highlight);
 
         // if single click on a highlighted portion, adds another highlight
@@ -208,10 +207,30 @@ class CodeField extends Component {
 
         function createHighlight(lineNum, text, highlightNum, badge) {
             // Creates a highlight with the appropriate line number, highlight number, and badge.
+            const idText = "line-" + lineNum + "-highlight-" + highlightNum;
+            const highlightClasses = [
+                "highlight",
+                "user-select-none",
+                "position-relative",
+            ];
+            const badgeClasses = [
+                "user-select-none",
+                "position-absolute",
+                "top-0",
+                "start-100",
+                "translate-middle",
+                "badge",
+                "rounded-pill",
+                "bg-primary",
+            ];
             return (
-                <span className="highlight user-select-none position-relative" id={"line-" + lineNum + "-highlight-" + highlightNum}>
+                <span className={highlightClasses.join(" ")} id={idText}>
                     {text}
-                    {badge && <span className="user-select-none position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">{highlightNum}</span>}
+                    {badge &&
+                        <span className={badgeClasses.join(" ")} id={idText + "-badge"}>
+                            {highlightNum}
+                        </span>
+                    }
                 </span>
             )
         }
@@ -229,17 +248,20 @@ class CodeField extends Component {
                     text += lines[i].charAt(j);
                     continue;
                 }
-                if (prevHighlight === 0)
-                    line.push(text);
-                else
-                    line.push(createHighlight(lineNum, text, prevHighlight, true));
+                if (text.length > 0) {
+                    if (prevHighlight === 0) {
+                        line.push(text);
+                    } else {
+                        line.push(createHighlight(lineNum, text, prevHighlight, true));
+                    }
+                }
                 text = lines[i].charAt(j);
                 prevHighlight = currentHighlight;
             }
             if (text.length > 0) {
-                if (prevHighlight === 0)
+                if (prevHighlight === 0) {
                     line.push(text);
-                else {
+                } else {
                     // see if next proper line's first character is the same highlight
                     let nextLine = i + 1;
                     while (nextLine < lines.length && lines[nextLine].length === 0) {
@@ -269,8 +291,10 @@ class CodeField extends Component {
     };
 
     render() {
+        const {answerChoices} = this.props.question;
+        const multipleChoice = answerChoices && answerChoices.length > 0;
         return (
-            <div className="code-field" onMouseUp={this.handleMouseUp}>
+            <div className="code-field" onMouseUp={!multipleChoice && this.handleMouseUp}>
                 { this.renderCodeLines() }
             </div>
         );
