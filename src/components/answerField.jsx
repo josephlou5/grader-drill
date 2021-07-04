@@ -12,7 +12,7 @@ class AnswerField extends Component {
             <button
                 type="button"
                 className="btn btn-danger m-2"
-                onClick={this.props.onClear}
+                onClick={() => this.props.onClear(this.props.question)}
             >
                 Clear Highlights
             </button>
@@ -20,9 +20,10 @@ class AnswerField extends Component {
     }
 
     renderAnswers(multipleChoice) {
+        const {question} = this.props;
         if (multipleChoice) {
             // multiple choice
-            return this.props.question.answerChoices.map((text, index) =>
+            return question.answerChoices.map((text, index) =>
                 <div key={index} className="form-check">
                     <input className="form-check-input" type="radio" name="answer" id={"choice" + index}/>
                     <label className="form-check-label" htmlFor={"choice" + index}>
@@ -40,6 +41,7 @@ class AnswerField extends Component {
                 <AnswerInput
                     key={index}
                     index={index}
+                    question={question}
                     highlight={highlight}
                     onDelete={this.props.onDelete}
                 />

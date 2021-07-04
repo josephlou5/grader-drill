@@ -12,7 +12,7 @@ class AnswerInput extends Component {
                         type="button"
                         className="btn btn-close m-1"
                         aria-label="Delete"
-                        onClick={() => this.props.onDelete(this.props.index)}
+                        onClick={() => this.props.onDelete(this.props.question, this.props.index)}
                     />
                 }
                 { "{startLine: " + this.props.highlight["startLine"] + ", " +

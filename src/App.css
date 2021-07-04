@@ -2,13 +2,21 @@
   font-family: Arial;
 }
 
-.question-field {
+.row {
+  display: flex;
+}
+
+.column {
+  flex: 50%;
+}
+
+.question-text {
   padding: 10px;
   border: 2px solid black;
   margin: 10px;
 }
 
-.question-field p {
+.question-text p {
   margin: 0px;
 }
 

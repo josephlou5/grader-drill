@@ -1,57 +1,48 @@
 import React, { Component } from 'react';
 import CodeField from './codeField';
-import QuestionField from './questionField';
+import QuestionText from './questionText';
 import AnswerField from './answerField';
 
 class QuestionPage extends Component {
     
-    constructor(props) {
-        super(props);
-        this.state = props.question;
+    renderComponents = () => {
+        const {question} = this.props;
+        if (question === null || question === undefined) {
+            return "Undefined question";
+        }
+        if (question.id === null) {
+            return "Invalid question";
+        }
+        return (
+            <React.Fragment>
+                <h3>{ question.questionType }</h3>
+                { question.hasQuestionField && 
+                    <QuestionText
+                        question={question}
+                    />
+                }
+                { question.hasCodeField &&
+                    <CodeField
+                        question={question}
+                        onHighlight={this.props.onHighlight}
+                    />
+                }
+                { question.hasAnswerField &&
+                    <AnswerField
+                        question={question}
+                        onClear={this.props.onClear}
+                        onDelete={this.props.onDelete}
+                    />
+                }
+            </React.Fragment>
+        );
     }
 
-    handleHighlight = (highlight) => {
-        console.log("Highlight created:", highlight);
-        let highlights = [...this.state.highlights];
-        highlights.push(highlight);
-        this.setState({ highlights: highlights });
-    };
-
-    handleClear = () => {
-        console.log("Clearing all highlights");
-        const highlights = this.state.highlights.filter(h => !h["byUser"]);
-        this.setState({ highlights: highlights });
-    }
-    
-    handleDelete = (highlightNum) => {
-        console.log("Deleting highlight index " + highlightNum);
-        let highlights = [...this.state.highlights];
-        highlights.splice(highlightNum, 1);
-        this.setState({ highlights: highlights });
-    };
-
-    render() { 
+    render() {
         return (
             <React.Fragment>
                 <h1>Question</h1>
-                { this.state.hasQuestionField && 
-                    <QuestionField
-                        question={this.state}
-                    />
-                }
-                { this.state.hasCodeField &&
-                    <CodeField
-                        question={this.state}
-                        onHighlight={this.handleHighlight}
-                    />
-                }
-                { this.state.hasAnswerField &&
-                    <AnswerField
-                        question={this.state}
-                        onClear={this.handleClear}
-                        onDelete={this.handleDelete}
-                    />
-                }
+                { this.renderComponents() }
             </React.Fragment>
         );
     }

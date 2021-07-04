@@ -61,7 +61,7 @@ class CodeField extends Component {
             endContainer = endContainer.parentNode;
         }
         // container is line number
-        if (endContainer.parentNode.id.startsWith("linenum-")) {
+        else if (endContainer.parentNode.id.startsWith("linenum-")) {
             // when this happens, endOffset = 2, so need to reset that too
             const lineNum = parseInt(endContainer.parentNode.id.split("-")[1]);
             if (lineNum === 1) {
@@ -106,7 +106,7 @@ class CodeField extends Component {
                 return;
             }
             endIndex--;
-            endChar = childrenText[endIndex].length;
+            endChar = childrenText[endIndex].nodeValue.length;
         }
 
         if (DEBUG) {
@@ -121,7 +121,7 @@ class CodeField extends Component {
         }
         while (childrenFlat[endIndex].nodeType !== Node.TEXT_NODE) {
             endIndex--;
-            endChar = childrenText[endIndex].length;
+            endChar = childrenText[endIndex].nodeValue.length;
         }
 
         if (DEBUG) console.log("Fixed indices:", startIndex, endIndex);
@@ -152,7 +152,7 @@ class CodeField extends Component {
                     endLine = lineNum;
                     endChar += lineOffset;
                 }
-                lineOffset += childrenText[i].length;
+                lineOffset += childrenText[i].nodeValue.length;
                 i++;
             }
             if (i > endIndex) break;
@@ -171,7 +171,7 @@ class CodeField extends Component {
             byUser: true,
         }
         if (DEBUG) console.log(highlight);
-        this.props.onHighlight(highlight);
+        this.props.onHighlight(this.props.question, highlight);
 
         // if single click on a highlighted portion, adds another highlight
         // so collapse the range to avoid that
