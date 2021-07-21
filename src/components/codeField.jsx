@@ -1,6 +1,75 @@
 import React, { Component } from 'react';
+// import ReactDOMServer from 'react-dom/server';
+import { resetValid } from '../shared';
+
+// editable textarea: https://css-tricks.com/creating-an-editable-textarea-that-supports-syntax-highlighted-code/
+// tab indent textarea: https://stackoverflow.com/questions/6637341/use-tab-to-indent-in-textarea
 
 class CodeField extends Component {
+
+    handleIndent = (event) => {
+        // Adapted from https://stackoverflow.com/a/45396754.
+        const element = event.target;
+        // tab
+        if (event.keyCode === 9) {
+            event.preventDefault();
+            const TAB = " ".repeat(4);
+            document.execCommand('insertText', false, TAB);
+        }
+        // enter
+        else if (event.keyCode === 13) {
+            if (element.selectionStart === element.selectionEnd) {
+                const text = element.value;
+                // start of the current line
+				let lineStart = element.selectionStart;
+				while (lineStart > 0 && text[lineStart - 1] !== '\n') {
+				    lineStart--;
+                }
+
+                // first character of the current line
+                let lineFirstChar = lineStart;
+				while (text[lineFirstChar] === ' ') {
+				    lineFirstChar++;
+                }
+
+                // copy indent of current line to new line
+				if (lineFirstChar > lineStart) {
+                    event.preventDefault();
+					document.execCommand('insertText', false, '\n' + text.substring(lineStart, lineFirstChar));
+				}
+            }
+        }
+    };
+    
+    renderEditMode = () => {
+        const {code} = this.props.question;
+        const lines = code.split('\n');
+        return (
+            <div className="row">
+                <div className="col-auto px-0" style={{paddingTop: "2px"}}>
+                    {lines.map((line, index) =>
+                        <pre key={index} className="code-text text-end">
+                            {index + 1}
+                        </pre>
+                    )}
+                </div>
+                <div className="col">
+                    <textarea
+                        className="code-text form-control textarea code-textarea"
+                        id="question-edit-code"
+                        spellCheck={false}
+                        onKeyDown={this.handleIndent}
+                        onChange={(event) => {
+                            resetValid(event.target);
+                            this.props.onCodeChange(event.target.value);
+                        }}
+                        value={code}
+                    />
+                    <div className="invalid-feedback">Must have code.</div>
+                </div>
+            </div>
+        );
+    };
 
     handleMouseUp = () => {
 
@@ -14,7 +83,7 @@ class CodeField extends Component {
         if (!range || range.collapsed) {
             return;
         }
-        if (DEBUG) console.log('Range object:', range);
+        if (DEBUG) console.log("Range object:", range);
 
         let {startContainer, endContainer} = range;
         let startChar = range.startOffset;
@@ -25,14 +94,16 @@ class CodeField extends Component {
             console.log("offsets:", startChar, endChar);
         }
 
-        // shouldn't happen but just in case
         if (startContainer.nodeType !== Node.TEXT_NODE) {
             console.log("Error: start container is not text:", startContainer);
             return;
         }
         if (endContainer.nodeType !== Node.TEXT_NODE) {
-            console.log("Error: end container is not text:", endContainer);
-            return;
+            endContainer = endContainer.firstChild;
+            if (endContainer.nodeType !== Node.TEXT_NODE) {
+                console.log("Error: end container is not text:", endContainer);
+                return;
+            }
         }
 
         // get line child nodes
@@ -49,36 +120,6 @@ class CodeField extends Component {
             return child.firstChild;
         });
         if (DEBUG) console.log("flat:", childrenText.map(child => child.nodeValue));
-
-        // fix containers
-        // container is badge
-        if (startContainer.parentNode.id.endsWith("-badge")) {
-            // go up to highlight span
-            startContainer = startContainer.parentNode;
-        }
-        if (endContainer.parentNode.id.endsWith("-badge")) {
-            // go up to highlight span
-            endContainer = endContainer.parentNode;
-        }
-        // container is line number
-        else if (endContainer.parentNode.id.startsWith("linenum-")) {
-            // when this happens, endOffset = 2, so need to reset that too
-            const lineNum = parseInt(endContainer.parentNode.id.split("-")[1]);
-            if (lineNum === 1) {
-                // already first line, so stay in this line instead
-                endContainer = children[lineNum - 1][0];
-                endChar = 0;
-            } else {
-                // go back to previous line
-                const prevLine = children[lineNum - 2];
-                endContainer = prevLine[prevLine.length - 1];
-                if (endContainer.nodeType === Node.TEXT_NODE) {
-                    endChar = endContainer.nodeValue.length;
-                } else {
-                    endChar = endContainer.firstChild.nodeValue.length;
-                }
-            }
-        }
 
         let startIndex = childrenText.indexOf(startContainer);
         let endIndex = childrenText.indexOf(endContainer);
@@ -168,10 +209,10 @@ class CodeField extends Component {
             startChar: startChar,
             endLine: endLine,
             endChar: endChar,
-            byUser: true,
+            byUser: !this.props.editMode,
         }
         if (DEBUG) console.log(highlight);
-        this.props.onHighlight(this.props.question, highlight);
+        this.props.onAddHighlight(this.props.question, highlight);
 
         // if single click on a highlighted portion, adds another highlight
         // so collapse the range to avoid that
@@ -180,13 +221,15 @@ class CodeField extends Component {
 
     renderCodeLines = () => {
         const lines = this.props.question.code.split('\n');
+        const numLines = lines.length;
 
         // create inHighlight array, which determines where highlights are
-        let inHighlight = new Array(lines.length);
-        for (let i = 0; i < lines.length; i++) {
+        let inHighlight = new Array(numLines);
+        for (let i = 0; i < numLines; i++) {
             inHighlight[i] = new Array(lines[i].length).fill(0);
         }
-        const {highlights} = this.props.question;
+        const {question} = this.props;
+        const {highlights} = question;
         for (let i = 0; i < highlights.length; i++) {
             const highlightNum = i + 1;
             const {startLine, startChar, endLine, endChar} = highlights[i];
@@ -205,9 +248,9 @@ class CodeField extends Component {
             }
         }
 
-        function createHighlight(lineNum, text, highlightNum, badge) {
+        function createHighlight(key, lineNum, text, highlightNum, badge) {
             // Creates a highlight with the appropriate line number, highlight number, and badge.
-            const idText = "line-" + lineNum + "-highlight-" + highlightNum;
+            const idText = `line-${lineNum}-highlight-${highlightNum}`;
             const highlightClasses = [
                 "highlight",
                 "user-select-none",
@@ -221,26 +264,49 @@ class CodeField extends Component {
                 "translate-middle",
                 "badge",
                 "rounded-pill",
-                "bg-primary",
+                highlights[highlightNum - 1].byUser ? "bg-success" : "bg-primary",
             ];
             return (
-                <span className={highlightClasses.join(" ")} id={idText}>
+                <span key={key} className={highlightClasses.join(" ")} id={idText}>
                     {text}
                     {badge &&
-                        <span className={badgeClasses.join(" ")} id={idText + "-badge"}>
+                        <span
+                            className={badgeClasses.join(" ")}
+                            id={idText + "-badge"}
+                            // todo: this was an attempt to turn the badge into a button to delete the highlight,
+                            // but i couldn't figure out how to add the onclick event
+                            // onMouseEnter={(event) => {
+                            //     const button = (
+                            //         <button
+                            //             type="button"
+                            //             className="btn-close btn-close-white"
+                            //             onClick={() => this.props.onDeleteHighlight(question, highlightNum)}
+                            //         />
+                            //     );
+                            //     // event.target.innerHTML = '<button type="button" class="btn-close btn-close-white">';
+                            //     event.target.innerHTML = ReactDOMServer.renderToString(button);
+                            // }}
+                            // onMouseLeave={(event) => {
+                            //     event.target.innerHTML = highlightNum;
+                            // }}
+                        >
                             {highlightNum}
                         </span>
                     }
                 </span>
-            )
+            );
         }
 
+        const ZERO_WIDTH_SPACE = '\u200B';
+
         let elements = [];
-        let text = "";
         let prevHighlight = 0;
-        for (let i = 0; i < lines.length; i++) {
+        let key = 0;
+        for (let i = 0; i < numLines; i++) {
             const lineNum = i + 1;
 
+            let lineKey = 0;
+            let text = "";
             let line = [];
             for (let j = 0; j < lines[i].length; j++) {
                 const currentHighlight = inHighlight[i][j];
@@ -252,7 +318,7 @@ class CodeField extends Component {
                     if (prevHighlight === 0) {
                         line.push(text);
                     } else {
-                        line.push(createHighlight(lineNum, text, prevHighlight, true));
+                        line.push(createHighlight(lineKey++, lineNum, text, prevHighlight, true));
                     }
                 }
                 text = lines[i].charAt(j);
@@ -264,38 +330,92 @@ class CodeField extends Component {
                 } else {
                     // see if next proper line's first character is the same highlight
                     let nextLine = i + 1;
-                    while (nextLine < lines.length && lines[nextLine].length === 0) {
+                    while (nextLine < numLines && lines[nextLine].length === 0) {
                         nextLine++;
                     }
-                    if (nextLine < lines.length && inHighlight[nextLine][0] === prevHighlight) {
+                    if (nextLine < numLines && inHighlight[nextLine][0] === prevHighlight) {
                         // if yes, don't add a badge
-                        line.push(createHighlight(lineNum, text, prevHighlight, false));
+                        line.push(createHighlight(lineKey++, lineNum, text, prevHighlight, false));
                     } else {
                         // otherwise, add the badge
-                        line.push(createHighlight(lineNum, text, prevHighlight, true));
+                        line.push(createHighlight(lineKey++, lineNum, text, prevHighlight, true));
                         prevHighlight = 0;
                     }
                 }
-                text = "";
             }
 
             elements.push(
-                <pre className="code-line">
-                    <span className="user-select-none" id={"linenum-" + lineNum}>{lineNum + " "}</span>
-                    <span id={"line-" + lineNum}>{ line }</span>
-                </pre>
+                <p key={key++} className="code-text" id={"line-" + lineNum}>
+                    {line.length > 0 ? line : ZERO_WIDTH_SPACE}
+                </p>
             );
         }
 
-        return elements;
+        return (
+            <div className="row h-100">
+                <div className="col-auto pe-2 user-select-none">
+                    {lines.map((line, index) =>
+                        <pre key={index} className="code-text text-end">
+                            {index + 1}
+                        </pre>
+                    )}
+                </div>
+                <div className="col ps-0 me-2" style={{overflowX: "scroll"}}>
+                    {elements}
+                </div>
+            </div>
+        );
+    };
+
+    renderField = () => {
+        const onMouseUp = !this.props.noChange ? this.handleMouseUp : undefined;
+        if (!this.props.editMode) {
+            return (
+                <div onMouseUp={onMouseUp}>
+                    {this.renderCodeLines()}
+                </div>
+            );
+        }
+        const {highlights} = this.props.question;
+        const canClear = highlights && highlights.length > 0;
+        return (
+            <div className="container-fluid">
+                <div className="row">
+                    <div className="col-6"></div>
+                    <div className="col-6">
+                        You can add default highlights to the code. Note that highlights will not change with the code.
+                    </div>
+                </div>
+                <div className="row">
+                    <div className="col-6">
+                        {this.renderEditMode()}
+                    </div>
+                    <div className="col-6" onMouseUp={onMouseUp}>
+                        {this.renderCodeLines()}
+                    </div>
+                </div>
+                {canClear &&
+                    <div className="row mt-2">
+                        <div className="col-6"></div>
+                        <div className="col-6">
+                            <button
+                                type="button"
+                                className="btn btn-danger"
+                                onClick={() => this.props.onClearHighlights(this.props.question)}
+                            >
+                                Clear Highlights
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        );
     };
 
     render() {
-        const {answerChoices} = this.props.question;
-        const multipleChoice = answerChoices && answerChoices.length > 0;
         return (
-            <div className="code-field" onMouseUp={!multipleChoice && this.handleMouseUp}>
-                { this.renderCodeLines() }
+            <div className="code-field">
+                {this.renderField()}
             </div>
         );
     }

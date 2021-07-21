@@ -2,12 +2,11 @@
   font-family: Arial;
 }
 
-.row {
-  display: flex;
-}
-
-.column {
-  flex: 50%;
+.textarea {
+  height: 100%;
+  width: 100%;
+  resize: none;
+  overflow: hidden;
 }
 
 .question-text {
@@ -26,11 +25,17 @@
   margin: 10px;
 }
 
-.code-line {
+.code-textarea {
+  line-height: calc(1.5em + 10px) !important;
+  overflow-x: scroll;
+}
+
+.code-text {
   margin: 0px;
   padding-top: 10px;
-  padding-left: 3px;
   font-family: Monaco;
+  font-size: 1em;
+  white-space: pre;
 }
 
 .highlight {
