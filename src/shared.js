@@ -1,18 +1,23 @@
-export function textareaSizing() {
-    const textareas = document.querySelectorAll(".textarea");
-    for (const textarea of textareas) {
-        dynamicResizing({ target: textarea });
-    }
-}
+import { useEffect } from "react";
 
-export function dynamicResizing(event) {
-    const element = event.target;
+function dynamicResizing(element) {
     if (element.scrollHeight === element.clientHeight) {
-        // extra space on the bottom
-        element.style.height = "1em";
+        // extra space on the bottom, so reset height
+        element.style.height = "1px";
     }
     element.style.height = element.scrollHeight + "px";
 }
+
+// SFC to automatically resize all textareas
+export const ResizeTextareas = () => {
+    useEffect(() => {
+        document
+            .querySelectorAll(".textarea")
+            .forEach((e) => dynamicResizing(e));
+    });
+    // component doesn't render anything
+    return null;
+};
 
 export function preventEnter(event) {
     if (event.keyCode === 13) {

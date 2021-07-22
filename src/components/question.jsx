@@ -2,17 +2,9 @@ import React, { Component } from "react";
 import CodeField from "./codeField";
 import QuestionTextField from "./questionTextField";
 import AnswerField from "./answerField";
-import { textareaSizing } from "../shared";
+import { ResizeTextareas } from "../shared";
 
 class Question extends Component {
-    componentDidMount() {
-        textareaSizing();
-    }
-
-    componentDidUpdate() {
-        textareaSizing();
-    }
-
     renderComponents = () => {
         const { question, noChange } = this.props;
         if (!question) {
@@ -50,6 +42,7 @@ class Question extends Component {
     render() {
         return (
             <React.Fragment>
+                <ResizeTextareas />
                 <h1>Question</h1>
                 {this.renderComponents()}
             </React.Fragment>

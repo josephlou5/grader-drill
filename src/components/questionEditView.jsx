@@ -4,7 +4,7 @@ import QuestionTextField from "./questionTextField";
 import CodeField from "./codeField";
 import AnswerField from "./answerField";
 import RubricField from "./rubricField";
-import { textareaSizing } from "../shared";
+import { ResizeTextareas } from "../shared";
 
 class QuestionEditView extends Component {
     constructor(props) {
@@ -27,14 +27,6 @@ class QuestionEditView extends Component {
                 this.state["canToggleCodeField"] = true;
             }
         }
-    }
-
-    componentDidMount() {
-        textareaSizing();
-    }
-
-    componentDidUpdate() {
-        textareaSizing();
     }
 
     handleQuestionType = (questionType) => {
@@ -312,6 +304,8 @@ class QuestionEditView extends Component {
         const questionTypes = ["Comment", "Highlight", "Multiple Choice"];
         return (
             <React.Fragment>
+                <ResizeTextareas />
+
                 <div className="row">
                     <div className="col">
                         <h1>
