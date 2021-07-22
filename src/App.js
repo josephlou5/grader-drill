@@ -1,11 +1,5 @@
 import React, { Component } from "react";
-import {
-    BrowserRouter,
-    Switch,
-    Route,
-    Link,
-    useParams,
-} from "react-router-dom";
+import { Switch, Route, Link, useParams } from "react-router-dom";
 import GradingDashboard from "./components/dashboardView";
 import GradingView from "./components/gradingView";
 import QuestionsView from "./components/questionsView";
@@ -218,87 +212,85 @@ class App extends Component {
         };
 
         return (
-            <BrowserRouter>
-                <div className="App">
-                    {/* navbar */}
-                    <nav className="navbar navbar-expand-lg navbar-light bg-light">
-                        <div className="container-fluid">
-                            <Link to="/" className="navbar-brand">
-                                Grader Drill
-                            </Link>
-                            <div className="collapse navbar-collapse">
-                                <div className="navbar-nav">
-                                    <Link to="/" className="nav-link">
-                                        Dashboard
-                                    </Link>
-                                    <Link to="/grading" className="nav-link">
-                                        Grading
-                                    </Link>
-                                    <Link to="/questions" className="nav-link">
-                                        Questions
-                                    </Link>
-                                </div>
+            <div className="App">
+                {/* navbar */}
+                <nav className="navbar navbar-expand-lg navbar-light bg-light">
+                    <div className="container-fluid">
+                        <Link to="/" className="navbar-brand">
+                            Grader Drill
+                        </Link>
+                        <div className="collapse navbar-collapse">
+                            <div className="navbar-nav">
+                                <Link to="/" className="nav-link">
+                                    Dashboard
+                                </Link>
+                                <Link to="/grading" className="nav-link">
+                                    Grading
+                                </Link>
+                                <Link to="/questions" className="nav-link">
+                                    Questions
+                                </Link>
                             </div>
                         </div>
-                    </nav>
+                    </div>
+                </nav>
 
-                    <Switch>
-                        {/* dashboard (home) */}
-                        <Route exact path="/">
-                            <GradingDashboard
-                                answered={this.state.answered}
-                                hideGraded={this.state.hideGraded}
-                                onHideGraded={this.handleHideGraded}
-                            />
-                        </Route>
+                <Switch>
+                    {/* dashboard (home) */}
+                    <Route exact path="/">
+                        <GradingDashboard
+                            answered={this.state.answered}
+                            hideGraded={this.state.hideGraded}
+                            onHideGraded={this.handleHideGraded}
+                        />
+                    </Route>
 
-                        {/* grading */}
-                        <Route exact path="/grading">
-                            <GradingView
-                                answered={this.state.answered}
-                                noChange={true}
-                                onGraded={this.handleGraded}
-                                eventHandlers={eventHandlers}
-                            />
-                        </Route>
-                        <Route path="/grading/:trainee/:questionId">
-                            <GradeQuestion
-                                answered={this.state.answered}
-                                noChange={true}
-                                onGraded={this.handleGraded}
-                                eventHandlers={eventHandlers}
-                            />
-                        </Route>
+                    {/* grading */}
+                    <Route exact path="/grading">
+                        <GradingView
+                            answered={this.state.answered}
+                            noChange={true}
+                            onGraded={this.handleGraded}
+                            eventHandlers={eventHandlers}
+                        />
+                    </Route>
+                    <Route path="/grading/:trainee/:questionId">
+                        <GradeQuestion
+                            answered={this.state.answered}
+                            noChange={true}
+                            onGraded={this.handleGraded}
+                            eventHandlers={eventHandlers}
+                        />
+                    </Route>
 
-                        {/* questions */}
-                        <Route exact path="/questions">
-                            <QuestionsView
-                                questions={this.state.questions}
-                                onDeleteQuestion={this.handleDeleteQuestion}
-                            />
-                        </Route>
-                        <Route exact path="/questions/new">
-                            <QuestionEditView
-                                newQuestion={true}
-                                onAddQuestion={this.handleAddQuestion}
-                                onEditQuestion={this.handleEditQuestion}
-                            />
-                        </Route>
-                        <Route path="/questions/edit/:questionId">
-                            <EditQuestion
-                                questions={this.state.questions}
-                                onAddQuestion={this.handleAddQuestion}
-                                onEditQuestion={this.handleEditQuestion}
-                            />
-                        </Route>
+                    {/* questions */}
+                    <Route exact path="/questions">
+                        <QuestionsView
+                            questions={this.state.questions}
+                            onDeleteQuestion={this.handleDeleteQuestion}
+                        />
+                    </Route>
+                    <Route exact path="/questions/new">
+                        <QuestionEditView
+                            newQuestion={true}
+                            onAddQuestion={this.handleAddQuestion}
+                            onEditQuestion={this.handleEditQuestion}
+                        />
+                    </Route>
+                    <Route path="/questions/edit/:questionId">
+                        <EditQuestion
+                            questions={this.state.questions}
+                            onAddQuestion={this.handleAddQuestion}
+                            onEditQuestion={this.handleEditQuestion}
+                        />
+                    </Route>
 
-                        {/* catch-all for page not found */}
-                        <Route path="*">
-                            <h1>Page not found</h1>
-                        </Route>
-                    </Switch>
-                </div>
-            </BrowserRouter>
+                    {/* catch-all for page not found */}
+                    <Route path="*">
+                        <h1>Page not found</h1>
+                    </Route>
+                </Switch>
+            </div>
         );
     }
 }
