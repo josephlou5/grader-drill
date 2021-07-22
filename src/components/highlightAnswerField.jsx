@@ -1,22 +1,22 @@
-import React, { Component } from 'react';
-import { preventEnter } from '../shared.js';
+import React, { Component } from "react";
+import { preventEnter } from "../shared.js";
 
 class HighlightAnswerField extends Component {
-
     renderClearButton = () => {
-        if (this.props.noChange)
-            return null;
-        const {question} = this.props;
-        const {highlights} = question;
-        if (!highlights || highlights.length === 0)
-            return null;
+        if (this.props.noChange) return null;
+        const { question } = this.props;
+        const { highlights } = question;
+        if (!highlights || highlights.length === 0) return null;
         let buttonProps = {
             type: "button",
             className: "btn btn-danger",
-        }
-        const canClear = !this.props.preview && (this.props.editMode || highlights.some(h => h['byUser']));
+        };
+        const canClear =
+            !this.props.preview &&
+            (this.props.editMode || highlights.some((h) => h["byUser"]));
         if (canClear) {
-            buttonProps["onClick"] = () => this.props.onClearHighlights(question);
+            buttonProps["onClick"] = () =>
+                this.props.onClearHighlights(question);
         } else {
             buttonProps["disabled"] = true;
         }
@@ -24,7 +24,7 @@ class HighlightAnswerField extends Component {
     };
 
     renderHighlight = (question, highlight, index, text = "") => {
-        const {preview, editMode, noChange} = this.props;
+        const { preview, editMode, noChange } = this.props;
 
         const classes = "form-control textarea";
 
@@ -41,7 +41,12 @@ class HighlightAnswerField extends Component {
         } else {
             Object.assign(textProps, {
                 onKeyDown: preventEnter,
-                onChange: (event) => this.props.onAnswerChange(question, index, event.target.value),
+                onChange: (event) =>
+                    this.props.onAnswerChange(
+                        question,
+                        index,
+                        event.target.value
+                    ),
             });
         }
 
@@ -52,7 +57,12 @@ class HighlightAnswerField extends Component {
                 <textarea
                     className={classes}
                     onKeyDown={preventEnter}
-                    onChange={(event) => this.props.onChangeHighlightText(index, event.target.value)}
+                    onChange={(event) =>
+                        this.props.onChangeHighlightText(
+                            index,
+                            event.target.value
+                        )
+                    }
                     placeholder="Existing comment"
                     value={highlight.text || ""}
                 />
@@ -60,7 +70,7 @@ class HighlightAnswerField extends Component {
         } else if (highlight.text) {
             // display the existing comment
             input = (
-                <div className="flex-grow-1" style={{padding: "0 0.75rem"}}>
+                <div className="flex-grow-1" style={{ padding: "0 0.75rem" }}>
                     {/*
                     // the div will annoyingly go to the next line when wrapping,
                     // so using a disabled textarea solves the problem very well.
@@ -75,13 +85,19 @@ class HighlightAnswerField extends Component {
                     <div className="row">
                         <textarea
                             className={classes}
-                            style={{borderBottom: "0px", borderRadius: "0 0.25rem 0 0"}}
+                            style={{
+                                borderBottom: "0px",
+                                borderRadius: "0 0.25rem 0 0",
+                            }}
                             value={highlight.text}
                             disabled={true}
                         />
                     </div>
                     <div className="row">
-                        <textarea {...textProps} style={{borderRadius: "0 0 0.25rem 0"}} />
+                        <textarea
+                            {...textProps}
+                            style={{ borderRadius: "0 0 0.25rem 0" }}
+                        />
                     </div>
                 </div>
             );
@@ -99,7 +115,8 @@ class HighlightAnswerField extends Component {
             if (noChange) {
                 buttonProps["disabled"] = true;
             } else {
-                buttonProps["onClick"] = () => this.props.onDeleteHighlight(question, index);
+                buttonProps["onClick"] = () =>
+                    this.props.onDeleteHighlight(question, index);
             }
             deleteButton = (
                 <div className="input-group-text bg-danger">
@@ -108,7 +125,10 @@ class HighlightAnswerField extends Component {
             );
         }
 
-        const labelClasses = "input-group-text bg-" + (highlight.byUser ? "success" : "primary") + " text-light";
+        const labelClasses =
+            "input-group-text bg-" +
+            (highlight.byUser ? "success" : "primary") +
+            " text-light";
 
         return (
             <React.Fragment>
@@ -120,19 +140,11 @@ class HighlightAnswerField extends Component {
     };
 
     renderField = () => {
-        const {question, noChange} = this.props;
-        const {highlights} = question;
+        const { question, noChange } = this.props;
+        const { highlights } = question;
         if (!highlights || highlights.length === 0) {
             return <p>No highlights</p>;
         }
-
-        // let classes = "input-group";
-        // if (!this.props.noChange) {
-        //     classes += " mt-2";
-        //     if (this.props.editMode) {
-        //         // classes += " w-100";
-        //     }
-        // }
 
         function classes(index) {
             if (noChange && index === 0) {
@@ -149,31 +161,16 @@ class HighlightAnswerField extends Component {
             answers = question.answers;
         }
 
-        return highlights.map((highlight, index) =>
+        return highlights.map((highlight, index) => (
             <div key={index} className={classes(index)}>
-                {this.renderHighlight(question, highlight, index, answers[index])}
+                {this.renderHighlight(
+                    question,
+                    highlight,
+                    index,
+                    answers[index]
+                )}
             </div>
-        );
-
-        // if (this.props.editMode) {
-        //     return highlights.map((highlight, index) =>
-        //         <div key={index} className="input-group mt-2 w-100">
-        //             {this.renderHighlight(highlight, index)}
-        //         </div>
-        //     );
-        // } else if (this.props.noChange) {
-        //     return highlights.map((highlight, index) =>
-        //         <div key={index} className="input-group my-2">
-        //             {this.renderHighlight(highlight, index, question.answers[index])}
-        //         </div>
-        //     );
-        // } else {
-        //     return highlights.map((highlight, index) =>
-        //         <div key={index} className="input-group mt-2">
-        //             {this.renderHighlight(highlight, index, question.answers[index])}
-        //         </div>
-        //     );
-        // }
+        ));
     };
 
     render() {

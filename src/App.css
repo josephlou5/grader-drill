@@ -1,58 +1,58 @@
 .App {
-  font-family: Arial;
+    font-family: Arial;
 }
 
 .textarea {
-  height: 100%;
-  width: 100%;
-  resize: none;
-  overflow: hidden;
+    height: 100%;
+    width: 100%;
+    resize: none;
+    overflow: hidden;
 }
 
 .question-text {
-  padding: 10px;
-  border: 2px solid black;
-  margin: 10px;
+    padding: 10px;
+    border: 2px solid black;
+    margin: 10px;
 }
 
 .question-text p {
-  margin: 0px;
+    margin: 0px;
 }
 
 .code-field {
-  padding: 10px;
-  border: 5px solid black;
-  margin: 10px;
+    padding: 10px;
+    border: 5px solid black;
+    margin: 10px;
 }
 
 .code-textarea {
-  line-height: calc(1.5em + 10px) !important;
-  overflow-x: scroll;
+    line-height: calc(1.5em + 10px) !important;
+    overflow-x: scroll;
 }
 
 .code-text {
-  margin: 0px;
-  padding-top: 10px;
-  font-family: Monaco;
-  font-size: 1em;
-  white-space: pre;
+    margin: 0px;
+    padding-top: 10px;
+    font-family: Monaco;
+    font-size: 1em;
+    white-space: pre;
 }
 
 .highlight {
-  background-color: yellow;
+    background-color: yellow;
 }
 
 .badge {
-  /* allow badge to sit on top of highlight */
-  z-index: 10;
+    /* allow badge to sit on top of highlight */
+    z-index: 10;
 }
 
 .answer-field {
-  padding: 10px;
-  border: 2px solid black;
-  margin: 10px;
+    padding: 10px;
+    border: 2px solid black;
+    margin: 10px;
 }
 
 .answer-field p {
-  margin: 0px;
+    margin: 0px;
 }

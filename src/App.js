@@ -1,19 +1,18 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 import {
     BrowserRouter,
     Switch,
     Route,
     Link,
     useParams,
-} from 'react-router-dom';
-import GradingDashboard from './components/dashboardView';
-import GradingView from './components/gradingView';
-import QuestionsView from './components/questionsView';
-import QuestionEditView from './components/questionEditView';
-import './App.css';
+} from "react-router-dom";
+import GradingDashboard from "./components/dashboardView";
+import GradingView from "./components/gradingView";
+import QuestionsView from "./components/questionsView";
+import QuestionEditView from "./components/questionEditView";
+import "./App.css";
 
 class App extends Component {
-
     state = {
         hideGraded: false,
         questionIdCounter: 3,
@@ -24,13 +23,16 @@ class App extends Component {
                 hasAnswerField: true,
                 questionType: "Comment",
                 questionText: "What's wrong with this code?",
-                code: "public class Question {\n    public static void main(String[] args) {\n        System.out.println(\"Hello world\");\n    }\n}",
+                code: 'public class Question {\n    public static void main(String[] args) {\n        System.out.println("Hello world");\n    }\n}',
                 highlights: [
                     // { startLine: 0, startChar: 14, endLine: 1, endChar: 5, byUser: false },
                     // { startLine: 1, startChar: 8, endLine: 1, endChar: 11, byUser: false },
                 ],
                 rubric: [
-                    { points: 1, text: "Says that nothing is wrong with the code" },
+                    {
+                        points: 1,
+                        text: "Says that nothing is wrong with the code",
+                    },
                 ],
             },
             2: {
@@ -38,7 +40,8 @@ class App extends Component {
                 hasCodeField: false,
                 hasAnswerField: true,
                 questionType: "Multiple Choice",
-                questionText: "What would you say to a student who uses `Integer` where they should use `int`?",
+                questionText:
+                    "What would you say to a student who uses `Integer` where they should use `int`?",
                 answerChoices: [
                     "You should use `int` because it's shorter to type.",
                     "`Integer` is a wrapper object and is not necessary for all cases.",
@@ -55,17 +58,31 @@ class App extends Component {
                 hasAnswerField: true,
                 questionType: "Comment",
                 questionText: "What's wrong with this `code`?",
-                code: "public class Question {\n    public static void main(String[] args) {\n        System.out.println(\"Hello world\");\n    }\n}\nmore lines\nmore\n\nlines\n!\n!\nthis is a really long line for testing purposes to see if the scroll bar will show up here properly or not",
+                code: 'public class Question {\n    public static void main(String[] args) {\n        System.out.println("Hello world");\n    }\n}\nmore lines\nmore\n\nlines\n!\n!\nthis is a really long line for testing purposes to see if the scroll bar will show up here properly or not',
                 highlights: [
-                    { startLine: 0, startChar: 14, endLine: 1, endChar: 5, byUser: false, text: "this is existing text" },
-                    { startLine: 1, startChar: 8, endLine: 1, endChar: 11, byUser: true },
+                    {
+                        startLine: 0,
+                        startChar: 14,
+                        endLine: 1,
+                        endChar: 5,
+                        byUser: false,
+                        text: "this is existing text",
+                    },
+                    {
+                        startLine: 1,
+                        startChar: 8,
+                        endLine: 1,
+                        endChar: 11,
+                        byUser: true,
+                    },
                 ],
-                answers: [
-                    "this is highlight 1",
-                    "this is another highlight",
-                ],
+                answers: ["this is highlight 1", "this is another highlight"],
                 rubric: [
-                    { points: 1, text: "Says that nothing is wrong with the code", checked: false },
+                    {
+                        points: 1,
+                        text: "Says that nothing is wrong with the code",
+                        checked: false,
+                    },
                 ],
                 graded: false,
             },
@@ -76,7 +93,8 @@ class App extends Component {
                 hasCodeField: false,
                 hasAnswerField: true,
                 questionType: "Multiple Choice",
-                questionText: "What would you say to a student who uses `Integer` where they should use `int`?",
+                questionText:
+                    "What would you say to a student who uses `Integer` where they should use `int`?",
                 answerChoices: [
                     "You should use `int` because it's shorter to type.",
                     "`Integer` is a wrapper object and is not necessary for all cases.",
@@ -95,9 +113,9 @@ class App extends Component {
     };
 
     handleAddQuestion = (question) => {
-        const {questionIdCounter} = this.state;
+        const { questionIdCounter } = this.state;
         question["id"] = questionIdCounter;
-        let questions = {...this.state.questions};
+        let questions = { ...this.state.questions };
         questions[questionIdCounter] = question;
         this.setState({
             questionIdCounter: questionIdCounter + 1,
@@ -106,20 +124,20 @@ class App extends Component {
     };
 
     handleEditQuestion = (question) => {
-        let questions = {...this.state.questions};
+        let questions = { ...this.state.questions };
         questions[question.id] = question;
         this.setState({ questions: questions });
     };
 
     handleDeleteQuestion = (questionId) => {
-        let questions = {...this.state.questions};
+        let questions = { ...this.state.questions };
         delete questions[questionId];
         this.setState({ questions: questions });
     };
 
     updateQuestion = (question) => {
         let found = false;
-        let answered = this.state.answered.map(q => {
+        let answered = this.state.answered.map((q) => {
             if (q.trainee === question.trainee && q.id === question.id) {
                 found = true;
                 return question;
@@ -210,9 +228,15 @@ class App extends Component {
                             </Link>
                             <div className="collapse navbar-collapse">
                                 <div className="navbar-nav">
-                                    <Link to="/" className="nav-link">Dashboard</Link>
-                                    <Link to="/grading" className="nav-link">Grading</Link>
-                                    <Link to="/questions" className="nav-link">Questions</Link>
+                                    <Link to="/" className="nav-link">
+                                        Dashboard
+                                    </Link>
+                                    <Link to="/grading" className="nav-link">
+                                        Grading
+                                    </Link>
+                                    <Link to="/questions" className="nav-link">
+                                        Questions
+                                    </Link>
                                 </div>
                             </div>
                         </div>
@@ -280,10 +304,12 @@ class App extends Component {
 }
 
 function GradeQuestion({ answered, noChange, onGraded, eventHandlers }) {
-    let {trainee, questionId} = useParams();
+    let { trainee, questionId } = useParams();
     // gets returned as a string, so make int
     questionId = parseInt(questionId);
-    const question = answered.find(q => (q.trainee === trainee && q.id === questionId));
+    const question = answered.find(
+        (q) => q.trainee === trainee && q.id === questionId
+    );
     if (!question) {
         return <h1>Invalid question</h1>;
     }
@@ -298,7 +324,7 @@ function GradeQuestion({ answered, noChange, onGraded, eventHandlers }) {
 }
 
 function EditQuestion({ questions, ...eventHandlers }) {
-    const {questionId} = useParams();
+    const { questionId } = useParams();
     const question = questions[questionId];
     return (
         <QuestionEditView

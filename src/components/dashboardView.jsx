@@ -1,10 +1,9 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 import { Link } from "react-router-dom";
 
 class GradingDashboard extends Component {
-
     renderTable = () => {
-        const {answered, hideGraded} = this.props;
+        const { answered, hideGraded } = this.props;
         if (!answered || answered.length === 0) {
             return <p className="m-2">No questions!</p>;
         }
@@ -16,7 +15,7 @@ class GradingDashboard extends Component {
                 score = question.score;
             }
             const questionId = question.id;
-            const {trainee} = question;
+            const { trainee } = question;
             const link = "/grading/" + trainee + "/" + questionId;
             return (
                 <tr key={"question-" + questionId}>
@@ -27,7 +26,10 @@ class GradingDashboard extends Component {
                     <td>{score}</td>
                     <td>
                         <Link to={link}>
-                            <button type="button" className="btn btn-primary btn-sm">
+                            <button
+                                type="button"
+                                className="btn btn-primary btn-sm"
+                            >
                                 Question
                             </button>
                         </Link>
@@ -52,12 +54,10 @@ class GradingDashboard extends Component {
                         <th></th>
                     </tr>
                 </thead>
-                <tbody>
-                    { rows }
-                </tbody>
+                <tbody>{rows}</tbody>
             </table>
         );
-    }
+    };
 
     render() {
         return (
@@ -68,7 +68,9 @@ class GradingDashboard extends Component {
                         Grading
                     </button>
                 </Link>
-                <button type="button" className="btn btn-light m-2">Export</button>
+                <button type="button" className="btn btn-light m-2">
+                    Export
+                </button>
                 {/* todo: could turn this into a toggle button instead of a checkbox */}
                 <div className="form-check form-check-inline">
                     <input
@@ -78,11 +80,14 @@ class GradingDashboard extends Component {
                         defaultChecked={this.props.hideGraded}
                         onChange={this.props.onHideGraded}
                     />
-                    <label className="form-check-label" htmlFor="hideGradedCheckbox">
+                    <label
+                        className="form-check-label"
+                        htmlFor="hideGradedCheckbox"
+                    >
                         Hide Graded
                     </label>
                 </div>
-                { this.renderTable() }
+                {this.renderTable()}
             </React.Fragment>
         );
     }

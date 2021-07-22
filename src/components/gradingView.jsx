@@ -1,13 +1,12 @@
-import React, { Component } from 'react';
-import Question from './question';
-import RubricField from './rubricField';
+import React, { Component } from "react";
+import Question from "./question";
+import RubricField from "./rubricField";
 
 class GradingView extends Component {
-
     constructor(props) {
         super(props);
 
-        let {question} = props;
+        let { question } = props;
 
         if (!question) {
             question = this.getNextUngraded();
@@ -37,16 +36,16 @@ class GradingView extends Component {
     }
 
     getNextUngraded = () => {
-        const {answered} = this.props;
+        const { answered } = this.props;
         if (!answered || answered.length === 0) {
             return null;
         }
-        const question = answered.find(q => !q.graded);
+        const question = answered.find((q) => !q.graded);
         if (!question) {
             return null;
         }
         return question;
-    }
+    };
 
     handleCheckChange = (index) => {
         let rubric = [...this.state.rubric];
@@ -55,12 +54,17 @@ class GradingView extends Component {
         rubric[index]["checked"] = checked;
         this.setState({
             rubric: rubric,
-            score: this.state.score + multiplier * rubric[index].points
+            score: this.state.score + multiplier * rubric[index].points,
         });
-    }
+    };
 
     handleSave = (assessor, score) => {
-        this.props.onGraded(this.state.question, this.state.rubric, assessor, score);
+        this.props.onGraded(
+            this.state.question,
+            this.state.rubric,
+            assessor,
+            score
+        );
     };
 
     handleNext = (assessor, score) => {
@@ -71,7 +75,7 @@ class GradingView extends Component {
     };
 
     renderGradeView = () => {
-        const {question} = this.state;
+        const { question } = this.state;
 
         if (!question) {
             return <h1>Nothing to grade!</h1>;
@@ -95,9 +99,7 @@ class GradingView extends Component {
 
         return (
             <div className="row">
-                <div>
-                    Trainee: {question.trainee}
-                </div>
+                <div>Trainee: {question.trainee}</div>
                 <div className="col-6">
                     <Question
                         question={question}
@@ -107,12 +109,12 @@ class GradingView extends Component {
                 </div>
                 <div className="col-6">
                     {"Score: " + score}
-                    {question.questionType !== "Multiple Choice" &&
+                    {question.questionType !== "Multiple Choice" && (
                         <RubricField
                             question={question}
                             onCheckChange={this.handleCheckChange}
                         />
-                    }
+                    )}
                     <div className="position-absolute bottom-0 d-flex justify-content-center">
                         {/* <button type="button" className="btn btn-danger m-2">Skip</button> */}
                         <button

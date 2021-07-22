@@ -1,10 +1,9 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 import { Link } from "react-router-dom";
 
 class QuestionsView extends Component {
-
     renderTable = () => {
-        const {questions} = this.props;
+        const { questions } = this.props;
         if (!questions || Object.keys(questions).length === 0) {
             return <p className="m-2">No questions!</p>;
         }
@@ -23,14 +22,19 @@ class QuestionsView extends Component {
                     <td>{preview}</td>
                     <td>
                         <Link to={"questions/edit/" + questionId}>
-                            <button type="button" className="btn btn-primary btn-sm mx-2">
+                            <button
+                                type="button"
+                                className="btn btn-primary btn-sm mx-2"
+                            >
                                 Edit
                             </button>
                         </Link>
                         <button
                             type="button"
                             className="btn btn-danger btn-sm mx-2"
-                            onClick={() => this.props.onDeleteQuestion(questionId)}
+                            onClick={() =>
+                                this.props.onDeleteQuestion(questionId)
+                            }
                         >
                             Delete
                         </button>
@@ -53,12 +57,10 @@ class QuestionsView extends Component {
                         <th></th>
                     </tr>
                 </thead>
-                <tbody>
-                    {rows}
-                </tbody>
+                <tbody>{rows}</tbody>
             </table>
         );
-    }
+    };
 
     render() {
         return (

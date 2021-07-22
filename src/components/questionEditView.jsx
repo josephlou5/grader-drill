@@ -1,13 +1,12 @@
-import React, { Component } from 'react';
-import { withRouter } from 'react-router-dom';
-import QuestionTextField from './questionTextField';
-import CodeField from './codeField';
-import AnswerField from './answerField';
-import RubricField from './rubricField';
-import { textareaSizing } from '../shared';
+import React, { Component } from "react";
+import { withRouter } from "react-router-dom";
+import QuestionTextField from "./questionTextField";
+import CodeField from "./codeField";
+import AnswerField from "./answerField";
+import RubricField from "./rubricField";
+import { textareaSizing } from "../shared";
 
 class QuestionEditView extends Component {
-
     constructor(props) {
         super(props);
         this.state = {
@@ -80,14 +79,14 @@ class QuestionEditView extends Component {
 
     handleCodeChange = (code) => {
         // see if any highlights were deleted
-        const lines = code.split('\n');
+        const lines = code.split("\n");
         const numLines = lines.length;
-        const lineLengths = lines.map(line => line.length);
+        const lineLengths = lines.map((line) => line.length);
 
         let removing = [];
         const highlights = this.state.highlights.flatMap((h, i) => {
-            let highlight = {...h};
-            let {startLine, startChar, endLine, endChar} = highlight;
+            let highlight = { ...h };
+            let { startLine, startChar, endLine, endChar } = highlight;
             if (startLine >= numLines) return [];
             if (endLine >= numLines) {
                 endLine = numLines - 1;
@@ -151,7 +150,7 @@ class QuestionEditView extends Component {
         let highlights = [...this.state.highlights];
         highlights[index]["text"] = text;
         this.setState({ highlights: highlights });
-    }
+    };
 
     handleDeleteHighlight = (question, highlightIndex) => {
         let highlights = [...this.state.highlights];
@@ -174,7 +173,7 @@ class QuestionEditView extends Component {
     handleDeleteAnswerChoice = (index) => {
         let answerChoices = [...this.state.answerChoices];
         answerChoices.splice(index, 1);
-        let stateUpdate = {answerChoices: answerChoices};
+        let stateUpdate = { answerChoices: answerChoices };
         if (index === this.state.correct) {
             // deleting the correct choice, so no more correct choice
             stateUpdate["correct"] = null;
@@ -197,7 +196,7 @@ class QuestionEditView extends Component {
 
     handleChangeRubricItemPoints = (index, points) => {
         let rubric = [...this.state.rubric];
-        let rubricItem = {...rubric[index]};
+        let rubricItem = { ...rubric[index] };
         let pointsNum = parseInt(points);
         if (isNaN(pointsNum)) {
             pointsNum = 0;
@@ -209,7 +208,7 @@ class QuestionEditView extends Component {
 
     handleChangeRubricItemText = (index, text) => {
         let rubric = [...this.state.rubric];
-        let rubricItem = {...rubric[index]};
+        let rubricItem = { ...rubric[index] };
         rubricItem["text"] = text;
         rubric[index] = rubricItem;
         this.setState({ rubric: rubric });
@@ -229,7 +228,9 @@ class QuestionEditView extends Component {
         let formValid = true;
 
         function setValid(elementId, isValid) {
-            document.getElementById(elementId).classList.toggle("is-invalid", !isValid);
+            document
+                .getElementById(elementId)
+                .classList.toggle("is-invalid", !isValid);
             if (!isValid) formValid = false;
         }
 
@@ -253,8 +254,14 @@ class QuestionEditView extends Component {
                 setValid("question-edit-rubric", false);
             } else {
                 question.rubric.forEach((item, index) => {
-                    setValid("question-edit-rubric-points-" + index, item.points && item.points !== 0);
-                    setValid("question-edit-rubric-" + index, item.text.length > 0);
+                    setValid(
+                        "question-edit-rubric-points-" + index,
+                        item.points && item.points !== 0
+                    );
+                    setValid(
+                        "question-edit-rubric-" + index,
+                        item.text.length > 0
+                    );
                 });
             }
         }
@@ -263,7 +270,6 @@ class QuestionEditView extends Component {
     };
 
     handleSave = () => {
-
         let question = {
             id: this.state.id,
             hasCodeField: this.state.hasCodeField,
@@ -277,8 +283,8 @@ class QuestionEditView extends Component {
         }
         switch (this.state.questionType) {
             case "Comment":
-                question["answers"] = (new Array(this.state.highlights.length)).fill("");
-                // fall through
+                question["answers"] = this.state.highlights.map(() => "");
+            // fall through
             case "Highlight":
                 question["rubric"] = this.state.rubric;
                 break;
@@ -308,15 +314,23 @@ class QuestionEditView extends Component {
             <React.Fragment>
                 <div className="row">
                     <div className="col">
-                        <h1>{this.props.newQuestion ? "New Question" : "Edit Question"}</h1>
+                        <h1>
+                            {this.props.newQuestion
+                                ? "New Question"
+                                : "Edit Question"}
+                        </h1>
                     </div>
                     <div className="col">
                         <h1>Preview</h1>
                     </div>
                 </div>
 
-                <div className="btn-group" role="group" style={{marginLeft: "10px"}}>
-                    {questionTypes.map(questionType => {
+                <div
+                    className="btn-group"
+                    role="group"
+                    style={{ marginLeft: "10px" }}
+                >
+                    {questionTypes.map((questionType) => {
                         const idFor = "type-" + questionType.toLowerCase();
                         return (
                             <React.Fragment key={questionType}>
@@ -325,10 +339,19 @@ class QuestionEditView extends Component {
                                     className="btn-check"
                                     name="question-type"
                                     id={idFor}
-                                    checked={questionType === this.state.questionType}
-                                    onChange={() => this.handleQuestionType(questionType)}
+                                    checked={
+                                        questionType === this.state.questionType
+                                    }
+                                    onChange={() =>
+                                        this.handleQuestionType(questionType)
+                                    }
                                 />
-                                <label className="btn btn-outline-primary" htmlFor={idFor}>{questionType}</label>
+                                <label
+                                    className="btn btn-outline-primary"
+                                    htmlFor={idFor}
+                                >
+                                    {questionType}
+                                </label>
                             </React.Fragment>
                         );
                     })}
@@ -340,9 +363,12 @@ class QuestionEditView extends Component {
                     onTextChange={this.handleTextChange}
                 />
 
-                {this.state.canToggleCodeField &&
+                {this.state.canToggleCodeField && (
                     // todo: can change this into a toggle button instead of a checkbox
-                    <div className="form-check form-check-inline" style={{marginLeft: "10px"}}>
+                    <div
+                        className="form-check form-check-inline"
+                        style={{ marginLeft: "10px" }}
+                    >
                         <input
                             type="checkbox"
                             className="form-check-input"
@@ -350,12 +376,15 @@ class QuestionEditView extends Component {
                             defaultChecked={this.state.hasCodeField}
                             onChange={this.handleToggleCodeField}
                         />
-                        <label className="form-check-label" htmlFor="hasCodeField">
+                        <label
+                            className="form-check-label"
+                            htmlFor="hasCodeField"
+                        >
                             Include code field
                         </label>
                     </div>
-                }
-                {this.state.hasCodeField &&
+                )}
+                {this.state.hasCodeField && (
                     <CodeField
                         editMode={true}
                         question={this.state}
@@ -364,9 +393,9 @@ class QuestionEditView extends Component {
                         onDeleteHighlight={this.handleDeleteHighlight}
                         onClearHighlights={this.handleClearHighlights}
                     />
-                }
+                )}
 
-                {this.state.hasAnswerField &&
+                {this.state.hasAnswerField && (
                     <AnswerField
                         editMode={true}
                         question={this.state}
@@ -376,30 +405,33 @@ class QuestionEditView extends Component {
                         onAddAnswerChoice={this.handleAddAnswerChoice}
                         onChangeAnswerChoice={this.handleChangeAnswerChoice}
                         onDeleteAnswerChoice={this.handleDeleteAnswerChoice}
-                        onSetCorrectAnswerChoice={this.handleSetCorrectAnswerChoice}
+                        onSetCorrectAnswerChoice={
+                            this.handleSetCorrectAnswerChoice
+                        }
                     />
-                }
+                )}
 
-                {this.state.questionType !== "Multiple Choice" &&
+                {this.state.questionType !== "Multiple Choice" && (
                     <div className="row">
                         <div className="col">
                             <RubricField
                                 editMode={true}
                                 question={this.state}
                                 onAddRubricItem={this.handleAddRubricItem}
-                                onChangeRubricItemPoints={this.handleChangeRubricItemPoints}
-                                onChangeRubricItemText={this.handleChangeRubricItemText}
+                                onChangeRubricItemPoints={
+                                    this.handleChangeRubricItemPoints
+                                }
+                                onChangeRubricItemText={
+                                    this.handleChangeRubricItemText
+                                }
                                 onDeleteRubricItem={this.handleDeleteRubricItem}
                             />
                         </div>
                         <div className="col">
-                            <RubricField
-                                preview={true}
-                                question={this.state}
-                            />
+                            <RubricField preview={true} question={this.state} />
                         </div>
                     </div>
-                }
+                )}
 
                 <div>
                     <button

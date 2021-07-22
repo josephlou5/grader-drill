@@ -1,11 +1,10 @@
-import React, { Component } from 'react';
-import CodeField from './codeField';
-import QuestionTextField from './questionTextField';
-import AnswerField from './answerField';
-import { textareaSizing } from '../shared';
+import React, { Component } from "react";
+import CodeField from "./codeField";
+import QuestionTextField from "./questionTextField";
+import AnswerField from "./answerField";
+import { textareaSizing } from "../shared";
 
 class Question extends Component {
-
     componentDidMount() {
         textareaSizing();
     }
@@ -13,9 +12,9 @@ class Question extends Component {
     componentDidUpdate() {
         textareaSizing();
     }
-    
+
     renderComponents = () => {
-        const {question, noChange} = this.props;
+        const { question, noChange } = this.props;
         if (!question) {
             return "Undefined question";
         }
@@ -24,17 +23,17 @@ class Question extends Component {
         }
         return (
             <React.Fragment>
-                <h3>{ question.questionType }</h3>
+                <h3>{question.questionType}</h3>
                 <QuestionTextField question={question} />
-                {question.hasCodeField &&
+                {question.hasCodeField && (
                     <CodeField
                         question={question}
                         noChange={noChange}
                         onAddHighlight={this.props.onAddHighlight}
                         onClearHighlights={this.props.onClearHighlights}
                     />
-                }
-                {question.hasAnswerField &&
+                )}
+                {question.hasAnswerField && (
                     <AnswerField
                         question={question}
                         noChange={noChange}
@@ -43,10 +42,10 @@ class Question extends Component {
                         onAnswerChange={this.props.onAnswerChange}
                         onMCSelect={this.props.onMCSelect}
                     />
-                }
+                )}
             </React.Fragment>
         );
-    }
+    };
 
     render() {
         return (
