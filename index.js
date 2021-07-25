@@ -4,10 +4,7 @@ const path = require("path");
 const app = express();
 app.use(express.json());
 
-app.use(
-    process.env.PUBLIC_URL,
-    express.static(path.join(__dirname, "client/build"))
-);
+app.use(express.static(path.join(__dirname, "client/build")));
 
 const data = {
     questionIdCounter: 3,
