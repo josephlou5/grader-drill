@@ -4,7 +4,7 @@ const path = require("path");
 const app = express();
 app.use(express.json());
 
-// app.use(express.static(path.resolve("..", "client", "build")));
+app.use(express.static(path.resolve("..", "client", "build")));
 
 const data = {
     questionIdCounter: 3,
@@ -212,18 +212,10 @@ app.post("/api/updateAnswered", (req, res) => {
     res.end();
 });
 
-if (process.env.NODE_ENV === "production") {
-    app.use(express.static("client/build"));
-
-    app.get("*", (req, res) => {
-        res.sendFile(path.resolve("..", "client", "build", "index.html"));
-    });
-}
-
 // all other get requests
-// app.get("*", (req, res) => {
-//     res.sendFile(path.resolve("..", "client", "build", "index.html"));
-// });
+app.get("*", (req, res) => {
+    res.sendFile(path.resolve("..", "client", "build", "index.html"));
+});
 
 // Listen
 const PORT = process.env.PORT || 3001;
