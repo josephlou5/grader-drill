@@ -6,7 +6,6 @@
     "engines": {
         "node": "14.17.1"
     },
-    "homepage": "/client/build",
     "scripts": {
         "start": "nodemon server/index.js",
         "build": "cd client && npm install && npm run build"
