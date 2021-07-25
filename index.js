@@ -163,12 +163,12 @@ app.get("/api/getQuestion/:questionId", (req, res) => {
 
 // TODO: update with database
 app.post("/api/updateQuestion", (req, res) => {
-    const question = req.body;
+    let question = req.body;
     if (question.id == null) {
         question["id"] = data.questionIdCounter++;
     }
     data.questions[question.id] = question;
-    res.end();
+    res.json(question);
 });
 
 app.get("/api/deleteQuestion/:questionId", (req, res) => {

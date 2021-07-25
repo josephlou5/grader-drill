@@ -317,7 +317,11 @@ export default function QuestionEditView(props) {
 
         if (!validate(newQuestion)) return;
 
-        updateQuestion(newQuestion);
+        updateQuestion(newQuestion, (q) => {
+            if (!question.id) {
+                setQuestion({ id: q.id });
+            }
+        });
     }
 
     function handleDone() {
