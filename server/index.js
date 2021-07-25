@@ -6,7 +6,7 @@ app.use(express.json());
 
 app.use(
     process.env.PUBLIC_URL,
-    express.static(path.resolve("..", "client", "build"))
+    express.static(path.join(__dirname, "../client/build"))
 );
 
 const data = {
@@ -217,7 +217,7 @@ app.post("/api/updateAnswered", (req, res) => {
 
 // all other get requests
 app.get("*", (req, res) => {
-    res.sendFile(path.resolve("..", "client", "build", "index.html"));
+    res.sendFile(path.join(__dirname, "../client/build/index.html"));
 });
 
 // Listen
