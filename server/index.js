@@ -214,6 +214,7 @@ app.post("/api/updateAnswered", (req, res) => {
 
 // all other get requests
 app.get("*", (req, res) => {
+    console.log("Other get request");
     res.sendFile(path.resolve("..", "client", "build", "index.html"));
 });
 
