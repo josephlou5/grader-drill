@@ -4,7 +4,7 @@ const path = require("path");
 const app = express();
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname, "/client/build")));
+app.use(express.static(path.join(__dirname, "../client/build")));
 
 const data = {
     questionIdCounter: 3,
@@ -214,7 +214,7 @@ app.post("/api/updateAnswered", (req, res) => {
 
 // all other get requests
 app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "/client/build", "index.html"));
+    res.sendFile(path.join(__dirname, "../client/build", "index.html"));
 });
 
 // Listen
