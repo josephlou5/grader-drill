@@ -324,11 +324,6 @@ export default function QuestionEditView(props) {
         });
     }
 
-    function handleDone() {
-        handleSave();
-        history.push("/questions");
-    }
-
     return (
         <React.Fragment>
             <ResizeTextareas />
@@ -462,13 +457,11 @@ export default function QuestionEditView(props) {
                 >
                     Save
                 </button>
-                <button
-                    type="button"
-                    className="btn btn-light m-2"
-                    onClick={handleDone}
-                >
-                    Done
-                </button>
+                <Link to="/questions">
+                    <button type="button" className="btn btn-light m-2">
+                        Done
+                    </button>
+                </Link>
             </div>
         </React.Fragment>
     );
