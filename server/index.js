@@ -4,7 +4,10 @@ const path = require("path");
 const app = express();
 app.use(express.json());
 
-app.use(express.static(path.resolve("..", "client", "build")));
+app.use(
+    process.env.PUBLIC_URL,
+    express.static(path.resolve("..", "client", "build"))
+);
 
 const data = {
     questionIdCounter: 3,
