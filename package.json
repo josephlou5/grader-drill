@@ -3,14 +3,14 @@
     "version": "1.0.0",
     "description": "",
     "author": "Joseph Lou",
-    "main": "index.js",
+    "main": "server.js",
     "engines": {
         "node": "14.17.1"
     },
     "scripts": {
-        "start": "node index.js",
+        "start": "node server.js",
         "build": "cd client && npm install && npm run build",
-        "dev": "nodemon index.js"
+        "dev": "nodemon server.js"
     },
     "keywords": [],
     "license": "ISC",
