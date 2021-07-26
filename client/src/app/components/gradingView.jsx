@@ -171,16 +171,21 @@ export default function GradingView() {
     return (
         <React.Fragment>
             <h1>Grading</h1>
-            <div className="row">
-                <div>Trainee: {question.trainee}</div>
-                <div>Assessor: {assessor}</div>
-                <div className="col-6">
-                    <Question question={question} noChange={true} />
+            <div className="container-fluid">
+                <div className="row">
+                    <div>Trainee: {question.trainee}</div>
+                    <div>Assessor: {assessor}</div>
+                    <div className="col-6">
+                        <Question question={question} noChange={true} />
+                    </div>
+                    <div className="col-6">
+                        {"Score: " + score}
+                        {rubricField}
+                    </div>
                 </div>
-                <div className="col-6">
-                    {"Score: " + score}
-                    {rubricField}
-                    <div className="position-absolute bottom-0 d-flex justify-content-center">
+                <div className="row">
+                    <div className="col-6"></div>
+                    <div className="col-6">
                         {buttons.map(({ variant, onClick, text }, index) => (
                             <button
                                 key={index}

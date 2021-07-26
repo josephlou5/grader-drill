@@ -42,7 +42,7 @@ export default function Question(props) {
         <React.Fragment>
             <ResizeTextareas />
             <h1>Question</h1>
-            <h3>{question.questionType}</h3>
+            <p>Question Type: {question.questionType}</p>
             <QuestionTextField question={question} />
             {question.hasCodeField && <CodeField {...codeFieldProps} />}
             {question.hasAnswerField && <AnswerField {...answerFieldProps} />}
