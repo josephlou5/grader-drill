@@ -9,7 +9,7 @@ function postRequest(route, data) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-    });
+    }).then((res) => res.json());
 }
 
 export function getAllQuestions(callback = null) {
@@ -29,7 +29,7 @@ export function getQuestion(questionId, callback = null) {
 export function updateQuestion(question, callback = null) {
     const action = question.id ? "Edit" : "Add";
     postRequest("/api/updateQuestion", question).then((res) => {
-        console.log(`${action}ed question ${question.id}`);
+        console.log(`${action}ed question ${res.id}`);
         if (callback) callback(res);
     });
 }

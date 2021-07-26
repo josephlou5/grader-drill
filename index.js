@@ -135,6 +135,7 @@ const data = {
         },
     ],
 };
+const RESET = JSON.parse(JSON.stringify(data));
 
 // TODO: update with database
 function getQuestions() {
@@ -160,11 +161,9 @@ app.get("/api/getQuestion/:questionId", (req, res) => {
 
 // TODO: update with database
 app.post("/api/updateQuestion", (req, res) => {
-    let question = req.body;
-    if (question.id == null) {
-        question["id"] = data.questionIdCounter++;
-    }
-    data.questions[question.id] = question;
+    const questionId = req.body.id || data.questionIdCounter++;
+    const question = { ...req.body, id: questionId };
+    data.questions[questionId] = question;
     res.json(question);
 });
 
@@ -210,6 +209,16 @@ app.post("/api/updateAnswered", (req, res) => {
     }
     data.answered = answered;
     res.end();
+});
+
+// for debugging
+app.get("/api/data", (req, res) => {
+    res.json(data);
+});
+
+app.get("/api/reset", (req, res) => {
+    Object.assign(data, RESET);
+    res.json("Data has been reset");
 });
 
 // all other get requests
