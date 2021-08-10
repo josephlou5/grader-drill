@@ -5,6 +5,10 @@ import MCAnswerField from "./mcAnswerField";
 export default function AnswerField(props) {
     const { questionType } = props.question;
 
+    if (!["Comment", "Multiple Choice"].includes(questionType)) {
+        return null;
+    }
+
     function fieldByQuestionType(previewMode = false) {
         switch (questionType) {
             case "Comment":
@@ -14,12 +18,10 @@ export default function AnswerField(props) {
                         previewMode={previewMode}
                     />
                 );
-            case "Highlight":
-                return <p>No question field here</p>;
             case "Multiple Choice":
                 return <MCAnswerField {...props} previewMode={previewMode} />;
             default:
-                return <p>Unknown question type</p>;
+                return null;
         }
     }
 

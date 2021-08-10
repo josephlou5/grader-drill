@@ -1,5 +1,5 @@
 import React from "react";
-import { preventEnter } from "../shared.js";
+import { TextareaLine, resetValidId } from "../shared";
 
 export default function HighlightAnswerField(props) {
     const { question, previewMode, editMode, noChange } = props;
@@ -17,22 +17,14 @@ export default function HighlightAnswerField(props) {
         };
 
         const canClear =
-            !props.previewMode &&
-            (props.editMode || highlights.some((h) => h["byUser"]));
+            !previewMode && (editMode || highlights.some((h) => h.byUser));
         if (canClear) {
-            buttonProps["onClick"] = () => props.onClearHighlights(question);
+            buttonProps.onClick = () => props.onClearHighlights(question);
         } else {
-            buttonProps["disabled"] = true;
+            buttonProps.disabled = true;
         }
 
         clearButton = <button {...buttonProps}>Clear Highlights</button>;
-    }
-
-    let answers;
-    if (editMode) {
-        answers = highlights.map(() => "");
-    } else {
-        answers = question.answers;
     }
 
     const classes = "form-control textarea";
@@ -42,27 +34,35 @@ export default function HighlightAnswerField(props) {
     }
 
     const field = highlights.map((highlight, index) => {
-        let textProps = {
+        const textProps = {
             className: textClasses,
-            value: answers[index],
+            placeholder: "Comment",
+            value: highlight.answer || "",
         };
+        let invalid = null;
         if (previewMode || noChange) {
-            textProps["disabled"] = true;
+            textProps.disabled = true;
         } else {
-            Object.assign(textProps, {
-                onKeyDown: preventEnter,
-                onChange: (event) =>
-                    props.onAnswerChange(question, index, event.target.value),
-            });
+            textProps.onChange = (event) => {
+                resetValidId(`highlight-${index}-comment`);
+                props.onAnswerChange(index, event.target.value);
+            };
+            invalid = (
+                <div>
+                    <input type="hidden" id={`highlight-${index}-comment`} />
+                    <div className="invalid-feedback">
+                        Must write a comment.
+                    </div>
+                </div>
+            );
         }
 
         let input;
         if (editMode && !previewMode) {
             // editing the existing comment
             input = (
-                <textarea
+                <TextareaLine
                     className={classes}
-                    onKeyDown={preventEnter}
                     onChange={(event) =>
                         props.onChangeHighlightText(index, event.target.value)
                     }
@@ -97,7 +97,7 @@ export default function HighlightAnswerField(props) {
                         />
                     </div>
                     <div className="row">
-                        <textarea
+                        <TextareaLine
                             {...textProps}
                             style={{ borderRadius: "0 0 0.25rem 0" }}
                         />
@@ -106,7 +106,7 @@ export default function HighlightAnswerField(props) {
             );
         } else {
             // no existing comment
-            input = <textarea {...textProps} />;
+            input = <TextareaLine {...textProps} />;
         }
 
         let deleteButton = null;
@@ -118,8 +118,7 @@ export default function HighlightAnswerField(props) {
             if (noChange) {
                 buttonProps["disabled"] = true;
             } else {
-                buttonProps["onClick"] = () =>
-                    props.onDeleteHighlight(question, index);
+                buttonProps["onClick"] = () => props.onDeleteHighlight(index);
             }
             deleteButton = (
                 <div className="input-group-text bg-danger">
@@ -137,11 +136,14 @@ export default function HighlightAnswerField(props) {
         const marginTop = noChange && index === 0 ? "" : " mt-2";
 
         return (
-            <div key={index} className={"input-group" + marginTop}>
-                <span className={labelClasses.join(" ")}>{index + 1}</span>
-                {input}
-                {deleteButton}
-            </div>
+            <React.Fragment key={index}>
+                <div className={"input-group" + marginTop}>
+                    <span className={labelClasses.join(" ")}>{index + 1}</span>
+                    {input}
+                    {deleteButton}
+                </div>
+                {invalid}
+            </React.Fragment>
         );
     });
 

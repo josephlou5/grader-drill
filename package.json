@@ -10,12 +10,17 @@
     "scripts": {
         "start": "node server.js",
         "build": "cd client && npm install && npm run build",
-        "dev": "nodemon server.js"
+        "dev": "nodemon server.js",
+        "frontend": "cd client && npm start"
     },
     "keywords": [],
     "license": "ISC",
     "dependencies": {
-        "express": "^4.17.1"
+        "express": "^4.17.1",
+        "pg": "^8.7.1",
+        "pg-hstore": "^2.3.4",
+        "sequelize": "^6.6.5",
+        "sequelize-cli": "^6.2.0"
     },
     "devDependencies": {
         "nodemon": "^2.0.12"

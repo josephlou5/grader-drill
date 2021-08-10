@@ -1,12 +1,12 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
-import { preventEnter, resetValidId } from "../shared";
+import { TextareaLine, resetValid, resetValidId } from "../shared";
 
 export default function MCAnswerField(props) {
-    const { question } = props;
+    const { question, previewMode, editMode, noChange } = props;
     const { correct, answer } = question;
 
-    if (props.previewMode) {
+    if (previewMode) {
         return question.answerChoices.map((text, index) => (
             <div key={index} className="form-check">
                 <input
@@ -17,7 +17,7 @@ export default function MCAnswerField(props) {
                 <ReactMarkdown>{text}</ReactMarkdown>
             </div>
         ));
-    } else if (props.editMode) {
+    } else if (editMode) {
         return (
             <React.Fragment>
                 {question.answerChoices.map((text, index) => (
@@ -37,18 +37,18 @@ export default function MCAnswerField(props) {
                                 }}
                             />
                         </div>
-                        <textarea
+                        <TextareaLine
                             className="form-control textarea"
                             id={"question-edit-mc-" + index}
                             value={text}
                             placeholder="Answer Choice"
-                            onKeyDown={preventEnter}
-                            onChange={(event) =>
+                            onChange={(event) => {
+                                resetValid(event.target);
                                 props.onChangeAnswerChoice(
                                     index,
                                     event.target.value
-                                )
-                            }
+                                );
+                            }}
                         />
                         <div className="input-group-text bg-danger">
                             <button
@@ -86,47 +86,77 @@ export default function MCAnswerField(props) {
                 </button>
             </React.Fragment>
         );
-    } else if (props.noChange) {
+    } else if (noChange) {
         // grading view, so show correct and incorrect
-        // todo: use font awesome for icons?
+        // todo: use font awesome for correct/incorrect icons?
         // https://fontawesome.com/v5.15/how-to-use/on-the-web/using-with/react
-        // todo: the text changes color which is nice, but need a better indicator of the different choices
         return question.answerChoices.map((text, index) => {
-            let components;
+            const classes = ["form-check-input", "pe-none"];
             if (index === correct) {
-                components = {
-                    p: ({ node, ...props }) => (
-                        <p style={{ color: "green" }} {...props} />
-                    ),
-                };
+                classes.push("bg-success");
             } else if (index === answer) {
-                components = {
-                    p: ({ node, ...props }) => (
-                        <p style={{ color: "red" }} {...props} />
-                    ),
-                };
+                classes.push("bg-danger");
             }
+            // // can use this to change the color of the markdown text
+            // let components = undefined;
+            // if (index === correct) {
+            //     components = {
+            //         p: ({ node, ...props }) => (
+            //             <p style={{ color: "green" }} {...props} />
+            //         ),
+            //     };
+            // } else if (index === answer) {
+            //     components = {
+            //         p: ({ node, ...props }) => (
+            //             <p style={{ color: "red" }} {...props} />
+            //         ),
+            //     };
+            // }
             return (
-                <ReactMarkdown key={index} components={components}>
-                    {text}
-                </ReactMarkdown>
+                <div key={index} className="form-check">
+                    <input
+                        type="radio"
+                        className={classes.join(" ")}
+                        tabIndex={-1}
+                        // defaultChecked={index === answer}
+                        onClick={(event) => event.preventDefault()}
+                        // disabled={true}
+                    />
+                    <ReactMarkdown>{text}</ReactMarkdown>
+                </div>
             );
         });
     } else {
-        return question.answerChoices.map((text, index) => (
-            <div key={index} className="form-check">
-                <input
-                    type="radio"
-                    className="form-check-input"
-                    name="answer"
-                    id={"choice" + index}
-                    checked={index === answer}
-                    onChange={() => props.onMCSelect(question, index)}
-                />
-                <label className="form-check-label" htmlFor={"choice" + index}>
-                    <ReactMarkdown>{text}</ReactMarkdown>
-                </label>
-            </div>
-        ));
+        return (
+            <React.Fragment>
+                {question.answerChoices.map((text, index) => (
+                    <div key={index} className="form-check">
+                        <input
+                            type="radio"
+                            className="form-check-input"
+                            name="answer"
+                            id={"choice" + index}
+                            checked={index === answer}
+                            onChange={() => {
+                                resetValidId("question-mc-choice");
+                                props.onMCSelect(index);
+                            }}
+                        />
+                        <label
+                            className="form-check-label"
+                            htmlFor={"choice" + index}
+                        >
+                            <ReactMarkdown>{text}</ReactMarkdown>
+                        </label>
+                    </div>
+                ))}
+                <div>
+                    <input type="hidden" id="question-mc-choice" />
+                    <div className="invalid-feedback">
+                        Must select an answer choice.
+                    </div>
+                </div>
+            </React.Fragment>
+        );
     }
 }

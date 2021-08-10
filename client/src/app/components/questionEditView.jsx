@@ -1,54 +1,88 @@
 import React, { useState, useEffect } from "react";
 import { Link, useHistory } from "react-router-dom";
-import { ResizeTextareas } from "../shared";
-import { getQuestion, updateQuestion } from "../api";
+import { ResizeTextareas, TextareaLine } from "../shared";
+import {
+    getQuestion,
+    addQuestion,
+    updateQuestion,
+    updateQuestionVersion,
+} from "../api";
 import QuestionTextField from "./questionTextField";
 import CodeField from "./codeField";
 import AnswerField from "./answerField";
 import RubricField from "./rubricField";
 
-export default function QuestionEditView(props) {
-    const [needsQuestion, setNeedsQuestion] = useState(!props.newQuestion);
-    const [question, setQuestionState] = useState({
-        hasCodeField: true,
-        hasAnswerField: true,
-        questionType: "Comment",
-        questionText: "",
-        code: "",
-        highlights: [],
-        answerChoices: [],
-        correct: null,
-        rubric: [],
-    });
+export default function QuestionEditView({ newQuestion, questionId }) {
+    const [invalid, setInvalid] = useState(false);
+    const [question, setQuestionState] = useState(null);
     const [canToggleCodeField, setToggleCodeField] = useState(false);
-
-    const history = useHistory();
 
     function setQuestion(updates) {
         setQuestionState({ ...question, ...updates });
     }
 
+    const history = useHistory();
+
     useEffect(() => {
-        if (!needsQuestion) return;
-        getQuestion(props.questionId, (q) => {
-            setNeedsQuestion(false);
-            if (!q) {
-                setQuestionState(null);
+        if (invalid || question) return;
+        getQuestion(questionId, (q) => {
+            const initial = {
+                id: null,
+                version: null,
+                hasCodeField: true,
+                hasAnswerField: true,
+                questionType: "Comment",
+                questionText: "",
+                code: "",
+                highlights: [],
+                answerChoices: [],
+                correct: null,
+                rubric: [],
+                tags: "",
+            };
+
+            if (newQuestion) {
+                setQuestionState(initial);
                 return;
             }
-            setQuestion(q);
+            if (!q) {
+                setInvalid(true);
+                return;
+            }
+
+            for (const [key, val] in Object.entries(q)) {
+                // want to create new version, so keep version as null
+                if (key === "version") continue;
+                if (val != null) {
+                    initial[key] = val;
+                }
+            }
+            setQuestionState(initial);
             if (q.questionType === "Multiple Choice") {
                 setToggleCodeField(true);
             }
         });
     });
 
-    if (needsQuestion) {
-        return <h1>Loading question...</h1>;
-    }
+    const title = <h1>{newQuestion ? "New Question" : "Edit Question"}</h1>;
 
     if (!question) {
-        return <h1>Invalid question</h1>;
+        return (
+            <React.Fragment>
+                {title}
+                <p>Getting question...</p>
+            </React.Fragment>
+        );
+    }
+
+    if (invalid) {
+        // `title` can only be "Edit Question"
+        return (
+            <React.Fragment>
+                {title}
+                <p>Invalid question</p>
+            </React.Fragment>
+        );
     }
 
     // event handlers
@@ -147,8 +181,8 @@ export default function QuestionEditView(props) {
         setQuestion({ code, highlights });
     }
 
-    function handleAddHighlight(question, highlight) {
-        let highlights = [...question.highlights];
+    function handleAddHighlight(highlight) {
+        const highlights = [...question.highlights];
         highlights.push(highlight);
         setQuestion({ highlights });
     }
@@ -157,32 +191,32 @@ export default function QuestionEditView(props) {
         setQuestion({ highlights: [] });
     }
 
-    function handleChangeHighlightText(index, text) {
-        let highlights = [...question.highlights];
-        highlights[index] = { ...highlights[index], text };
-        setQuestion({ highlights });
-    }
-
-    function handleDeleteHighlight(question, highlightIndex) {
-        let highlights = [...question.highlights];
+    function handleDeleteHighlight(highlightIndex) {
+        const highlights = [...question.highlights];
         highlights.splice(highlightIndex, 1);
         setQuestion({ highlights });
     }
 
+    function handleChangeHighlightText(index, text) {
+        const highlights = [...question.highlights];
+        highlights[index] = { ...highlights[index], text };
+        setQuestion({ highlights });
+    }
+
     function handleAddAnswerChoice() {
-        let answerChoices = [...question.answerChoices];
+        const answerChoices = [...question.answerChoices];
         answerChoices.push("");
         setQuestion({ answerChoices });
     }
 
     function handleChangeAnswerChoice(index, answerChoice) {
-        let answerChoices = [...question.answerChoices];
+        const answerChoices = [...question.answerChoices];
         answerChoices[index] = answerChoice;
         setQuestion({ answerChoices });
     }
 
     function handleDeleteAnswerChoice(index) {
-        let answerChoices = [...question.answerChoices];
+        const answerChoices = [...question.answerChoices];
         answerChoices.splice(index, 1);
         let correct = question.correct;
         if (index === correct) {
@@ -225,6 +259,10 @@ export default function QuestionEditView(props) {
         let rubric = [...question.rubric];
         rubric.splice(index, 1);
         setQuestion({ rubric });
+    }
+
+    function handleChangeTags(text) {
+        setQuestion({ tags: text });
     }
 
     function handleCancel() {
@@ -277,63 +315,106 @@ export default function QuestionEditView(props) {
     }
 
     function handleSave() {
-        const {
-            id,
-            hasCodeField,
-            hasAnswerField,
-            questionType,
-            questionText,
-            highlights,
-        } = question;
-        let newQuestion = {
-            id,
-            hasCodeField,
-            hasAnswerField,
-            questionType,
-            questionText,
-            highlights,
-        };
-        if (hasCodeField) {
-            newQuestion["code"] = question.code;
+        if (!validate(question)) return;
+        if (question.id == null) {
+            // add the new question
+            addQuestion(question, (q) =>
+                setQuestion({ id: q.id, version: q.version })
+            );
+        } else if (question.version == null) {
+            // make a new version of the current question
+            updateQuestion(question, (q) =>
+                setQuestion({ version: q.version })
+            );
+        } else {
+            // keep updating the current version
+            updateQuestionVersion(question);
         }
-        switch (questionType) {
-            case "Comment":
-            // TODO: this used to cause some error, but it's actually unnecessary,
-            // so i need to find the error
-            // newQuestion["answers"] = highlights.map(() => "");
-            // fall through
-            case "Highlight":
-                newQuestion["rubric"] = question.rubric;
-                break;
-            case "Multiple Choice":
-                Object.assign(newQuestion, {
-                    answerChoices: question.answerChoices,
-                    correct: question.correct,
-                });
-                break;
-            default:
-                return;
-        }
-
-        if (!validate(newQuestion)) return;
-
-        updateQuestion(newQuestion, (q) => {
-            if (!question.id) {
-                setQuestion({ id: q.id });
-            }
-        });
     }
+
+    const questionTypeChoice = ["Comment", "Highlight", "Multiple Choice"].map(
+        (questionType) => {
+            const idFor = "type-" + questionType.toLowerCase();
+            return (
+                <React.Fragment key={questionType}>
+                    <input
+                        type="radio"
+                        className="btn-check"
+                        name="question-type"
+                        id={idFor}
+                        checked={questionType === question.questionType}
+                        onChange={() => handleQuestionType(questionType)}
+                    />
+                    <label className="btn btn-outline-primary" htmlFor={idFor}>
+                        {questionType}
+                    </label>
+                </React.Fragment>
+            );
+        }
+    );
+
+    const codeFieldProps = {
+        question: question,
+        editMode: true,
+        onCodeChange: handleCodeChange,
+        onAddHighlight: handleAddHighlight,
+        onDeleteHighlight: handleDeleteHighlight,
+        onClearHighlights: handleClearHighlights,
+    };
+    const answerFieldProps = {
+        question: question,
+        editMode: true,
+        onClearHighlights: handleClearHighlights,
+        onChangeHighlightText: handleChangeHighlightText,
+        onDeleteHighlight: handleDeleteHighlight,
+        onAddAnswerChoice: handleAddAnswerChoice,
+        onChangeAnswerChoice: handleChangeAnswerChoice,
+        onDeleteAnswerChoice: handleDeleteAnswerChoice,
+        onSetCorrectAnswerChoice: handleSetCorrectAnswerChoice,
+    };
+
+    let rubricField = null;
+    if (question.questionType !== "Multiple Choice") {
+        const rubricFieldProps = {
+            rubric: question.rubric,
+            editMode: true,
+            onAddRubricItem: handleAddRubricItem,
+            onChangeRubricItemPoints: handleChangeRubricItemPoints,
+            onChangeRubricItemText: handleChangeRubricItemText,
+            onDeleteRubricItem: handleDeleteRubricItem,
+        };
+        rubricField = (
+            <div className="row">
+                <div className="col">
+                    <RubricField {...rubricFieldProps} />
+                </div>
+                <div className="col">
+                    <RubricField rubric={question.rubric} previewMode={true} />
+                </div>
+            </div>
+        );
+    }
+
+    const tags = (
+        <div className="row">
+            <div className="col-6">
+                <h1>Tags</h1>
+                <TextareaLine
+                    className="form-control textarea"
+                    placeholder='E.g., "difficulty:hard"'
+                    value={question.tags}
+                    onChange={(event) => handleChangeTags(event.target.value)}
+                />
+            </div>
+        </div>
+    );
 
     return (
         <React.Fragment>
             <ResizeTextareas />
 
             <div className="row">
-                <div className="col">
-                    <h1>
-                        {props.newQuestion ? "New Question" : "Edit Question"}
-                    </h1>
-                </div>
+                <div className="col">{title}</div>
                 <div className="col">
                     <h1>Preview</h1>
                 </div>
@@ -344,41 +425,14 @@ export default function QuestionEditView(props) {
                 role="group"
                 style={{ marginLeft: "10px" }}
             >
-                {["Comment", "Highlight", "Multiple Choice"].map(
-                    (questionType) => {
-                        const idFor = "type-" + questionType.toLowerCase();
-                        return (
-                            <React.Fragment key={questionType}>
-                                <input
-                                    type="radio"
-                                    className="btn-check"
-                                    name="question-type"
-                                    id={idFor}
-                                    checked={
-                                        questionType === question.questionType
-                                    }
-                                    onChange={() =>
-                                        handleQuestionType(questionType)
-                                    }
-                                />
-                                <label
-                                    className="btn btn-outline-primary"
-                                    htmlFor={idFor}
-                                >
-                                    {questionType}
-                                </label>
-                            </React.Fragment>
-                        );
-                    }
-                )}
+                {questionTypeChoice}
             </div>
 
             <QuestionTextField
-                editMode={true}
                 question={question}
+                editMode={true}
                 onTextChange={handleTextChange}
             />
-
             {canToggleCodeField && (
                 // todo: can change this into a toggle button instead of a checkbox
                 <div
@@ -388,59 +442,22 @@ export default function QuestionEditView(props) {
                     <input
                         type="checkbox"
                         className="form-check-input"
-                        id="hasCodeField"
+                        id="hasCodeFieldCheck"
                         defaultChecked={question.hasCodeField}
                         onChange={handleToggleCodeField}
                     />
-                    <label className="form-check-label" htmlFor="hasCodeField">
+                    <label
+                        className="form-check-label"
+                        htmlFor="hasCodeFieldCheck"
+                    >
                         Include code field
                     </label>
                 </div>
             )}
-            {question.hasCodeField && (
-                <CodeField
-                    editMode={true}
-                    question={question}
-                    onCodeChange={handleCodeChange}
-                    onAddHighlight={handleAddHighlight}
-                    onDeleteHighlight={handleDeleteHighlight}
-                    onClearHighlights={handleClearHighlights}
-                />
-            )}
-
-            {question.hasAnswerField && (
-                <AnswerField
-                    editMode={true}
-                    question={question}
-                    onClearHighlights={handleClearHighlights}
-                    onChangeHighlightText={handleChangeHighlightText}
-                    onDeleteHighlight={handleDeleteHighlight}
-                    onAddAnswerChoice={handleAddAnswerChoice}
-                    onChangeAnswerChoice={handleChangeAnswerChoice}
-                    onDeleteAnswerChoice={handleDeleteAnswerChoice}
-                    onSetCorrectAnswerChoice={handleSetCorrectAnswerChoice}
-                />
-            )}
-
-            {question.questionType !== "Multiple Choice" && (
-                <div className="row">
-                    <div className="col">
-                        <RubricField
-                            editMode={true}
-                            question={question}
-                            onAddRubricItem={handleAddRubricItem}
-                            onChangeRubricItemPoints={
-                                handleChangeRubricItemPoints
-                            }
-                            onChangeRubricItemText={handleChangeRubricItemText}
-                            onDeleteRubricItem={handleDeleteRubricItem}
-                        />
-                    </div>
-                    <div className="col">
-                        <RubricField previewMode={true} question={question} />
-                    </div>
-                </div>
-            )}
+            {question.hasCodeField && <CodeField {...codeFieldProps} />}
+            {question.hasAnswerField && <AnswerField {...answerFieldProps} />}
+            {rubricField}
+            {tags}
 
             <div>
                 <button
