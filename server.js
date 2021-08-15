@@ -214,11 +214,18 @@ if (process.env.NODE_ENV !== "production") {
     });
 }
 
-// get all users
+// get all users or get user by email
 app.get("/api/users", (req, res) => {
-    models.User.findAll({ order: [["id", "ASC"]] }).then((users) =>
-        res.json(users)
-    );
+    const { email } = req.query;
+    if (email) {
+        models.User.findOne({ where: { email } }).then((user) =>
+            res.json(user)
+        );
+    } else {
+        models.User.findAll({ order: [["id", "ASC"]] }).then((users) =>
+            res.json(users)
+        );
+    }
 });
 
 // get user by id
@@ -239,13 +246,7 @@ app.get("/api/users/:userId", (req, res) => {
 
 // add user
 app.post("/api/users", (req, res) => {
-    // const user = req.body;
-    const user = {
-        email: "jdlou+trainee@princeton.edu",
-        isAssessor: false,
-        isTrainee: true,
-    };
-
+    const user = req.body;
     models.User.add(user)
         .then((user) => res.json(user))
         .catch((err) => {

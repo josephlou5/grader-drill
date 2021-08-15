@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Switch, Route, Link, Redirect, useParams } from "react-router-dom";
 import "./app.css";
-import { getAllUsers, getUser } from "./api";
+import { resetValid, resetValidId, setElementValid } from "./shared";
+import { addUser, getUserByEmail } from "./api";
 
 import TraineeDashboard from "./components/traineeDashboard";
 import TrainingView from "./components/trainingView";
@@ -13,6 +14,7 @@ import QuestionsView from "./components/questionsView";
 import QuestionEditView from "./components/questionEditView";
 
 export default function App() {
+    const [signUp, setSignUp] = useState(false);
     const [loggedIn, setLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
     const [role, setRole] = useState(null);
@@ -28,11 +30,14 @@ export default function App() {
         setHideGraded(!hideGraded);
     }
 
-    function handleLogIn(userId) {
-        getUser(userId, (user) => {
-            setUser(user);
-            setLoggedIn(true);
-        });
+    function handleLogIn(user) {
+        setUser(user);
+        setLoggedIn(true);
+        setSignUp(false);
+    }
+
+    function handleSignUp() {
+        setSignUp(true);
     }
 
     function handleLogOut() {
@@ -46,20 +51,6 @@ export default function App() {
     function handleChooseRole(role) {
         setRole(role);
     }
-
-    const logOutButton = (
-        <div className="d-flex">
-            {user && role && <span className="navbar-text me-2">{role}</span>}
-            {user && <div className="navbar-brand">{user.email}</div>}
-            <button
-                type="button"
-                className="btn btn-outline-danger"
-                onClick={handleLogOut}
-            >
-                Log Out
-            </button>
-        </div>
-    );
 
     let navbar = null;
     if (role === "Trainee") {
@@ -92,6 +83,40 @@ export default function App() {
             </div>
         );
     }
+
+    const logOutButton = (
+        <div className="d-flex">
+            {user && role && <span className="navbar-text me-2">{role}</span>}
+            {user && <div className="navbar-brand">{user.email}</div>}
+            <button
+                type="button"
+                className="btn btn-outline-danger"
+                onClick={handleLogOut}
+            >
+                Log Out
+            </button>
+        </div>
+    );
+
+    const logInButtons = (
+        <div className="d-flex">
+            <button
+                type="button"
+                className="btn btn-success me-2"
+                onClick={() => setSignUp(false)}
+            >
+                Log In
+            </button>
+            <button
+                type="button"
+                className="btn btn-success"
+                onClick={handleSignUp}
+            >
+                Sign Up
+            </button>
+        </div>
+    );
+
     navbar = (
         <nav className="navbar navbar-expand-lg navbar-light bg-light">
             <div className="container-fluid">
@@ -99,23 +124,42 @@ export default function App() {
                     Grader Drill
                 </Link>
                 {navbar}
-                {user && logOutButton}
+                {loggedIn ? logOutButton : logInButtons}
             </div>
         </nav>
     );
 
     let home;
-    if (!loggedIn) {
+    if (signUp) {
+        home = <SignUpView onLogIn={handleLogIn} />;
+    } else if (!loggedIn) {
         home = <LogInView onLogIn={handleLogIn} />;
-    } else if (user.isTrainee && user.isAssessor) {
-        home = <ChooseRole user={user} onChooseRole={handleChooseRole} />;
     } else {
-        // only one role, so skip choosing
-        const onlyRole = user.isTrainee ? "Trainee" : "Assessor";
-        if (onlyRole !== role) {
-            setRole(onlyRole);
+        let onlyRole = null;
+        for (const [key, val] of Object.entries(user)) {
+            if (["id", "email"].includes(key)) continue;
+            if (typeof val !== "boolean") continue;
+            if (!val) continue;
+            // remove the "is" from the key
+            const role = key.substring(2);
+            if (onlyRole == null) {
+                onlyRole = role;
+            } else {
+                onlyRole = null;
+                break;
+            }
         }
-        home = <Redirect to="/dashboard" />;
+
+        if (!onlyRole) {
+            // more than one role
+            home = <ChooseRole user={user} onChooseRole={handleChooseRole} />;
+        } else {
+            // only one role, so skip choosing
+            if (onlyRole !== role) {
+                setRole(onlyRole);
+            }
+            home = <Redirect to="/dashboard" />;
+        }
     }
 
     let other = <Redirect to="/" />;
@@ -152,43 +196,224 @@ export default function App() {
     );
 }
 
-function LogInView({ onLogIn }) {
-    const [loading, setLoading] = useState(true);
-    const [users, setUsers] = useState(null);
+function SignUpView({ onLogIn }) {
+    const [email, setEmail] = useState("");
+    const [roles, setRoles] = useState({
+        isTrainee: false,
+        isAssessor: false,
+    });
 
-    useEffect(() => {
-        getAllUsers((users) => {
-            setUsers(users);
-            setLoading(false);
+    function handleEmailChange(text) {
+        setEmail(text);
+    }
+
+    function handleToggleRole(key) {
+        setRoles({ ...roles, [key]: !roles[key] });
+    }
+
+    function handleSignUp() {
+        let formValid = true;
+        // validate
+        if (email === "") {
+            formValid = false;
+            setElementValid("email", false);
+        }
+        if (!Object.values(roles).some((r) => r)) {
+            formValid = false;
+            setElementValid("roles", false);
+        }
+
+        if (!formValid) return;
+
+        const user = { email, ...roles };
+        addUser(user, (u) => {
+            // validate
+            if (!u) {
+                setElementValid("email", false);
+                return;
+            }
+            onLogIn(u);
         });
-    }, []);
-
-    if (loading) {
-        return "Loading users...";
     }
 
-    if (users.length === 0) {
-        return "No users";
-    }
+    return (
+        <React.Fragment>
+            <h1>Sign Up</h1>
 
-    const btns = users.map((user, i) => (
-        <div key={i}>
+            <div className="mb-3">
+                <label className="form-label" htmlFor="email">
+                    Email address
+                </label>
+                <input
+                    type="email"
+                    className="form-control"
+                    id="email"
+                    onChange={(event) => {
+                        resetValid(event.target);
+                        handleEmailChange(event.target.value);
+                    }}
+                    placeholder="name@example.com"
+                    value={email}
+                />
+                <div className="invalid-feedback">Invalid email address.</div>
+            </div>
+
+            <div>Roles</div>
+            <div role="group" className="btn-group d-block mb-3">
+                {["Trainee", "Assessor"].map((role, index) => {
+                    const idFor = "is" + role;
+                    return (
+                        <React.Fragment key={index}>
+                            <input
+                                type="checkbox"
+                                className="btn-check"
+                                id={idFor}
+                                autoComplete="off"
+                                onChange={() => {
+                                    resetValidId("roles");
+                                    handleToggleRole(idFor);
+                                }}
+                            />
+                            <label
+                                className="btn btn-outline-success"
+                                for={idFor}
+                            >
+                                {role}
+                            </label>
+                        </React.Fragment>
+                    );
+                })}
+
+                <div>
+                    <input type="hidden" id="roles" />
+                    <div className="invalid-feedback">
+                        Must choose at least one role.
+                    </div>
+                </div>
+            </div>
+
             <button
-                className="btn btn-primary m-1"
-                onClick={() => onLogIn(user.id)}
+                type="button"
+                className="btn btn-lg btn-primary"
+                onClick={handleSignUp}
             >
-                {user.email}
+                Sign Up
             </button>
-        </div>
-    ));
+        </React.Fragment>
+    );
+}
+
+function LogInView({ onLogIn }) {
+    const [email, setEmail] = useState("");
+    const [rememberMe, setRememberMe] = useState(false);
+
+    function handleEmailChange(text) {
+        setEmail(text);
+    }
+
+    function handleRememberMeChange() {
+        setRememberMe(!rememberMe);
+    }
+
+    function handleLogIn() {
+        // validate
+        if (email === "") {
+            setElementValid("email", false);
+            return;
+        }
+        getUserByEmail(email, (user) => {
+            // validate
+            if (!user) {
+                setElementValid("email", false);
+                return;
+            }
+            onLogIn(user);
+        });
+    }
 
     return (
         <React.Fragment>
             <h1>Log In</h1>
-            {btns}
+
+            <div className="mb-3">
+                <label className="form-label" htmlFor="email">
+                    Email address
+                </label>
+                <input
+                    type="email"
+                    className="form-control"
+                    id="email"
+                    onChange={(event) => {
+                        resetValid(event.target);
+                        handleEmailChange(event.target.value);
+                    }}
+                    placeholder="name@example.com"
+                    value={email}
+                />
+                <div className="invalid-feedback">Invalid email address.</div>
+            </div>
+
+            <div className="form-check mb-3">
+                <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id="remember-me"
+                    onChange={handleRememberMeChange}
+                    checked={rememberMe}
+                />
+                <label className="form-check-label" htmlFor="remember-me">
+                    Remember me
+                </label>
+            </div>
+
+            <button
+                type="button"
+                className="btn btn-lg btn-primary"
+                onClick={handleLogIn}
+            >
+                Log In
+            </button>
         </React.Fragment>
     );
 }
+
+// function LogInView({ onLogIn }) {
+//     const [loading, setLoading] = useState(true);
+//     const [users, setUsers] = useState(null);
+
+//     useEffect(() => {
+//         getAllUsers((users) => {
+//             setUsers(users);
+//             setLoading(false);
+//         });
+//     }, []);
+
+//     if (loading) {
+//         return "Loading users...";
+//     }
+
+//     if (users.length === 0) {
+//         return "No users";
+//     }
+
+//     const btns = users.map((user, i) => (
+//         <div key={i}>
+//             <button
+//                 className="btn btn-primary m-1"
+//                 onClick={() => onLogIn(user.id)}
+//             >
+//                 {user.email}
+//             </button>
+//         </div>
+//     ));
+
+//     return (
+//         <React.Fragment>
+//             <h1>Log In</h1>
+//             {btns}
+//         </React.Fragment>
+//     );
+// }
 
 function ChooseRole({ user, onChooseRole }) {
     if (!user) {

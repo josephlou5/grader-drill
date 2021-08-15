@@ -94,14 +94,14 @@ function checkInt(arg, requestType, resource, callback) {
 }
 
 function checkError(data, requestType, resource) {
-    if (!data.error) {
+    if (data && !data.error) {
         if (CONSOLE) console.log(getMsg(requestType, resource), data);
         return data;
     } else {
         if (CONSOLE)
             console.log(
                 getErrMsg(requestType, resource),
-                data.msg || data.message
+                data ? data.msg || data.message : "null"
             );
         return null;
     }
@@ -113,6 +113,14 @@ export function getAllUsers(callback = null) {
     getRequest("/api/users").then((users) => {
         if (CONSOLE) console.log("got users:", users);
         if (callback) callback(users);
+    });
+}
+
+export function getUserByEmail(email, callback = null) {
+    if (checkNull(email, callback)) return;
+    getRequest(`/api/users?email=${email}`).then((u) => {
+        u = checkError(u, "get", "user by email");
+        if (callback) callback(u);
     });
 }
 
@@ -224,6 +232,7 @@ export function getTraineeAnswered(traineeId, callback = null) {
     });
 }
 
+// not used because assessor dashboard filters on its own
 export function getAssessorGraded(assessorId, callback = null) {
     if (checkNull(assessorId, callback)) return;
     if (!checkInt(assessorId, "get", "assessor answered", callback)) return;

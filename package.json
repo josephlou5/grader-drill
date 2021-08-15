@@ -5,7 +5,8 @@
     "author": "Joseph Lou",
     "main": "server.js",
     "engines": {
-        "node": "14.17.1"
+        "node": "14.17.1",
+        "npm": "7.19.0"
     },
     "scripts": {
         "start": "node server.js",

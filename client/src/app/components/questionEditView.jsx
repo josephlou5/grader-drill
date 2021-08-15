@@ -421,8 +421,8 @@ export default function QuestionEditView({ newQuestion, questionId }) {
             </div>
 
             <div
-                className="btn-group"
                 role="group"
+                className="btn-group"
                 style={{ marginLeft: "10px" }}
             >
                 {questionTypeChoice}
