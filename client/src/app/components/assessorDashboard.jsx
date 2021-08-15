@@ -3,11 +3,16 @@ import { Link } from "react-router-dom";
 import { QuestionType, UserEmail } from "../shared";
 import { getAllAnswered } from "../api";
 
-export default function AssessorDashboard({
-    assessor,
-    hideGraded,
-    onHideGraded,
-}) {
+export default function AssessorDashboard(props) {
+    return (
+        <React.Fragment>
+            <h1>Assessor Dashboard</h1>
+            <Dashboard {...props} />
+        </React.Fragment>
+    );
+}
+
+function Dashboard({ assessor, hideGraded, onHideGraded }) {
     const [answered, setAnswered] = useState(null);
 
     useEffect(() => {
@@ -20,10 +25,6 @@ export default function AssessorDashboard({
         return <p>Getting answered...</p>;
     }
 
-    if (answered.length === 0) {
-        return <p>No answered</p>;
-    }
-
     const tableProps = {
         assessor,
         answered,
@@ -32,7 +33,6 @@ export default function AssessorDashboard({
     };
     return (
         <React.Fragment>
-            <h1>Assessor Dashboard</h1>
             <Link to="/grading">
                 <button type="button" className="btn btn-success m-2">
                     Grading
