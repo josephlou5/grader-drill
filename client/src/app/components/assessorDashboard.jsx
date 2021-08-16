@@ -12,7 +12,7 @@ export default function AssessorDashboard(props) {
     );
 }
 
-function Dashboard({ assessor, hideGraded, onHideGraded }) {
+function Dashboard({ assessor }) {
     const [answered, setAnswered] = useState(null);
 
     useEffect(() => {
@@ -25,12 +25,6 @@ function Dashboard({ assessor, hideGraded, onHideGraded }) {
         return <p>Getting answered...</p>;
     }
 
-    const tableProps = {
-        assessor,
-        answered,
-        hideGraded,
-        onHideGraded,
-    };
     return (
         <React.Fragment>
             <Link to="/grading">
@@ -42,8 +36,8 @@ function Dashboard({ assessor, hideGraded, onHideGraded }) {
                 Export
             </button> */}
 
-            <GradedTable {...tableProps} />
-            <AnsweredTable {...tableProps} />
+            <GradedTable assessor={assessor} answered={answered} />
+            <AnsweredTable assessor={assessor} answered={answered} />
         </React.Fragment>
     );
 }
@@ -113,7 +107,13 @@ function GradedTable({ assessor, answered }) {
     );
 }
 
-function AnsweredTable({ assessor, answered, hideGraded, onHideGraded }) {
+function AnsweredTable({ assessor, answered }) {
+    const [hideGraded, setHideGraded] = useState(false);
+
+    function handleToggleHideGraded() {
+        setHideGraded(!hideGraded);
+    }
+
     let rowsShowing = 0;
     const rows = answered.map((question, index) => {
         let classes = undefined;
@@ -205,7 +205,7 @@ function AnsweredTable({ assessor, answered, hideGraded, onHideGraded }) {
                     className="form-check-input"
                     id="hideGradedCheckbox"
                     defaultChecked={hideGraded}
-                    onChange={onHideGraded}
+                    onChange={handleToggleHideGraded}
                 />
                 <label
                     className="form-check-label"

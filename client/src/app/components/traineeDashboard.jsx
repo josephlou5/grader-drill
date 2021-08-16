@@ -3,11 +3,7 @@ import { Link } from "react-router-dom";
 import { QuestionType } from "../shared";
 import { getTraineeAnswered } from "../api";
 
-export default function TraineeDashboard({
-    trainee,
-    hideUngraded,
-    onHideUngraded,
-}) {
+export default function TraineeDashboard({ trainee }) {
     const [answered, setAnswered] = useState(null);
 
     useEffect(() => {
@@ -18,13 +14,7 @@ export default function TraineeDashboard({
 
     let table = <p>Loading...</p>;
     if (answered) {
-        table = (
-            <AnsweredTable
-                answered={answered}
-                hideUngraded={hideUngraded}
-                onHideUngraded={onHideUngraded}
-            />
-        );
+        table = <AnsweredTable answered={answered} />;
     }
 
     return (
@@ -40,7 +30,13 @@ export default function TraineeDashboard({
     );
 }
 
-function AnsweredTable({ answered, hideUngraded, onHideUngraded }) {
+function AnsweredTable({ answered }) {
+    const [hideUngraded, setHideUngraded] = useState(false);
+
+    function handleToggleHideUngraded() {
+        setHideUngraded(!hideUngraded);
+    }
+
     let rowsShowing = 0;
     const rows = answered.map((question, index) => {
         let classes = undefined;
@@ -124,7 +120,7 @@ function AnsweredTable({ answered, hideUngraded, onHideUngraded }) {
                     className="form-check-input"
                     id="hideUngradedCheckbox"
                     defaultChecked={hideUngraded}
-                    onChange={onHideUngraded}
+                    onChange={handleToggleHideUngraded}
                 />
                 <label
                     className="form-check-label"

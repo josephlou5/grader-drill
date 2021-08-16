@@ -1,5 +1,20 @@
 "use strict";
 const { Model } = require("sequelize");
+const crypto = require("crypto");
+
+function hash(password, salt) {
+    // Hashes a password with a given salt.
+    return crypto
+        .pbkdf2Sync(password, salt, 10000, 64, "sha512")
+        .toString("hex");
+}
+
+function hashPassword(password) {
+    // Generates a random salt and returns the salt and hashed password.
+    const salt = crypto.randomBytes(32).toString("hex");
+    return { salt, hash: hash(password, salt) };
+}
+
 module.exports = (sequelize, DataTypes) => {
     class User extends Model {
         /**
@@ -12,6 +27,11 @@ module.exports = (sequelize, DataTypes) => {
         }
 
         static add(user) {
+            const { password } = user;
+            delete user.password;
+            if (password) {
+                Object.assign(user, hashPassword(password.normalize()));
+            }
             return User.create(user).then(async (u) => {
                 if (u.isTrainee) {
                     await u.createTrainee({ userId: u.id });
@@ -21,6 +41,10 @@ module.exports = (sequelize, DataTypes) => {
                 }
                 return new Promise((resolve) => resolve(u));
             });
+        }
+
+        checkPassword(password) {
+            return this.hash === hash(password.normalize(), this.salt);
         }
     }
     User.init(
@@ -32,6 +56,14 @@ module.exports = (sequelize, DataTypes) => {
                 validate: {
                     isEmail: true,
                 },
+            },
+            salt: {
+                type: DataTypes.STRING(64),
+                allowNull: false,
+            },
+            hash: {
+                type: DataTypes.STRING(128),
+                allowNull: false,
             },
             isTrainee: {
                 type: DataTypes.BOOLEAN,
@@ -46,10 +78,15 @@ module.exports = (sequelize, DataTypes) => {
             sequelize,
             modelName: "User",
             validate: {
-                validUser() {
+                validRoles() {
                     if (!this.isAssessor && !this.isTrainee) {
                         throw new Error("User must have a role.");
                     }
+                },
+            },
+            scopes: {
+                noPass: {
+                    attributes: { exclude: ["salt", "hash"] },
                 },
             },
         }

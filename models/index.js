@@ -70,6 +70,10 @@ db.Answered.belongsTo(db.Assessor, {
     foreignKey: "assessorId",
 });
 
+// by default, no password
+db.UserPass = db.User;
+db.User = db.User.scope("noPass");
+
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 

@@ -11,6 +11,9 @@ node_modules
 # production
 build
 
+# VSCode
+.vscode/
+
 # misc
 .DS_Store
 .env.local

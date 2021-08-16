@@ -13,6 +13,14 @@ module.exports = {
                 allowNull: false,
                 unique: true,
             },
+            salt: {
+                type: Sequelize.STRING(64),
+                allowNull: false,
+            },
+            hash: {
+                type: Sequelize.STRING(128),
+                allowNull: false,
+            },
             isTrainee: {
                 type: Sequelize.BOOLEAN,
                 defaultValue: false,
