@@ -14,6 +14,7 @@ import { isLoggedIn, logOutUser, setRoleCookie } from "./api";
 import PageNotFound from "./components/pageNotFound";
 
 import HomeView from "./components/homeView";
+import AboutView from "./components/aboutView";
 import LogInView from "./components/logInView";
 import SignUpView from "./components/signUpView";
 
@@ -149,6 +150,13 @@ function AppView() {
                 <Link to="/" className="navbar-brand">
                     Grader Drill
                 </Link>
+                <div className="collapse navbar-collapse">
+                    <div className="navbar-nav">
+                        <Link to="/about" className="nav-link">
+                            About
+                        </Link>
+                    </div>
+                </div>
                 {logInButtons}
             </div>
         </nav>
@@ -160,6 +168,9 @@ function AppView() {
             <Switch>
                 <Route exact path="/">
                     <HomeView />
+                </Route>
+                <Route exact path="/about">
+                    <AboutView />
                 </Route>
 
                 <Route exact path="/login">
