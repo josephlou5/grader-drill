@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { UserEmail } from "../shared";
+import { Title, UserEmail } from "../shared";
 import { getAnswered, getQuestionVersion } from "../api";
 import QuestionView from "./questionView";
 import RubricField from "./rubricField";
@@ -130,12 +130,13 @@ export default function AnsweredView({ trainee, assessor, hideRubric }) {
     }
 
     return (
-        <div>
+        <React.Fragment>
+            <Title title="Answered" />
             <div>{traineeStr}</div>
             <div>{assessorStr}</div>
             {score}
             {gradeButton}
             {field}
-        </div>
+        </React.Fragment>
     );
 }

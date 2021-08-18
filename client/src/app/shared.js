@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { getUser, getQuestionVersion } from "./api.js";
 
+// component to set the document title
+export function Title({ title }) {
+    useEffect(() => {
+        document.title = title;
+    }, [title]);
+    return null;
+}
+
 function dynamicResizing(element) {
     if (element.scrollHeight === element.clientHeight) {
         // extra space on the bottom, so reset height

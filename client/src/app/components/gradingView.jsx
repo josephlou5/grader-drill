@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { Link, Redirect, useHistory } from "react-router-dom";
+import { Title, UserEmail } from "../shared";
 import {
     getAllAnswered,
     getAnswered,
     getQuestionVersion,
     updateAnswered,
 } from "../api";
-import { UserEmail } from "../shared";
 import QuestionView from "./questionView";
 import RubricField from "./rubricField";
 
 export default function GradingView(props) {
     return (
         <React.Fragment>
+            <Title title="Grading" />
             <h1>Grading</h1>
             <Grading {...props} />
         </React.Fragment>

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Title, ResizeTextareas, TextareaLine } from "../shared";
 import { getAllQuestions, deleteQuestion } from "../api";
-import { ResizeTextareas, TextareaLine } from "../shared";
 
 export default function QuestionsView() {
     return (
         <React.Fragment>
+            <Title title="Questions" />
             <h1>Questions</h1>
             <Link to="/questions/new">
                 <button type="button" className="btn btn-success m-2">
@@ -58,6 +59,8 @@ const QuestionsTable = () => {
             preview = preview.substring(0, PREVIEW_LENGTH - 3) + "...";
         }
 
+        const tags = question.tags;
+
         return (
             <tr
                 key={`question-${questionId}-v-${question.version}`}
@@ -67,6 +70,7 @@ const QuestionsTable = () => {
                 <td>{question.version}</td>
                 <td>{question.questionType || "N/A"}</td>
                 <td>{preview}</td>
+                <td>{tags || "None"}</td>
                 <td>
                     <Link to={"/questions/edit/" + questionId}>
                         <button
@@ -110,6 +114,7 @@ const QuestionsTable = () => {
                         <th>Version</th>
                         <th>Type</th>
                         <th>Text</th>
+                        <th>Tags</th>
                         <th></th>
                     </tr>
                 </thead>

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { Title } from "../shared";
 import { getTraineeAnswered, getAllQuestions, addAnswered } from "../api";
 import QuestionView from "./questionView";
 
 export default function TrainingView(props) {
     return (
         <React.Fragment>
+            <Title title="Training" />
             <h1>Training</h1>
             <Training {...props} />
         </React.Fragment>

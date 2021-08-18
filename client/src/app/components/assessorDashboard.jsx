@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { QuestionType, UserEmail } from "../shared";
+import { Title, QuestionType, UserEmail } from "../shared";
 import { getAllAnswered } from "../api";
 
 export default function AssessorDashboard(props) {
     return (
         <React.Fragment>
+            <Title title="Assessor Dashboard" />
             <h1>Assessor Dashboard</h1>
             <Dashboard {...props} />
         </React.Fragment>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useHistory } from "react-router-dom";
-import { ResizeTextareas, TextareaLine } from "../shared";
+import { Title, ResizeTextareas, TextareaLine } from "../shared";
 import {
     getQuestion,
     addQuestion,
@@ -12,9 +12,24 @@ import CodeField from "./codeField";
 import AnswerField from "./answerField";
 import RubricField from "./rubricField";
 
-export default function QuestionEditView({ newQuestion, questionId }) {
+export default function EditQuestionView({ newQuestion, questionId }) {
+    const initial = {
+        id: null,
+        version: null,
+        hasCodeField: true,
+        hasAnswerField: true,
+        questionType: "Comment",
+        questionText: "",
+        code: "",
+        highlights: [],
+        answerChoices: [],
+        correct: null,
+        rubric: [],
+        tags: "",
+    };
+
     const [invalid, setInvalid] = useState(false);
-    const [question, setQuestionState] = useState(null);
+    const [question, setQuestionState] = useState(initial);
     const [canToggleCodeField, setToggleCodeField] = useState(false);
 
     function setQuestion(updates) {
@@ -24,52 +39,31 @@ export default function QuestionEditView({ newQuestion, questionId }) {
     const history = useHistory();
 
     useEffect(() => {
-        if (invalid || question) return;
-        getQuestion(questionId, (q) => {
-            const initial = {
-                id: null,
-                version: null,
-                hasCodeField: true,
-                hasAnswerField: true,
-                questionType: "Comment",
-                questionText: "",
-                code: "",
-                highlights: [],
-                answerChoices: [],
-                correct: null,
-                rubric: [],
-                tags: "",
-            };
+        if (invalid || newQuestion) return;
+        if (question.id != null) return;
 
-            if (newQuestion) {
-                setQuestionState(initial);
-                return;
-            }
+        getQuestion(questionId, (q) => {
             if (!q) {
                 setInvalid(true);
                 return;
             }
 
-            for (const [key, val] in Object.entries(q)) {
-                // want to create new version, so keep version as null
-                if (key === "version") continue;
-                if (val != null) {
-                    initial[key] = val;
-                }
-            }
-            setQuestionState(initial);
+            // want to create new version, so keep version as null
+            delete q.version;
+            setQuestion(q);
             if (q.questionType === "Multiple Choice") {
                 setToggleCodeField(true);
             }
         });
     });
 
-    const title = <h1>{newQuestion ? "New Question" : "Edit Question"}</h1>;
+    const title = newQuestion ? "New Question" : "Edit Question";
 
     if (!question) {
         return (
             <React.Fragment>
-                {title}
+                <Title title={title} />
+                <h1>{title}</h1>
                 <p>Getting question...</p>
             </React.Fragment>
         );
@@ -79,7 +73,8 @@ export default function QuestionEditView({ newQuestion, questionId }) {
         // `title` can only be "Edit Question"
         return (
             <React.Fragment>
-                {title}
+                <Title title={title} />
+                <h1>{title}</h1>
                 <p>Invalid question</p>
             </React.Fragment>
         );
@@ -411,10 +406,13 @@ export default function QuestionEditView({ newQuestion, questionId }) {
 
     return (
         <React.Fragment>
+            <Title title={title} />
             <ResizeTextareas />
 
             <div className="row">
-                <div className="col">{title}</div>
+                <div className="col">
+                    <h1>{title}</h1>
+                </div>
                 <div className="col">
                     <h1>Preview</h1>
                 </div>

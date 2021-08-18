@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { QuestionType } from "../shared";
+import { Title, QuestionType } from "../shared";
 import { getTraineeAnswered } from "../api";
 
 export default function TraineeDashboard({ trainee }) {
@@ -19,6 +19,7 @@ export default function TraineeDashboard({ trainee }) {
 
     return (
         <React.Fragment>
+            <Title title="Trainee Dashboard" />
             <h1>Trainee Dashboard</h1>
             <Link to="/training">
                 <button type="button" className="btn btn-success m-2">
