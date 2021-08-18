@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Switch,
     Route,
@@ -170,8 +170,7 @@ function AppView() {
                 </Route>
 
                 <Route path="*">
-                    <Title title="Page not found" />
-                    <h1>Page not found</h1>
+                    <PageNotFound />
                 </Route>
             </Switch>
         </React.Fragment>
@@ -180,7 +179,7 @@ function AppView() {
 
 function LoggedInView({ user, role, onChooseRole, onLogOut }) {
     let navbar = null;
-    let other = <h1>Page not found</h1>;
+    let other = <PageNotFound />;
     if (role.role === "Trainee") {
         navbar = (
             <div className="collapse navbar-collapse">
@@ -266,7 +265,12 @@ function LoggedInView({ user, role, onChooseRole, onLogOut }) {
 
 function ChooseRole({ user, onChooseRole }) {
     if (!user) {
-        return <h1>Invalid user</h1>;
+        return (
+            <React.Fragment>
+                <Title title="Invalid user" />
+                <h1>Invalid user</h1>
+            </React.Fragment>
+        );
     }
 
     const roles = Object.entries(user).flatMap(([key, val]) => {
@@ -364,7 +368,7 @@ function AssessorView({ assessor }) {
 
                 {/* catch-all for page not found */}
                 <Route path="*">
-                    <h1>Page not found</h1>
+                    <PageNotFound />
                 </Route>
             </Switch>
         </React.Fragment>

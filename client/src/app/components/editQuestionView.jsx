@@ -74,8 +74,7 @@ export default function EditQuestionView({ newQuestion, questionId }) {
         return (
             <React.Fragment>
                 <Title title={title} />
-                <h1>{title}</h1>
-                <p>Invalid question</p>
+                <h1>Invalid question</h1>
             </React.Fragment>
         );
     }
