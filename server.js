@@ -1,6 +1,5 @@
 const path = require("path");
 const express = require("express");
-const session = require("express-session");
 const { sequelize, Sequelize, ...models } = require("./models/index.js");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
@@ -10,7 +9,19 @@ app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "client/build")));
 
-app.use(session({ secret: "secret", resave: false, saveUninitialized: false }));
+const sess = {
+    secret: "secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: null,
+    },
+};
+// in production, use secure cookies
+if (process.env.NODE_ENV === "production") {
+    sess.cookie.secure = true;
+}
+app.use(require("express-session")(sess));
 app.use(passport.initialize());
 app.use(passport.session());
 
