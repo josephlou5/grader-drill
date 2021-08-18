@@ -32,7 +32,7 @@ passport.use(
             passwordField: "password",
         },
         (email, password, done) => {
-            console.log("authenticating:", email, password);
+            console.log("authenticating:", email);
             models.UserPass.findOne({ where: { email } }).then((user) => {
                 if (!user) {
                     return done(null, false, { message: "Invalid email." });
@@ -277,8 +277,14 @@ if (process.env.NODE_ENV !== "production") {
 // sign up
 app.post("/api/users", (req, res) => {
     const user = req.body;
+    console.log("signing up:", user.email);
     models.User.add(user)
         .then((user) => {
+            // don't pass the password info
+            user = user.toJSON();
+            delete user.salt;
+            delete user.hash;
+            console.log("created user:", user);
             req.login(user, (err) => res.json(err || user));
         })
         .catch((err) => {
