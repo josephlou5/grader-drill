@@ -57,8 +57,7 @@ passport.serializeUser((user, done) => {
     done(null, {
         id: user.id,
         email: user.email,
-        isTrainee: user.isTrainee,
-        isAssessor: user.isAssessor,
+        roles: user.roles,
     });
 });
 passport.deserializeUser((user, done) => {
@@ -251,15 +250,13 @@ if (process.env.NODE_ENV !== "production") {
         await models.User.add({
             email: "assessor@test.com",
             password: "password",
-            isAssessor: true,
-            isTrainee: true,
+            roles: ["Trainee", "Assessor"],
         }).catch((err) => console.log(err));
         for (let num = 1; num <= 3; num++) {
             await models.User.add({
                 email: `trainee${num}@test.com`,
                 password: "password",
-                isAssessor: false,
-                isTrainee: true,
+                roles: ["Trainee"],
             });
         }
         for (const q of data.questions) {

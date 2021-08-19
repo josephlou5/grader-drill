@@ -194,6 +194,7 @@ function handleHighlight(lines) {
 
     resetValidId("question-code");
 
+    console.log("added highlight:", highlight);
     return highlight;
 }
 
@@ -313,20 +314,22 @@ function CodeLines({
     for (let i = 0; i < numLines; i++) {
         inHighlight[i] = new Array(lines[i].length).fill(0);
     }
-    for (let i = 0; i < highlights ? highlights.length : 0; i++) {
-        const highlightNum = i + 1;
-        const { startLine, startChar, endLine, endChar } = highlights[i];
-        if (startLine === endLine) {
-            for (let c = startChar; c < endChar; c++) {
-                inHighlight[startLine][c] = highlightNum;
+    if (highlights) {
+        for (let i = 0; i < highlights.length; i++) {
+            const highlightNum = i + 1;
+            const { startLine, startChar, endLine, endChar } = highlights[i];
+            if (startLine === endLine) {
+                for (let c = startChar; c < endChar; c++) {
+                    inHighlight[startLine][c] = highlightNum;
+                }
+                continue;
             }
-            continue;
-        }
-        for (let lineNum = startLine; lineNum <= endLine; lineNum++) {
-            for (let c = 0; c < lines[lineNum].length; c++) {
-                if (lineNum === startLine && c < startChar) continue;
-                if (lineNum === endLine && c >= endChar) break;
-                inHighlight[lineNum][c] = highlightNum;
+            for (let lineNum = startLine; lineNum <= endLine; lineNum++) {
+                for (let c = 0; c < lines[lineNum].length; c++) {
+                    if (lineNum === startLine && c < startChar) continue;
+                    if (lineNum === endLine && c >= endChar) break;
+                    inHighlight[lineNum][c] = highlightNum;
+                }
             }
         }
     }

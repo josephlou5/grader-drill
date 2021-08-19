@@ -7,12 +7,10 @@ export default function SignUpView({ onLogIn }) {
         const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
         const confirm = document.getElementById("confirm").value;
-        const roles = {};
-        let atLeastOneRole = false;
+        const roles = [];
         for (const element of document.getElementsByClassName("role")) {
-            roles[element.id] = element.checked;
             if (element.checked) {
-                atLeastOneRole = true;
+                roles.push(element.id);
             }
         }
 
@@ -34,10 +32,11 @@ export default function SignUpView({ onLogIn }) {
             formValid = false;
             setElementValid("confirm", false);
         }
-        if (!atLeastOneRole) {
+        if (roles.length === 0) {
             formValid = false;
             setElementValid("roles", false);
         }
+
         if (!formValid) {
             setElementValid("error", false);
             return;
@@ -144,14 +143,13 @@ export default function SignUpView({ onLogIn }) {
 
             <div>Roles</div>
             <div role="group" className="btn-group d-block mb-3">
-                {["Trainee", "Assessor"].map((role, index) => {
-                    const idFor = "is" + role;
+                {["Admin", "Trainee", "Assessor"].map((role, index) => {
                     return (
                         <React.Fragment key={index}>
                             <input
                                 type="checkbox"
                                 className="btn-check role"
-                                id={idFor}
+                                id={role}
                                 autoComplete="off"
                                 onChange={() => {
                                     resetValidId("error");
@@ -160,7 +158,7 @@ export default function SignUpView({ onLogIn }) {
                             />
                             <label
                                 className="btn btn-outline-success"
-                                htmlFor={idFor}
+                                htmlFor={role}
                             >
                                 {role}
                             </label>

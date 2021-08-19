@@ -65,13 +65,34 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.STRING(128),
                 allowNull: false,
             },
+            roles: {
+                type: DataTypes.TEXT,
+                allowNull: false,
+                defaultValue: "[]",
+                get() {
+                    return JSON.parse(this.getDataValue("roles"));
+                },
+                set(value) {
+                    this.setDataValue("roles", JSON.stringify(value));
+                },
+            },
+            isAdmin: {
+                type: DataTypes.VIRTUAL,
+                get() {
+                    return this.roles.includes("Admin");
+                },
+            },
             isTrainee: {
-                type: DataTypes.BOOLEAN,
-                defaultValue: false,
+                type: DataTypes.VIRTUAL,
+                get() {
+                    return this.roles.includes("Trainee");
+                },
             },
             isAssessor: {
-                type: DataTypes.BOOLEAN,
-                defaultValue: false,
+                type: DataTypes.VIRTUAL,
+                get() {
+                    return this.roles.includes("Assessor");
+                },
             },
         },
         {
@@ -79,7 +100,7 @@ module.exports = (sequelize, DataTypes) => {
             modelName: "User",
             validate: {
                 validRoles() {
-                    if (!this.isAssessor && !this.isTrainee) {
+                    if (this.roles.length === 0) {
                         throw new Error("User must have a role.");
                     }
                 },

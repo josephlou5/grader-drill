@@ -120,7 +120,7 @@ function checkError(data, requestType, resource, array = false) {
 // authentication
 
 export function signUpUser(email, password, roles, callback = null) {
-    const user = { email, password, ...roles };
+    const user = { email, password, roles };
     postRequest("/users", user).then((u) => {
         checkError(u, "add", "user");
         if (callback) callback(u);

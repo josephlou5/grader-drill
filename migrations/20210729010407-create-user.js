@@ -21,13 +21,10 @@ module.exports = {
                 type: Sequelize.STRING(128),
                 allowNull: false,
             },
-            isTrainee: {
-                type: Sequelize.BOOLEAN,
-                defaultValue: false,
-            },
-            isAssessor: {
-                type: Sequelize.BOOLEAN,
-                defaultValue: false,
+            roles: {
+                type: Sequelize.TEXT,
+                allowNull: false,
+                defaultValue: "[]",
             },
             createdAt: {
                 allowNull: false,

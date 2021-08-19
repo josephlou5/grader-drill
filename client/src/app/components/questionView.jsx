@@ -7,7 +7,6 @@ import AnswerField from "./answerField";
 export default function QuestionView(props) {
     return (
         <React.Fragment>
-            <ResizeTextareas />
             <h1>Question</h1>
             <Question {...props} />
         </React.Fragment>
@@ -44,6 +43,7 @@ function Question({ answered, question: propsQuestion, noChange, onSubmit }) {
         };
         return (
             <React.Fragment>
+                <ResizeTextareas />
                 <p>Question Type: {propsQuestion.questionType}</p>
                 <QuestionTextField {...fieldProps} />
                 {propsQuestion.hasCodeField && <CodeField {...fieldProps} />}
@@ -136,6 +136,7 @@ function Question({ answered, question: propsQuestion, noChange, onSubmit }) {
     };
     return (
         <React.Fragment>
+            <ResizeTextareas />
             <p>Question Type: {question.questionType}</p>
             <QuestionTextField question={question} />
             {question.hasCodeField && <CodeField {...codeFieldProps} />}

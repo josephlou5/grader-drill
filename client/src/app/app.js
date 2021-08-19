@@ -71,14 +71,7 @@ function AppView() {
         setUser(user);
 
         // check role
-        const roles = Object.entries(user).flatMap(([key, val]) => {
-            if (["id", "email"].includes(key)) return [];
-            if (typeof val !== "boolean") return [];
-            if (!val) return [];
-            // remove the "is" from the key
-            const role = key.substring(2);
-            return [role];
-        });
+        const { roles } = user;
         if (roles.length === 0) {
             return;
         } else if (roles.length === 1) {
@@ -99,12 +92,10 @@ function AppView() {
     }
 
     function handleLogOut() {
-        logOutUser(() => {
-            setLoggedIn(false);
-            setUser(null);
-            setRole({});
-            history.push("/");
-        });
+        setLoggedIn(false);
+        setUser(null);
+        setRole({});
+        logOutUser(() => history.push("/"));
     }
 
     function handleChooseRole(role) {
@@ -191,7 +182,24 @@ function AppView() {
 function LoggedInView({ user, role, onChooseRole, onLogOut }) {
     let navbar = null;
     let other = <PageNotFound />;
-    if (role.role === "Trainee") {
+    if (role.role === "Admin") {
+        navbar = (
+            <div className="collapse navbar-collapse">
+                <div className="navbar-nav">
+                    <Link to="/dashboard" className="nav-link">
+                        Dashboard
+                    </Link>
+                    <Link to="/drills" className="nav-link">
+                        Drills
+                    </Link>
+                    <Link to="/users" className="nav-link">
+                        Users
+                    </Link>
+                </div>
+            </div>
+        );
+        other = <AdminView user={user} />;
+    } else if (role.role === "Trainee") {
         navbar = (
             <div className="collapse navbar-collapse">
                 <div className="navbar-nav">
@@ -227,9 +235,15 @@ function LoggedInView({ user, role, onChooseRole, onLogOut }) {
     const logOutButton = (
         <div className="d-flex">
             {user && role.role && (
-                <span className="navbar-text me-2">{role.role}</span>
+                <Link to="/" className="nav-link text-secondary">
+                    {role.role}
+                </Link>
             )}
-            {user && <div className="navbar-brand">{user.email}</div>}
+            {user && (
+                <Link to="/profile" className="navbar-brand">
+                    {user.email}
+                </Link>
+            )}
             <Link to="/">
                 <button
                     type="button"
@@ -268,6 +282,9 @@ function LoggedInView({ user, role, onChooseRole, onLogOut }) {
                 <Route exact path="/">
                     {home}
                 </Route>
+                <Route exact path="/profile">
+                    <ProfileView user={user} />
+                </Route>
                 <Route path="*">{other}</Route>
             </Switch>
         </React.Fragment>
@@ -284,17 +301,13 @@ function ChooseRole({ user, onChooseRole }) {
         );
     }
 
-    const roles = Object.entries(user).flatMap(([key, val]) => {
-        if (["id", "email"].includes(key)) return [];
-        if (typeof val !== "boolean") return [];
-        if (!val) return [];
-        // remove the "is" from the key
-        const role = key.substring(2);
-        return [role];
-    });
-
-    if (roles.length === 0) {
-        return <h1>Invalid user: has no roles</h1>;
+    if (user.roles.length === 0) {
+        return (
+            <React.Fragment>
+                <Title title="Invalid user" />
+                <h1>Invalid user: has no roles</h1>
+            </React.Fragment>
+        );
     }
 
     return (
@@ -302,16 +315,49 @@ function ChooseRole({ user, onChooseRole }) {
             <Title title="Choose Role" />
             <h1>Choose Role</h1>
             <Link to="/dashboard">
-                {roles.map((role, index) => (
+                {user.roles.map((role, index) => (
                     <button
                         key={index}
-                        className="btn btn-primary m-1"
+                        className="btn btn-success m-1"
                         onClick={() => onChooseRole(role)}
                     >
                         {role}
                     </button>
                 ))}
             </Link>
+        </React.Fragment>
+    );
+}
+
+function ProfileView({ user }) {
+    if (!user) {
+        return (
+            <React.Fragment>
+                <Title title="Invalid user" />
+                <h1>Invalid user</h1>
+            </React.Fragment>
+        );
+    }
+
+    const { roles } = user;
+    if (roles.length === 0) {
+        roles.push("No roles");
+    }
+
+    return (
+        <React.Fragment>
+            <Title title="Profile" />
+            <h1>Profile</h1>
+            <p>Email: {user.email}</p>
+            <p>Roles: {roles.join(", ")}</p>
+        </React.Fragment>
+    );
+}
+
+function AdminView({ user }) {
+    return (
+        <React.Fragment>
+            <h1>Admin page</h1>
         </React.Fragment>
     );
 }
