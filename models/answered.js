@@ -16,7 +16,13 @@ module.exports = (sequelize, DataTypes) => {
             // an Answered and a Question, so we can use the
             // `questionType` field to figure out which fields to keep
             // and to auto-grade multiple choice questions
-            let fields = ["questionId", "version", "traineeId", "highlights"];
+            let fields = [
+                "questionId",
+                "version",
+                "traineeId",
+                "traineeDrillId",
+                "highlights",
+            ];
             if (question.hasCodeField) {
                 fields.push("code");
             }
@@ -54,6 +60,7 @@ module.exports = (sequelize, DataTypes) => {
                 "questionId",
                 "version",
                 "traineeId",
+                "traineeDrillId",
                 "graded",
                 "highlights",
             ];

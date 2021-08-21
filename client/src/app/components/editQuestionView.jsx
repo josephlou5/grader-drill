@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useHistory } from "react-router-dom";
-import { Title, ResizeTextareas, TextareaLine } from "../shared";
+import {
+    Title,
+    ResizeTextareas,
+    TextareaLine,
+    setElementValid,
+} from "../shared";
 import {
     getQuestion,
     addQuestion,
@@ -267,9 +272,7 @@ export default function EditQuestionView({ newQuestion, questionId }) {
         let formValid = true;
 
         function setValid(elementId, isValid) {
-            document
-                .getElementById(elementId)
-                .classList.toggle("is-invalid", !isValid);
+            setElementValid(elementId, isValid);
             if (!isValid) formValid = false;
         }
 

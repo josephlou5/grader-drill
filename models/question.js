@@ -39,11 +39,16 @@ module.exports = (sequelize, DataTypes) => {
             return Question.create(question, { fields });
         }
 
-        static delete(options) {
-            return Question.findAll(options).then((questions) => {
-                if (questions.length === 0)
-                    return new Promise((resolve) => resolve(null));
-                return Question.destroy(options).then(() => questions);
+        static delete(questionId) {
+            const where = { id: questionId };
+            return Question.destroy({ where }).then((num) => {
+                if (num === 0) return null;
+                return Question.findAll({
+                    where,
+                    order: [["deletedAt", "DESC"]],
+                    limit: num,
+                    paranoid: false,
+                });
             });
         }
     }

@@ -54,6 +54,24 @@ db.Assessor.belongsTo(db.User, {
     foreignKey: { name: "userId", primaryKey: true },
 });
 
+// drills
+db.Drill.hasMany(db.TraineeDrill, {
+    foreignKey: "drillId",
+    allowNull: false,
+});
+db.TraineeDrill.belongsTo(db.Drill, {
+    foreignKey: "drillId",
+    allowNull: false,
+});
+db.Trainee.hasMany(db.TraineeDrill, {
+    foreignKey: "traineeId",
+    allowNull: false,
+});
+db.TraineeDrill.belongsTo(db.Trainee, {
+    foreignKey: "traineeId",
+    allowNull: false,
+});
+
 // answered
 db.Trainee.hasMany(db.Answered, {
     foreignKey: "traineeId",
@@ -63,6 +81,14 @@ db.Answered.belongsTo(db.Trainee, {
     foreignKey: "traineeId",
     allowNull: false,
 });
+db.TraineeDrill.hasMany(db.Answered, {
+    foreignKey: "traineeDrillId",
+    allowNull: false,
+});
+db.Answered.belongsTo(db.TraineeDrill, {
+    foreignKey: "traineeDrillId",
+    allowNull: false,
+});
 db.Assessor.hasMany(db.Answered, {
     foreignKey: "assessorId",
 });
@@ -70,9 +96,109 @@ db.Answered.belongsTo(db.Assessor, {
     foreignKey: "assessorId",
 });
 
-// by default, no password
-db.UserPass = db.User;
+// ordered scopes
+Object.values(db).forEach((model) =>
+    model.addScope("ordered", { order: [["id", "ASC"]] })
+);
+
+db.Answered = db.Answered.scope("ordered");
+
+// eager loading scopes
+db.User.addScope("include", {
+    attributes: {
+        exclude: ["createdAt", "updatedAt"],
+    },
+});
+db.User.Include = db.User.scope(["include", "noPass"]);
+db.Trainee.addScope("include", {
+    attributes: {
+        exclude: ["createdAt", "updatedAt"],
+    },
+    include: db.User.Include,
+});
+db.Trainee.Include = db.Trainee.scope("include");
+db.Assessor.addScope("include", {
+    attributes: {
+        exclude: ["createdAt", "updatedAt"],
+    },
+    include: db.User.Include,
+});
+db.Assessor.Include = db.Assessor.scope("include");
+db.Drill.addScope("include", {
+    attributes: {
+        exclude: ["createdAt", "updatedAt"],
+    },
+    paranoid: false,
+});
+db.Drill.Include = db.Drill.scope("include");
+db.TraineeDrill.addScope("include", {
+    attributes: {
+        exclude: ["createdAt", "updatedAt", "deletedAt"],
+    },
+});
+db.TraineeDrill.Include = db.TraineeDrill.scope("include");
+
+db.TraineeDrill.addScope("ongoing", {
+    where: { completedAt: null },
+});
+db.TraineeDrill.addScope("includeTrainee", {
+    include: db.Trainee.Include,
+});
+db.TraineeDrill.addScope("includeDrill", {
+    include: db.Drill.Include,
+});
+db.TraineeDrill.IncludeTrainee = db.TraineeDrill.scope(
+    "include",
+    "includeTrainee"
+);
+db.TraineeDrill.IncludeDrill = db.TraineeDrill.scope(
+    "ordered",
+    "include",
+    "includeDrill"
+);
+db.Drill.addScope("includeDrill", {
+    include: {
+        model: db.TraineeDrill.IncludeTrainee,
+        include: db.Answered,
+    },
+});
+db.Drill.IncludeDrill = db.Drill.scope("includeDrill");
+db.Answered.addScope("includeTrainee", {
+    include: db.Trainee.Include,
+});
+db.Answered.addScope("includeAssessor", {
+    include: db.Assessor.Include,
+});
+db.Answered.addScope("includeDrill", {
+    include: {
+        model: db.TraineeDrill.IncludeDrill,
+        paranoid: false,
+    },
+});
+db.Answered.IncludeAll = db.Answered.scope(
+    "includeTrainee",
+    "includeAssessor",
+    "includeDrill"
+);
+db.Answered.IncludeUsers = db.Answered.scope(
+    "includeTrainee",
+    "includeAssessor"
+);
+db.Answered.IncludeDrill = db.Answered.scope("includeDrill");
+db.Answered.IncludeTraineeDrill = db.Answered.scope(
+    "includeTrainee",
+    "includeDrill"
+);
+
+// other scopes
+
+// default is no password
+db.User.Pass = db.User;
 db.User = db.User.scope("noPass");
+
+// default is uncompleted
+db.TraineeDrill.All = db.TraineeDrill;
+db.TraineeDrill = db.TraineeDrill.scope("ongoing");
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;

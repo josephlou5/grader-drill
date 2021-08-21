@@ -14,7 +14,8 @@ const sess = {
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: null,
+        // set the max age to 180 days
+        maxAge: 180 * 24 * 60 * 60 * 1000,
     },
 };
 // in production, use secure cookies
@@ -33,7 +34,7 @@ passport.use(
         },
         (email, password, done) => {
             console.log("authenticating:", email);
-            models.UserPass.findOne({ where: { email } }).then((user) => {
+            models.User.Pass.findOne({ where: { email } }).then((user) => {
                 if (!user) {
                     return done(null, false, { message: "Invalid email." });
                 }
@@ -43,10 +44,7 @@ passport.use(
                 }
                 console.log(email, "authenticated");
                 // don't pass the password info
-                user = user.toJSON();
-                delete user.salt;
-                delete user.hash;
-                return done(null, user);
+                return done(null, user.noPass());
             });
         }
     )
@@ -67,6 +65,42 @@ passport.deserializeUser((user, done) => {
 // for debugging: reset the database
 if (process.env.NODE_ENV !== "production") {
     const data = {
+        drills: [
+            {
+                name: "COS126",
+                numQuestions: 3,
+                dueDate: "2021-09-01",
+                tags: "course:126",
+            },
+            {
+                name: "COS226",
+                numQuestions: 3,
+                dueDate: "2021-09-01",
+                tags: "course:226",
+            },
+        ],
+        traineeDrills: [
+            {
+                drillId: 1,
+                traineeId: 1,
+                progress: 0,
+            },
+            {
+                drillId: 1,
+                traineeId: 2,
+                progress: 1,
+            },
+            {
+                drillId: 1,
+                traineeId: 3,
+                progress: 1,
+            },
+            {
+                drillId: 1,
+                traineeId: 4,
+                progress: 1,
+            },
+        ],
         questions: [
             {
                 id: 1,
@@ -144,6 +178,7 @@ if (process.env.NODE_ENV !== "production") {
                 questionId: 1,
                 version: 1,
                 traineeId: 2,
+                traineeDrillId: 2,
                 assessorId: 1,
                 score: 0,
                 questionType: "Comment",
@@ -180,6 +215,7 @@ if (process.env.NODE_ENV !== "production") {
                 version: 1,
                 autograded: true,
                 traineeId: 3,
+                traineeDrillId: 3,
                 questionType: "Multiple Choice",
                 highlights: [],
                 answer: 0,
@@ -190,6 +226,7 @@ if (process.env.NODE_ENV !== "production") {
                 questionId: 3,
                 version: 1,
                 traineeId: 4,
+                traineeDrillId: 4,
                 questionType: "Highlight",
                 highlights: [
                     {
@@ -224,9 +261,12 @@ if (process.env.NODE_ENV !== "production") {
 
     app.get("/reset", async (req, res) => {
         let response = {};
+        // reset all the tables
         await Promise.all(
             Object.values(models).map(async (model) => {
-                if (model.name === "Associations") return;
+                if (model.name === "TraineeDrill") {
+                    model = model.All;
+                }
                 await model
                     .destroy({ where: {}, truncate: false, force: true })
                     .then(
@@ -238,7 +278,11 @@ if (process.env.NODE_ENV !== "production") {
                     );
                 // reset the id sequence for users and answered
                 const tableName = model.getTableName();
-                if (!(tableName === "Users" || tableName === "Answered"))
+                if (
+                    !["Users", "Answered", "Drills", "TraineeDrills"].includes(
+                        tableName
+                    )
+                )
                     return;
                 const sequence = tableName + "_id_seq";
                 await sequelize
@@ -247,10 +291,11 @@ if (process.env.NODE_ENV !== "production") {
                     .catch(() => (response[sequence] = "Failed to reset to 1"));
             })
         );
+        // add new data
         await models.User.add({
             email: "assessor@test.com",
             password: "password",
-            roles: ["Trainee", "Assessor"],
+            roles: ["Admin", "Trainee", "Assessor"],
         }).catch((err) => console.log(err));
         for (let num = 1; num <= 3; num++) {
             await models.User.add({
@@ -258,6 +303,12 @@ if (process.env.NODE_ENV !== "production") {
                 password: "password",
                 roles: ["Trainee"],
             });
+        }
+        for (const d of data.drills) {
+            await models.Drill.add(d);
+        }
+        for (const d of data.traineeDrills) {
+            await models.TraineeDrill.add(d);
         }
         for (const q of data.questions) {
             await models.Question.add(q);
@@ -277,17 +328,14 @@ app.post("/api/users", (req, res) => {
     console.log("signing up:", user.email);
     models.User.add(user)
         .then((user) => {
-            // don't pass the password info
-            user = user.toJSON();
-            delete user.salt;
-            delete user.hash;
+            user = user.noPass();
             console.log("created user:", user);
             req.login(user, (err) => res.json(err || user));
         })
         .catch((err) => {
             const response = { error: true, msg: [], message: [] };
             for (const error of err.errors) {
-                response.message.push(err.message);
+                response.message.push(error.message);
                 switch (error.type) {
                     case "notNull Violation":
                         if (error.path === "email") {
@@ -346,7 +394,7 @@ app.post("/api/users/logout", (req, res) => {
     res.json({ success: true });
 });
 
-// set role
+// set role in cookie
 app.post("/api/users/role", (req, res) => {
     if (!req.isAuthenticated()) {
         res.json({ success: false });
@@ -383,16 +431,59 @@ function checkAuth(req, res) {
     return false;
 }
 
+function checkRole(req, res, role) {
+    if (!checkAuth(req, res)) return false;
+    if (req.user.roles.includes(role)) return true;
+    res.json({
+        error: true,
+        msg: `needs role "${role}" for permission`,
+        insufficientRole: true,
+    });
+    return false;
+}
+
 // get all users
-// not used
 app.get("/api/users", (req, res) => {
     if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
     models.User.findAll({ order: [["id", "ASC"]] }).then((users) =>
         res.json(users)
     );
 });
 
+// change user password
+app.post("/api/users/password", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    const userId = req.user.id;
+    const { oldPass, newPass } = req.body;
+    models.User.Pass.findByPk(userId).then((user) => {
+        if (!user) {
+            // shouldn't happen because user is logged in
+            res.json({
+                error: true,
+                msg: `user ${userId} does not exist`,
+                dne: true,
+            });
+        } else if (!user.checkPassword(oldPass)) {
+            res.json({
+                error: true,
+                msg: "wrong password",
+                passwordIncorrect: true,
+            });
+        } else if (newPass === oldPass) {
+            res.json({
+                error: true,
+                msg: "same password",
+                samePassword: true,
+            });
+        } else {
+            user.changePassword(newPass).then((u) => res.json(u));
+        }
+    });
+});
+
 // get user by id
+// not used
 app.get("/api/users/:userId", (req, res) => {
     if (!checkAuth(req, res)) return;
     const { userId } = req.params;
@@ -405,6 +496,24 @@ app.get("/api/users/:userId", (req, res) => {
             });
         } else {
             res.json(user);
+        }
+    });
+});
+
+// reset user password
+app.post("/api/users/:userId/password", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
+    const { userId } = req.params;
+    models.User.findByPk(userId).then((user) => {
+        if (!user) {
+            res.json({
+                error: true,
+                msg: `user ${userId} does not exist`,
+                dne_error: true,
+            });
+        } else {
+            user.resetPassword().then((u) => res.json(u));
         }
     });
 });
@@ -514,6 +623,7 @@ function addQuestion(question) {
 // add new question
 app.post("/api/questions", (req, res) => {
     if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
     let question = req.body;
     // get the next id
     models.Question.max("id", { paranoid: false }).then((id) => {
@@ -526,6 +636,7 @@ app.post("/api/questions", (req, res) => {
 // update question (add new version)
 app.post("/api/questions/:questionId", (req, res) => {
     if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
     const { questionId } = req.params;
     let question = req.body;
     // get the next version number
@@ -551,6 +662,7 @@ app.post("/api/questions/:questionId", (req, res) => {
 // update question version
 app.post("/api/questions/:questionId/:version", (req, res) => {
     if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
     const { questionId, version } = req.params;
     let question = req.body;
     models.Question.update(question, {
@@ -571,8 +683,9 @@ app.post("/api/questions/:questionId/:version", (req, res) => {
 // delete question (all versions)
 app.delete("/api/questions/:questionId", (req, res) => {
     if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
     const { questionId } = req.params;
-    models.Question.delete({ where: { id: questionId } }).then((questions) => {
+    models.Question.delete(questionId).then((questions) => {
         if (!questions) {
             res.json({
                 error: true,
@@ -585,27 +698,336 @@ app.delete("/api/questions/:questionId", (req, res) => {
     });
 });
 
+// get all drills
+app.get("/api/drills", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
+    models.Drill.findAll().then((drills) => res.json(drills));
+});
+
+// get drill by id
+app.get("/api/drills/:drillId", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
+    const { drillId } = req.params;
+    models.Drill.IncludeDrill.findByPk(drillId).then((drill) => {
+        if (!drill) {
+            res.json({
+                error: true,
+                msg: `drill ${drillId} does not exist`,
+                dne_error: true,
+            });
+        } else {
+            res.json(drill);
+        }
+    });
+});
+
+// add new drill
+app.post("/api/drills", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
+    const drill = req.body;
+    models.Drill.add(drill)
+        .then((d) => res.json(d))
+        .catch((err) => {
+            const response = { error: true, msg: [], message: [] };
+            for (const error of err.errors) {
+                response.message.push(error.message);
+                switch (error.type) {
+                    case "notNull Violation":
+                        if (error.path === "name") {
+                            response.msg.push("name is null");
+                            response.nameViolation = true;
+                        } else if (error.path === "numQuestions") {
+                            response.msg.push("numQuestions is null");
+                            response.numQuestionsViolation = true;
+                        } else if (error.path === "dueDate") {
+                            response.msg.push("dueDate is null");
+                            response.dueDateViolation = true;
+                        }
+                        response.null_violation = true;
+                        break;
+                    case "unique violation":
+                        response.msg.push(
+                            "generated code was not unique; please try again"
+                        );
+                        response.uniqueViolation = true;
+                        break;
+                    default:
+                        console.log("unknown error:", error);
+                        break;
+                }
+            }
+            res.json(response);
+        });
+});
+
+// update drill
+app.post("/api/drills/:drillId", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
+    const { drillId } = req.params;
+    const drill = req.body;
+    models.Drill.update(drill, { where: { id: drillId } }).then((num) => {
+        if (num === 1) {
+            res.json(drill);
+        } else {
+            res.json({
+                error: true,
+                msg: `drill ${drillId} does not exist`,
+                dne_error: true,
+            });
+        }
+    });
+});
+
+// delete drill
+app.delete("/api/drills/:drillId", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
+    const { drillId } = req.params;
+    models.Drill.delete(drillId).then((drill) => {
+        if (!drill) {
+            res.json({
+                error: true,
+                msg: `drill ${drillId} does not exist`,
+                dne_error: true,
+            });
+        } else {
+            res.json(drill);
+        }
+    });
+});
+
+// get all trainee drills
+// not used
+app.get("/api/traineeDrills", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    const { drillId } = req.query;
+    const where = {};
+    if (drillId) {
+        where.drillId = drillId;
+    }
+    models.TraineeDrill.findAll({ where }).then((drills) => res.json(drills));
+});
+
+// get all trainee drills by logged in trainee
+app.get("/api/traineeDrills/trainee", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Trainee")) return;
+    const traineeId = req.user.id;
+    models.TraineeDrill.IncludeDrill.findAll({ where: { traineeId } }).then(
+        (drills) => res.json(drills)
+    );
+});
+
+// get trainee drill by id
+// not used
+app.get("/api/traineeDrills/:traineeDrillId", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    const { traineeDrillId } = req.params;
+    models.TraineeDrill.findByPk(traineeDrillId).then((drill) => {
+        if (!drill) {
+            res.json({
+                error: true,
+                msg: `trainee drill ${traineeDrillId} does not exist`,
+                dne_error: true,
+            });
+        } else {
+            res.json(drill);
+        }
+    });
+});
+
+// add trainee drill by drill code
+app.post("/api/traineeDrills", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Trainee")) return;
+    const traineeId = req.user.id;
+    const code = req.body.drillCode;
+    models.Drill.findOne({ where: { code } }).then((drill) => {
+        if (!drill) {
+            res.json({
+                error: true,
+                msg: `drill with code "${code}" does not exist`,
+                dne_error: true,
+            });
+            return;
+        }
+        const drillId = drill.id;
+        models.TraineeDrill.All.findOrCreate({
+            where: { drillId, traineeId },
+            paranoid: false,
+        })
+            .then(([d, created]) => {
+                if (created) {
+                    res.json(d);
+                    return;
+                }
+                if (!d.deletedAt) {
+                    // trainee already in drill
+                    res.json({
+                        error: true,
+                        msg: `trainee ${traineeId} already in drill ${drillId}`,
+                        unique_violation: true,
+                    });
+                    return;
+                }
+                // trainee was in drill before; need to restore
+                models.TraineeDrill.restore({ where: { id: d.id } }).then(() =>
+                    res.json(d)
+                );
+            })
+            .catch((err) => {
+                const response = { error: true, msg: [], message: [] };
+                for (const error of err.errors) {
+                    response.message.push(error.message);
+                    switch (error.type) {
+                        case "notNull Violation":
+                            if (error.path === "drillId") {
+                                response.msg.push("drillId is null");
+                            } else if (error.path === "traineeId") {
+                                response.msg.push("traineeId is null");
+                            }
+                            response.null_violation = true;
+                            break;
+                        default:
+                            console.log("unknown error:", error);
+                            break;
+                    }
+                }
+                res.json(response);
+            });
+    });
+});
+
+// increment progress for trainee drill
+app.post("/api/traineeDrills/:traineeDrillId/increment", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Trainee")) return;
+    const { traineeDrillId } = req.params;
+    const where = { where: { id: traineeDrillId } };
+    models.TraineeDrill.increment("progress", where).then(([[rows, num]]) => {
+        // a little strange that it returns [[rows, num affected rows]]
+        // instead of [rows, num affected rows], which is what i expected
+        if (num === 0) {
+            res.json({
+                error: true,
+                msg: `trainee drill ${traineeDrillId} does not exist`,
+                dne_error: true,
+            });
+            return;
+        }
+        const traineeDrill = rows[0];
+        models.Drill.findByPk(traineeDrill.drillId, { paranoid: false }).then(
+            (drill) => {
+                if (traineeDrill.progress < drill.numQuestions) {
+                    res.json(traineeDrill);
+                    return;
+                }
+                models.TraineeDrill.update(
+                    { completedAt: sequelize.literal("CURRENT_TIMESTAMP") },
+                    where
+                ).then(() => {
+                    models.TraineeDrill.All.findByPk(traineeDrillId).then((d) =>
+                        res.json(d)
+                    );
+                });
+            }
+        );
+    });
+});
+
+app.delete("/api/traineeDrills/:traineeDrillId", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Trainee")) return;
+    const { traineeDrillId } = req.params;
+    models.TraineeDrill.delete({ where: { id: traineeDrillId } }).then(
+        (drills) => {
+            if (!drills) {
+                res.json({
+                    error: true,
+                    msg: `trainee drill ${traineeDrillId} does not exist`,
+                    dne_error: true,
+                });
+            } else {
+                res.json(drills);
+            }
+        }
+    );
+});
+
 // get all answered
 app.get("/api/answered", (req, res) => {
     if (!checkAuth(req, res)) return;
-    const { traineeId, assessorId } = req.query;
-    let where = {};
-    if (traineeId) {
-        where["traineeId"] = traineeId;
+    if (!checkRole(req, res, "Assessor")) return;
+    const { traineeDrillId, assessorId } = req.query;
+    const options = {
+        where: {},
+        include: [
+            models.Trainee.Include,
+            models.Assessor.Include,
+            models.TraineeDrill.Include,
+        ],
+    };
+    if (traineeDrillId) {
+        options.where.traineeDrillId = traineeDrillId;
     }
     if (assessorId) {
-        where["assessorId"] = assessorId;
+        options.where.assessorId = assessorId;
     }
-    models.Answered.findAll({ where, order: [["id", "ASC"]] }).then(
+    models.Answered.IncludeUsers.findAll().then((answered) =>
+        res.json(answered)
+    );
+});
+
+// get all answered by logged in trainee
+app.get("/api/answered/trainee", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Trainee")) return;
+    const traineeId = req.user.id;
+    models.Answered.IncludeDrill.findAll({ where: { traineeId } }).then(
         (answered) => res.json(answered)
     );
+});
+
+// get all graded by logged in assessor
+app.get("/api/answered/assessor", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Assessor")) return;
+    const assessorId = req.user.id;
+    models.Answered.IncludeTraineeDrill.findAll({
+        where: { assessorId, graded: true },
+        order: [["updatedAt", "ASC"]],
+    }).then((answered) => res.json(answered));
+});
+
+// get all ungraded by logged in assessor
+app.get("/api/answered/ungraded", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Assessor")) return;
+    const assessorId = req.user.id;
+    models.Answered.IncludeTraineeDrill.findAll({
+        where: {
+            // ungraded
+            graded: false,
+            // don't grade your own questions
+            traineeId: { [Sequelize.Op.ne]: assessorId },
+        },
+        order: [
+            ["questionId", "ASC"],
+            ["version", "ASC"],
+            ["id", "ASC"],
+        ],
+    }).then((answered) => res.json(answered));
 });
 
 // get answered by id
 app.get("/api/answered/:answeredId", (req, res) => {
     if (!checkAuth(req, res)) return;
     const { answeredId } = req.params;
-    models.Answered.findByPk(answeredId).then((question) => {
+    models.Answered.IncludeUsers.findByPk(answeredId).then((question) => {
         if (!question) {
             res.json({
                 error: true,
@@ -621,20 +1043,27 @@ app.get("/api/answered/:answeredId", (req, res) => {
 // add new answered
 app.post("/api/answered", (req, res) => {
     if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Trainee")) return;
+    const traineeId = req.user.id;
     const question = req.body;
+    question.traineeId = traineeId;
     models.Answered.add(question)
         .then((q) => res.json(q))
         .catch((err) => {
-            const error = err.errors[0];
-            let response = { error: true, message: error.message };
             // TODO: test and fix
-            switch (error.type) {
-                case "notNull Violation":
-                    // response.msg = "something is null";
-                    response.null_violation = true;
-                    break;
-                default:
-                    break;
+            console.log(err);
+            const response = { error: true, msg: [], message: [] };
+            for (const error of err.errors) {
+                response.message.push(error.message);
+                switch (error.type) {
+                    case "notNull Violation":
+                        // response.msg = "something is null";
+                        response.null_violation = true;
+                        break;
+                    default:
+                        console.log("unknown error:", error);
+                        break;
+                }
             }
             res.json(response);
         });
@@ -643,6 +1072,8 @@ app.post("/api/answered", (req, res) => {
 // update answered
 app.post("/api/answered/:answeredId", (req, res) => {
     if (!checkAuth(req, res)) return;
+    // only update answered when grading
+    if (!checkRole(req, res, "Assessor")) return;
     const { answeredId } = req.params;
     const question = req.body;
     models.Answered.update(question, { where: { id: answeredId } }).then(

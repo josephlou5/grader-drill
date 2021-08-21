@@ -1,5 +1,5 @@
 import React from "react";
-import { Title, resetValid, resetValidId, setElementValid } from "../shared";
+import { Title, setElementValid, resetValid, resetValidId } from "../shared";
 import { signUpUser } from "../api";
 
 export default function SignUpView({ onLogIn }) {

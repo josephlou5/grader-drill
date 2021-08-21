@@ -1,5 +1,5 @@
 import React from "react";
-import { Title, resetValid, resetValidId, setElementValid } from "../shared";
+import { Title, setElementValid, resetValid, resetValidId } from "../shared";
 import { logInUser } from "../api";
 
 export default function LogInView({ onLogIn }) {
@@ -61,6 +61,11 @@ export default function LogInView({ onLogIn }) {
                     type="password"
                     className="form-control"
                     id="password"
+                    onKeyDown={(event) => {
+                        if (event.code === "Enter") {
+                            document.getElementById("login-button").click();
+                        }
+                    }}
                     onChange={(event) => {
                         resetValid(event.target);
                         resetValidId("login");
@@ -77,7 +82,7 @@ export default function LogInView({ onLogIn }) {
                 </div>
             </div>
 
-            <div className="form-check mb-3">
+            {/* <div className="form-check mb-3">
                 <input
                     type="checkbox"
                     className="form-check-input"
@@ -86,11 +91,12 @@ export default function LogInView({ onLogIn }) {
                 <label className="form-check-label" htmlFor="remember-me">
                     Remember me
                 </label>
-            </div>
+            </div> */}
 
             <button
                 type="button"
                 className="btn btn-lg btn-primary"
+                id="login-button"
                 onClick={handleLogIn}
             >
                 Log In

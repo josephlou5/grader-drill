@@ -6,19 +6,7 @@
         "host": "localhost",
         "dialect": "postgres"
     },
-    "test": {
-        "username": "josephlou",
-        "password": "password",
-        "database": "grader_drill_test",
-        "host": "localhost",
-        "dialect": "postgres"
-    },
     "production": {
-        "username": "josephlou",
-        "password": "password",
-        "database": "grader_drill_production",
-        "host": "localhost",
-        "dialect": "postgres",
         "use_env_variable": "DATABASE_URL"
     }
 }

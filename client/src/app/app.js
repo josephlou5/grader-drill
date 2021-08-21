@@ -17,15 +17,23 @@ import HomeView from "./components/homeView";
 import AboutView from "./components/aboutView";
 import LogInView from "./components/logInView";
 import SignUpView from "./components/signUpView";
+import ProfileView from "./components/profileView";
+
+import AdminDashboard from "./components/adminDashboard";
+import UsersView from "./components/usersView";
+import QuestionsView from "./components/questionsView";
+import EditQuestionView from "./components/editQuestionView";
+import DrillsView from "./components/drillsView";
+import DrillView from "./components/drillView";
+import EditDrillView from "./components/editDrillView";
 
 import TraineeDashboard from "./components/traineeDashboard";
+import JoinDrillView from "./components/joinDrillView";
 import TrainingView from "./components/trainingView";
 import AnsweredView from "./components/answeredView";
 
 import AssessorDashboard from "./components/assessorDashboard";
 import GradingView from "./components/gradingView";
-import QuestionsView from "./components/questionsView";
-import EditQuestionView from "./components/editQuestionView";
 
 export default function App() {
     return (
@@ -35,21 +43,29 @@ export default function App() {
     );
 }
 
+function PrivateRoute({ user, children, ...rest }) {
+    const render = ({ location }) => {
+        if (user) return children;
+        const to = {
+            pathname: "/login",
+            state: { from: location },
+        };
+        return <Redirect to={to} />;
+    };
+    return <Route {...rest} render={render} />;
+}
+
 function AppView() {
     const [loading, setLoading] = useState(true);
     const [loggedIn, setLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
-    const [role, setRoleState] = useState({});
+    const [role, setRoleState] = useState();
 
     const history = useHistory();
 
-    function setRole(update) {
-        if (update.role) {
-            setRoleCookie(update.role);
-        } else {
-            setRoleCookie(null);
-        }
-        setRoleState(update);
+    function setRole(role) {
+        setRoleCookie(role);
+        setRoleState(role);
     }
 
     // in the first render, check if the user is logged in through cookies
@@ -75,13 +91,9 @@ function AppView() {
         if (roles.length === 0) {
             return;
         } else if (roles.length === 1) {
-            setRole({ oneRole: true, role: roles[0] });
+            setRole(roles[0]);
         } else {
-            if (user.role) {
-                setRole({ role: user.role });
-            } else {
-                setRole({});
-            }
+            setRole(user.role || null);
         }
     }
 
@@ -94,12 +106,12 @@ function AppView() {
     function handleLogOut() {
         setLoggedIn(false);
         setUser(null);
-        setRole({});
+        setRole(null);
         logOutUser(() => history.push("/"));
     }
 
     function handleChooseRole(role) {
-        setRole({ role });
+        setRole(role);
     }
 
     if (loading) {
@@ -182,61 +194,67 @@ function AppView() {
 function LoggedInView({ user, role, onChooseRole, onLogOut }) {
     let navbar = null;
     let other = <PageNotFound />;
-    if (role.role === "Admin") {
-        navbar = (
-            <div className="collapse navbar-collapse">
-                <div className="navbar-nav">
-                    <Link to="/dashboard" className="nav-link">
-                        Dashboard
-                    </Link>
-                    <Link to="/drills" className="nav-link">
-                        Drills
-                    </Link>
-                    <Link to="/users" className="nav-link">
-                        Users
-                    </Link>
+    switch (role) {
+        case "Admin":
+            navbar = (
+                <div className="collapse navbar-collapse">
+                    <div className="navbar-nav">
+                        <Link to="/dashboard" className="nav-link">
+                            Dashboard
+                        </Link>
+                        <Link to="/users" className="nav-link">
+                            Users
+                        </Link>
+                        <Link to="/questions" className="nav-link">
+                            Questions
+                        </Link>
+                        <Link to="/drills" className="nav-link">
+                            Drills
+                        </Link>
+                    </div>
                 </div>
-            </div>
-        );
-        other = <AdminView user={user} />;
-    } else if (role.role === "Trainee") {
-        navbar = (
-            <div className="collapse navbar-collapse">
-                <div className="navbar-nav">
-                    <Link to="/dashboard" className="nav-link">
-                        Dashboard
-                    </Link>
-                    <Link to="/training" className="nav-link">
-                        Training
-                    </Link>
+            );
+            other = <AdminView admin={user} />;
+            break;
+        case "Trainee":
+            navbar = (
+                <div className="collapse navbar-collapse">
+                    <div className="navbar-nav">
+                        <Link to="/dashboard" className="nav-link">
+                            Dashboard
+                        </Link>
+                        <Link to="/training" className="nav-link">
+                            Training
+                        </Link>
+                    </div>
                 </div>
-            </div>
-        );
-        other = <TraineeView trainee={user} />;
-    } else if (role.role === "Assessor") {
-        navbar = (
-            <div className="collapse navbar-collapse">
-                <div className="navbar-nav">
-                    <Link to="/dashboard" className="nav-link">
-                        Dashboard
-                    </Link>
-                    <Link to="/grading" className="nav-link">
-                        Grading
-                    </Link>
-                    <Link to="/questions" className="nav-link">
-                        Questions
-                    </Link>
+            );
+            other = <TraineeView trainee={user} />;
+            break;
+        case "Assessor":
+            navbar = (
+                <div className="collapse navbar-collapse">
+                    <div className="navbar-nav">
+                        <Link to="/dashboard" className="nav-link">
+                            Dashboard
+                        </Link>
+                        <Link to="/grading" className="nav-link">
+                            Grading
+                        </Link>
+                    </div>
                 </div>
-            </div>
-        );
-        other = <AssessorView assessor={user} />;
+            );
+            other = <AssessorView assessor={user} />;
+            break;
+        default:
+            break;
     }
 
     const logOutButton = (
         <div className="d-flex">
-            {user && role.role && (
+            {user && role && (
                 <Link to="/" className="nav-link text-secondary">
-                    {role.role}
+                    {role}
                 </Link>
             )}
             {user && (
@@ -268,19 +286,12 @@ function LoggedInView({ user, role, onChooseRole, onLogOut }) {
         </nav>
     );
 
-    let home;
-    if (role.oneRole) {
-        home = <Redirect to="/dashboard" />;
-    } else {
-        home = <ChooseRole user={user} onChooseRole={onChooseRole} />;
-    }
-
     return (
         <React.Fragment>
             {navbar}
             <Switch>
                 <Route exact path="/">
-                    {home}
+                    <ChooseRole user={user} onChooseRole={onChooseRole} />
                 </Route>
                 <Route exact path="/profile">
                     <ProfileView user={user} />
@@ -310,6 +321,10 @@ function ChooseRole({ user, onChooseRole }) {
         );
     }
 
+    if (user.roles.length === 1) {
+        return <Redirect to="/dashboard" />;
+    }
+
     return (
         <React.Fragment>
             <Title title="Choose Role" />
@@ -329,37 +344,67 @@ function ChooseRole({ user, onChooseRole }) {
     );
 }
 
-function ProfileView({ user }) {
-    if (!user) {
-        return (
-            <React.Fragment>
-                <Title title="Invalid user" />
-                <h1>Invalid user</h1>
-            </React.Fragment>
-        );
-    }
-
-    const { roles } = user;
-    if (roles.length === 0) {
-        roles.push("No roles");
-    }
-
+function AdminView({ admin }) {
     return (
         <React.Fragment>
-            <Title title="Profile" />
-            <h1>Profile</h1>
-            <p>Email: {user.email}</p>
-            <p>Roles: {roles.join(", ")}</p>
+            <Switch>
+                {/* dashboard */}
+                <Route exact path="/dashboard">
+                    <AdminDashboard />
+                </Route>
+
+                {/* users */}
+                <Route exact path="/users">
+                    <UsersView admin={admin} />
+                </Route>
+
+                {/* questions */}
+                <Route exact path="/questions">
+                    <QuestionsView />
+                </Route>
+                <Route exact path="/questions/new">
+                    <EditQuestionView newQuestion={true} />
+                </Route>
+                <Route exact path="/questions/edit/:questionId">
+                    <EditQuestion />
+                </Route>
+
+                {/* drills */}
+                <Route exact path="/drills">
+                    <DrillsView />
+                </Route>
+                <Route exact path="/drills/new">
+                    <EditDrillView newDrill={true} />
+                </Route>
+                <Route exact path="/drills/edit/:drillId">
+                    <EditDrill />
+                </Route>
+                <Route exact path="/drills/:drillId">
+                    <DrillView />
+                </Route>
+
+                {/* answered */}
+                <Route exact path="/answered/:answeredId">
+                    <AnsweredView admin={admin} />
+                </Route>
+
+                {/* catch-all for page not found */}
+                <Route path="*">
+                    <PageNotFound />
+                </Route>
+            </Switch>
         </React.Fragment>
     );
 }
 
-function AdminView({ user }) {
-    return (
-        <React.Fragment>
-            <h1>Admin page</h1>
-        </React.Fragment>
-    );
+function EditDrill() {
+    const { drillId } = useParams();
+    return <EditDrillView drillId={drillId} />;
+}
+
+function EditQuestion() {
+    const { questionId } = useParams();
+    return <EditQuestionView questionId={questionId} />;
 }
 
 function TraineeView({ trainee }) {
@@ -368,7 +413,12 @@ function TraineeView({ trainee }) {
             <Switch>
                 {/* dashboard */}
                 <Route exact path="/dashboard">
-                    <TraineeDashboard trainee={trainee} />
+                    <TraineeDashboard />
+                </Route>
+
+                {/* join drill */}
+                <Route exact path="/join/:drillCode">
+                    <JoinDrillView />
                 </Route>
 
                 {/* training */}
@@ -412,17 +462,6 @@ function AssessorView({ assessor }) {
                     <AnsweredView assessor={assessor} />
                 </Route>
 
-                {/* questions */}
-                <Route exact path="/questions">
-                    <QuestionsView />
-                </Route>
-                <Route exact path="/questions/new">
-                    <EditQuestionView newQuestion={true} />
-                </Route>
-                <Route exact path="/questions/edit/:questionId">
-                    <EditQuestion />
-                </Route>
-
                 {/* catch-all for page not found */}
                 <Route path="*">
                     <PageNotFound />
@@ -441,9 +480,4 @@ function GradeQuestion({ assessor }) {
             answeredId={answeredId}
         />
     );
-}
-
-function EditQuestion() {
-    const { questionId } = useParams();
-    return <EditQuestionView questionId={questionId} />;
 }

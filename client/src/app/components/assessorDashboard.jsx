@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Title, QuestionType, UserEmail } from "../shared";
-import { getAllAnswered } from "../api";
+import { Title, QuestionType } from "../shared";
+import { getAllAnswered, getAssessorGraded } from "../api";
 
 export default function AssessorDashboard(props) {
     return (
@@ -15,6 +15,11 @@ export default function AssessorDashboard(props) {
 
 function Dashboard({ assessor }) {
     const [answered, setAnswered] = useState(null);
+    const [anonymous, setAnonymous] = useState(true);
+
+    function handleToggleAnonymous() {
+        setAnonymous(!anonymous);
+    }
 
     useEffect(() => {
         getAllAnswered((answered) => {
@@ -26,6 +31,22 @@ function Dashboard({ assessor }) {
         return <p>Getting answered...</p>;
     }
 
+    // could turn this into a toggle button instead of a checkbox
+    const anonymousToggle = (
+        <div className="form-check form-check-inline">
+            <input
+                type="checkbox"
+                className="form-check-input"
+                id="anonymousCheckbox"
+                checked={anonymous}
+                onChange={handleToggleAnonymous}
+            />
+            <label className="form-check-label" htmlFor="anonymousCheckbox">
+                Anonymous
+            </label>
+        </div>
+    );
+
     return (
         <React.Fragment>
             <Link to="/grading">
@@ -33,30 +54,38 @@ function Dashboard({ assessor }) {
                     Grading
                 </button>
             </Link>
-            {/* <button type="button" className="btn btn-light m-2">
-                Export
-            </button> */}
+            <div>{anonymousToggle}</div>
 
-            <GradedTable assessor={assessor} answered={answered} />
-            <AnsweredTable assessor={assessor} answered={answered} />
+            <GradedTable assessor={assessor} anonymous={anonymous} />
+            <AnsweredTable answered={answered} anonymous={anonymous} />
         </React.Fragment>
     );
 }
 
-function GradedTable({ assessor, answered }) {
-    let index = 0;
-    const rows = answered.flatMap((question) => {
-        if (!question.graded) return [];
-        if (question.assessorId !== assessor.id) return [];
+function GradedTable({ assessor, anonymous }) {
+    const [graded, setGraded] = useState(null);
 
-        index++;
+    useEffect(() => {
+        getAssessorGraded((g) => setGraded(g));
+    }, []);
+
+    if (!graded) {
+        return <p>Getting graded...</p>;
+    }
+
+    const rows = graded.map((question, index) => {
+        let traineeStr;
+        if (anonymous) {
+            traineeStr = "Anonymous";
+        } else {
+            traineeStr = question.Trainee.User.email;
+        }
+
         const link = "/answered/" + question.id;
-        return [
+        return (
             <tr key={index}>
-                <th>{index}</th>
-                <td>
-                    <UserEmail userId={question.traineeId} />
-                </td>
+                <th>{index + 1}</th>
+                <td>{traineeStr}</td>
                 <td>{question.questionId}</td>
                 <td>
                     <QuestionType
@@ -75,40 +104,36 @@ function GradedTable({ assessor, answered }) {
                         </button>
                     </Link>
                 </td>
-            </tr>,
-        ];
+            </tr>
+        );
     });
 
-    if (rows.length === 0) {
-        return (
-            <React.Fragment>
-                <h2>My Graded</h2>
-                <p>None graded</p>
-            </React.Fragment>
-        );
-    }
+    const table = (
+        <table className="table table-hover align-middle">
+            <thead className="table-light">
+                <tr>
+                    <th></th>
+                    <th>Trainee</th>
+                    <th>Question Id</th>
+                    <th>Question Type</th>
+                    <th>Score</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>{rows}</tbody>
+        </table>
+    );
 
     return (
         <React.Fragment>
             <h2>My Graded</h2>
-            <table className="table table-hover align-middle">
-                <thead className="table-light">
-                    <tr>
-                        <th></th>
-                        <th>Trainee</th>
-                        <th>Question Id</th>
-                        <th>Question Type</th>
-                        <th>Score</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>{rows}</tbody>
-            </table>
+            {table}
+            {rows.length === 0 && <p>None graded</p>}
         </React.Fragment>
     );
 }
 
-function AnsweredTable({ assessor, answered }) {
+function AnsweredTable({ answered, anonymous }) {
     const [hideGraded, setHideGraded] = useState(false);
 
     function handleToggleHideGraded() {
@@ -124,15 +149,22 @@ function AnsweredTable({ assessor, answered }) {
             rowsShowing++;
         }
 
+        let traineeStr;
+        if (anonymous) {
+            traineeStr = "Anonymous";
+        } else {
+            traineeStr = question.Trainee.User.email;
+        }
+
         let assessorStr;
         if (!question.graded) {
             assessorStr = "-";
         } else if (question.autograded) {
             assessorStr = "Auto-graded";
-        } else if (assessor.id === question.assessorId) {
-            assessorStr = assessor.email;
+        } else if (anonymous) {
+            assessorStr = "Graded";
         } else {
-            assessorStr = <UserEmail userId={question.assessorId} dne={"-"} />;
+            assessorStr = question.Assessor.User.email;
         }
 
         let score = "-";
@@ -144,9 +176,7 @@ function AnsweredTable({ assessor, answered }) {
         return (
             <tr key={index} className={classes}>
                 <th>{index + 1}</th>
-                <td>
-                    <UserEmail userId={question.traineeId} />
-                </td>
+                <td>{traineeStr}</td>
                 <td>{assessorStr}</td>
                 <td>{question.questionId}</td>
                 <td>
@@ -186,37 +216,29 @@ function AnsweredTable({ assessor, answered }) {
             <tbody>{rows}</tbody>
         </table>
     );
-    if (rowsShowing === 0) {
-        table = (
-            <React.Fragment>
-                {table}
-                <p>No answered</p>
-            </React.Fragment>
-        );
-    }
+
+    // could turn this into a toggle button instead of a checkbox
+    const hideGradedToggle = (
+        <div className="form-check form-check-inline">
+            <input
+                type="checkbox"
+                className="form-check-input"
+                id="hideGradedCheckbox"
+                checked={hideGraded}
+                onChange={handleToggleHideGraded}
+            />
+            <label className="form-check-label" htmlFor="hideGradedCheckbox">
+                Hide Graded
+            </label>
+        </div>
+    );
 
     return (
         <React.Fragment>
             <h2>All Answered</h2>
-
-            {/* could turn this into a toggle button instead of a checkbox */}
-            <div className="form-check form-check-inline">
-                <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id="hideGradedCheckbox"
-                    defaultChecked={hideGraded}
-                    onChange={handleToggleHideGraded}
-                />
-                <label
-                    className="form-check-label"
-                    htmlFor="hideGradedCheckbox"
-                >
-                    Hide Graded
-                </label>
-            </div>
-
+            {hideGradedToggle}
             {table}
+            {rowsShowing === 0 && <p>No answered</p>}
         </React.Fragment>
     );
 }

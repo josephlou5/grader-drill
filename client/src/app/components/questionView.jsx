@@ -21,9 +21,12 @@ function Question({ answered, question: propsQuestion, noChange, onSubmit }) {
     }
 
     useEffect(() => {
-        const initial = { highlights: [], ...propsQuestion };
+        const initial = { ...propsQuestion };
+        if (!initial.highlights) {
+            initial.highlights = [];
+        }
         if (propsQuestion.questionType === "Multiple Choice") {
-            initial["answer"] = null;
+            initial.answer = null;
         }
         setQuestionState(initial);
     }, [propsQuestion]);
@@ -35,7 +38,7 @@ function Question({ answered, question: propsQuestion, noChange, onSubmit }) {
             highlights: answered.highlights,
         };
         if (propsQuestion.questionType === "Multiple Choice") {
-            question["answer"] = answered.answer;
+            question.answer = answered.answer;
         }
         const fieldProps = {
             question,
@@ -106,7 +109,7 @@ function Question({ answered, question: propsQuestion, noChange, onSubmit }) {
         } else {
             if (!question.highlights.some((h) => h.byUser)) {
                 setValid("question-code", false);
-            } else {
+            } else if (question.questionType === "Comment") {
                 question.highlights.forEach((h, index) => {
                     setValid(
                         `highlight-${index}-comment`,

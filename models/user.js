@@ -1,11 +1,12 @@
 "use strict";
 const { Model } = require("sequelize");
 const crypto = require("crypto");
+const { nanoid } = require("nanoid");
 
 function hash(password, salt) {
     // Hashes a password with a given salt.
     return crypto
-        .pbkdf2Sync(password, salt, 10000, 64, "sha512")
+        .pbkdf2Sync(password.normalize(), salt, 10000, 64, "sha512")
         .toString("hex");
 }
 
@@ -30,21 +31,41 @@ module.exports = (sequelize, DataTypes) => {
             const { password } = user;
             delete user.password;
             if (password) {
-                Object.assign(user, hashPassword(password.normalize()));
+                Object.assign(user, hashPassword(password));
             }
             return User.create(user).then(async (u) => {
-                if (u.isTrainee) {
+                if (u.roles.includes("Trainee")) {
                     await u.createTrainee({ userId: u.id });
                 }
-                if (u.isAssessor) {
+                if (u.roles.includes("Assessor")) {
                     await u.createAssessor({ userId: u.id });
                 }
                 return new Promise((resolve) => resolve(u));
             });
         }
 
+        noPass() {
+            const user = this.toJSON();
+            delete user.salt;
+            delete user.hash;
+            return user;
+        }
+
         checkPassword(password) {
-            return this.hash === hash(password.normalize(), this.salt);
+            return this.hash === hash(password, this.salt);
+        }
+
+        resetPassword() {
+            const password = nanoid(16);
+            return this.update(hashPassword(password)).then((u) => {
+                u = u.noPass();
+                u.password = password;
+                return u;
+            });
+        }
+
+        changePassword(password) {
+            return this.update(hashPassword(password)).then((u) => u.noPass());
         }
     }
     User.init(
@@ -74,24 +95,6 @@ module.exports = (sequelize, DataTypes) => {
                 },
                 set(value) {
                     this.setDataValue("roles", JSON.stringify(value));
-                },
-            },
-            isAdmin: {
-                type: DataTypes.VIRTUAL,
-                get() {
-                    return this.roles.includes("Admin");
-                },
-            },
-            isTrainee: {
-                type: DataTypes.VIRTUAL,
-                get() {
-                    return this.roles.includes("Trainee");
-                },
-            },
-            isAssessor: {
-                type: DataTypes.VIRTUAL,
-                get() {
-                    return this.roles.includes("Assessor");
                 },
             },
         },

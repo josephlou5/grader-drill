@@ -6,7 +6,7 @@ function getRequest(route) {
     return fetch("/api" + route).then((res) => res.json());
 }
 
-function postRequest(route, data) {
+function postRequest(route, data = {}) {
     return new Promise((resolve, reject) => {
         fetch("/api" + route, {
             method: "POST",
@@ -49,6 +49,9 @@ function getMsg(requestType, resource) {
         case "update":
             action = "updated";
             break;
+        case "reset":
+            action = "reset";
+            break;
         case "delete":
             action = "deleted";
             break;
@@ -76,6 +79,9 @@ function getErrMsg(requestType, resource) {
             break;
         case "update":
             action = "updating";
+            break;
+        case "reset":
+            action = "resetting";
             break;
         case "delete":
             action = "deleting";
@@ -162,7 +168,6 @@ export function isLoggedIn(callback = null) {
 
 // API
 
-// not used
 export function getAllUsers(callback = null) {
     getRequest("/users").then((users) => {
         users = checkError(users, "get", "all users", true);
@@ -170,11 +175,31 @@ export function getAllUsers(callback = null) {
     });
 }
 
+// not used
 export function getUser(userId, callback = null) {
     if (checkNull(userId, callback)) return;
     if (!checkInt(userId, "get", "user", callback)) return;
     getRequest(`/users/${userId}`).then((u) => {
         u = checkError(u, "get", "user");
+        if (callback) callback(u);
+    });
+}
+
+export function changeUserPassword(oldPass, newPass, callback = null) {
+    if (checkNull(oldPass, callback)) return;
+    if (checkNull(newPass, callback)) return;
+    // infers id from logged in user
+    postRequest("/users/password", { oldPass, newPass }).then((u) => {
+        checkError(u, "update", "user password");
+        if (callback) callback(u);
+    });
+}
+
+export function resetUserPassword(userId, callback = null) {
+    if (checkNull(userId, callback)) return;
+    if (!checkInt(userId, "reset", "user password", callback)) return;
+    postRequest(`/users/${userId}/password`).then((u) => {
+        u = checkError(u, "reset", "user password");
         if (callback) callback(u);
     });
 }
@@ -237,8 +262,102 @@ export function deleteQuestion(questionId, callback = null) {
     if (checkNull(questionId, callback)) return;
     if (!checkInt(questionId, "delete", "question", callback)) return;
     deleteRequest(`/questions/${questionId}`).then((q) => {
-        q = checkError(q, "delete", "question");
+        q = checkError(q, "delete", "question", true);
         if (callback) callback(q);
+    });
+}
+
+export function getAllDrills(callback = null) {
+    getRequest("/drills").then((drills) => {
+        drills = checkError(drills, "get", "all drills", true);
+        if (callback) callback(drills);
+    });
+}
+
+export function getDrill(drillId, callback = null) {
+    if (checkNull(drillId, callback)) return;
+    if (!checkInt(drillId, "get", "drill", callback)) return;
+    getRequest(`/drills/${drillId}`).then((d) => {
+        d = checkError(d, "get", "drill");
+        if (callback) callback(d);
+    });
+}
+
+export function addDrill(drill, callback = null) {
+    if (checkNull(drill, callback)) return;
+    postRequest("/drills", drill).then((d) => {
+        d = checkError(d, "add", "drill");
+        if (callback) callback(d);
+    });
+}
+
+export function updateDrill(drill, callback = null) {
+    if (checkNull(drill, callback)) return;
+    postRequest(`/drills/${drill.id}`, drill).then((d) => {
+        d = checkError(d, "update", "drill");
+        if (callback) callback(d);
+    });
+}
+
+export function deleteDrill(drillId, callback = null) {
+    if (checkNull(drillId, callback)) return;
+    if (!checkInt(drillId, "delete", "drill", callback)) return;
+    deleteRequest(`/drills/${drillId}`).then((d) => {
+        d = checkError(d, "delete", "drill");
+        if (callback) callback(d);
+    });
+}
+
+// not used
+export function getAllTraineeDrills(callback = null) {
+    getRequest("/traineeDrills").then((drills) => {
+        drills = checkError(drills, "get", "all trainee drills", true);
+        if (callback) callback(drills);
+    });
+}
+
+// not used
+export function getTraineeDrill(traineeDrillId, callback = null) {
+    if (checkNull(traineeDrillId, callback)) return;
+    if (!checkInt(traineeDrillId, "get", "trainee drill", callback)) return;
+    getRequest(`/traineeDrills/${traineeDrillId}`).then((d) => {
+        d = checkError(d, "get", "trainee drill");
+        if (callback) callback(d);
+    });
+}
+
+export function getDrillByTrainee(callback = null) {
+    // infers trainee id from logged in user
+    getRequest("/traineeDrills/trainee").then((d) => {
+        d = checkError(d, "get", "drills by trainee", true);
+        if (callback) callback(d);
+    });
+}
+
+export function addTraineeDrill(drillCode, callback = null) {
+    // infers trainee id from logged in user
+    if (checkNull(drillCode, callback)) return;
+    postRequest("/traineeDrills", { drillCode }).then((d) => {
+        checkError(d, "add", "trainee drill");
+        if (callback) callback(d);
+    });
+}
+
+export function traineeDrillProgress(traineeDrillId, callback = null) {
+    if (checkNull(traineeDrillId, callback)) return;
+    if (!checkInt(traineeDrillId, "update", "trainee drill", callback)) return;
+    postRequest(`/traineeDrills/${traineeDrillId}/increment`).then((d) => {
+        d = checkError(d, "update", "trainee drill");
+        if (callback) callback(d);
+    });
+}
+
+export function deleteTraineeDrill(traineeDrillId, callback = null) {
+    if (checkNull(traineeDrillId, callback)) return;
+    if (!checkInt(traineeDrillId, "delete", "trainee drill", callback)) return;
+    deleteRequest(`/traineeDrills/${traineeDrillId}`).then((d) => {
+        d = checkError(d, "delete", "trainee drill", true);
+        if (callback) callback(d);
     });
 }
 
@@ -258,32 +377,27 @@ export function getAnswered(answeredId, callback = null) {
     });
 }
 
-export function getTraineeAnswered(traineeId, callback = null) {
-    if (checkNull(traineeId, callback)) return;
-    if (!checkInt(traineeId, "get", "trainee answered", callback)) return;
-    getRequest(`/answered/?traineeId=${traineeId}`).then((answered) => {
-        answered = checkError(
-            answered,
-            "get",
-            `answered for trainee ${traineeId}`,
-            true
-        );
+export function getTraineeAnswered(callback = null) {
+    // infers trainee id from logged in user
+    getRequest("/answered/trainee").then((answered) => {
+        answered = checkError(answered, "get", "answered for trainee", true);
         if (callback) callback(answered);
     });
 }
 
-// not used because assessor dashboard filters on its own
-export function getAssessorGraded(assessorId, callback = null) {
-    if (checkNull(assessorId, callback)) return;
-    if (!checkInt(assessorId, "get", "assessor answered", callback)) return;
-    getRequest(`/answered/?assessorId=${assessorId}`).then((graded) => {
-        graded = checkError(
-            graded,
-            "get",
-            `graded for assessor ${assessorId}`,
-            true
-        );
+export function getAssessorGraded(callback = null) {
+    // infers assessor id from logged in user
+    getRequest("/answered/assessor").then((graded) => {
+        graded = checkError(graded, "get", "graded for assessor", true);
         if (callback) callback(graded);
+    });
+}
+
+export function getAssessorUngraded(callback = null) {
+    // infers assessor id from logged in user
+    getRequest("/answered/ungraded").then((answered) => {
+        answered = checkError(answered, "get", "ungraded answered", true);
+        if (callback) callback(answered);
     });
 }
 

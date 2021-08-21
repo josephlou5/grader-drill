@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link, Redirect, useHistory } from "react-router-dom";
-import { Title, UserEmail } from "../shared";
+import { Title } from "../shared";
 import {
-    getAllAnswered,
     getAnswered,
+    getAssessorUngraded,
     getQuestionVersion,
     updateAnswered,
 } from "../api";
@@ -52,22 +52,15 @@ function Grading({ assessor, specificQuestion, answeredId }) {
                 });
             } else {
                 // get the next ungraded question
-                getAllAnswered((answered) => {
-                    const nextUngraded = answered.find(
-                        (q) =>
-                            // ungraded
-                            !q.graded &&
-                            // not answered by yourself
-                            assessor.id !== q.traineeId &&
-                            // not the same question as the current
-                            !(question && q.id === question.id)
-                    );
-                    if (nextUngraded == null) {
-                        // no more to grade
-                        setNoMoreQuestions(true);
+                getAssessorUngraded((questions) => {
+                    for (const q of questions) {
+                        // if questions were skipped, don't grade them again
+                        if (answered && q.id <= answered.id) continue;
+                        setAnswered(q);
                         return;
                     }
-                    setAnswered(nextUngraded);
+                    // no more to grade
+                    setNoMoreQuestions(true);
                 });
             }
         } else {
@@ -115,6 +108,44 @@ function Grading({ assessor, specificQuestion, answeredId }) {
             specificQuestion={specificQuestion}
             onNextQuestion={handleNextQuestion}
         />
+    );
+}
+
+function TraineeInfo({ answered }) {
+    const [anonymous, setAnonymous] = useState(true);
+
+    function handleToggleAnonymous() {
+        setAnonymous(!anonymous);
+    }
+
+    // could turn this into a toggle button instead of a checkbox
+    const anonymousToggle = (
+        <div className="form-check form-check-inline">
+            <input
+                type="checkbox"
+                className="form-check-input"
+                id="anonymousCheckbox"
+                checked={anonymous}
+                onChange={handleToggleAnonymous}
+            />
+            <label className="form-check-label" htmlFor="anonymousCheckbox">
+                Anonymous
+            </label>
+        </div>
+    );
+
+    let traineeStr = "Trainee: ";
+    if (anonymous) {
+        traineeStr += "Anonymous";
+    } else {
+        traineeStr += answered.Trainee.User.email;
+    }
+
+    return (
+        <React.Fragment>
+            {anonymousToggle}
+            <div>{traineeStr}</div>
+        </React.Fragment>
     );
 }
 
@@ -199,9 +230,7 @@ function GradeQuestion({
     return (
         <div className="container-fluid">
             <div className="row">
-                <div>
-                    <UserEmail userId={answered.traineeId} label={"Trainee"} />
-                </div>
+                <TraineeInfo answered={answered} />
                 <div>Assessor: {assessor.email}</div>
                 <div className="col-6">
                     <QuestionView

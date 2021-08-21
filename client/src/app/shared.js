@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getUser, getQuestionVersion } from "./api.js";
+import { getQuestionVersion } from "./api.js";
 
 // component to set the document title
 export function Title({ title }) {
@@ -26,42 +26,6 @@ export function ResizeTextareas() {
     });
     // component doesn't render anything
     return null;
-}
-
-// component to load a user's email
-export function UserEmail({ userId, label, dne = "Unknown" }) {
-    const [state, setState] = useState({
-        loading: true,
-        user: null,
-    });
-
-    useEffect(() => {
-        if (isNaN(userId)) {
-            setState({ invalid: true });
-            return;
-        }
-        getUser(userId, (user) => {
-            setState({
-                loading: false,
-                user,
-            });
-        });
-    }, [userId]);
-
-    let pre = "";
-    if (label) {
-        pre = label + ": ";
-    }
-
-    if (state.invalid) {
-        return pre + dne;
-    } else if (state.loading) {
-        return pre + "Loading...";
-    } else if (state.user) {
-        return pre + state.user.email;
-    } else {
-        return pre + dne;
-    }
 }
 
 // component to load a question's type
@@ -94,7 +58,7 @@ export function TextareaLine(props) {
     const updatedProps = { ...props };
     updatedProps.onKeyDown = (event) => {
         // enter key doesn't do anything
-        if (event.keyCode === 13) {
+        if (event.code === "Enter") {
             event.preventDefault();
         }
         if (props.onKeyDown) props.onKeyDown(event);

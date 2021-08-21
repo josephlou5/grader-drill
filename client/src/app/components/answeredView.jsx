@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Title, UserEmail } from "../shared";
+import { Title } from "../shared";
 import { getAnswered, getQuestionVersion } from "../api";
 import QuestionView from "./questionView";
 import RubricField from "./rubricField";
 
-export default function AnsweredView({ trainee, assessor, hideRubric }) {
+export default function AnsweredView({ admin, trainee, assessor, hideRubric }) {
     const [invalid, setInvalid] = useState(false);
     const [answered, setAnswered] = useState(null);
     const [question, setQuestion] = useState(null);
@@ -20,7 +20,7 @@ export default function AnsweredView({ trainee, assessor, hideRubric }) {
             }
             setAnswered(a);
             getQuestionVersion(a.questionId, a.version, (q) => {
-                // assume `q` must exist
+                // assume question must exist
                 setQuestion(q);
             });
         });
@@ -37,10 +37,16 @@ export default function AnsweredView({ trainee, assessor, hideRubric }) {
     if (trainee && trainee.id !== answered.traineeId) {
         return (
             <React.Fragment>
+                <Title title="Access Denied" />
                 <h1>Sorry! Access Denied</h1>
                 <p>Trainees can only view their own answered questions.</p>
             </React.Fragment>
         );
+    }
+
+    let score = null;
+    if (answered.graded) {
+        score = <div>Score: {answered.score}</div>;
     }
 
     let rubricField = null;
@@ -86,37 +92,6 @@ export default function AnsweredView({ trainee, assessor, hideRubric }) {
         }
     }
 
-    let traineeStr = "Trainee: ";
-    if (trainee && trainee.id === answered.traineeId) {
-        traineeStr += trainee.email;
-    } else if (assessor && assessor.id === answered.traineeId) {
-        traineeStr += assessor.email;
-    } else {
-        traineeStr = (
-            <UserEmail userId={answered.traineeId} label={"Trainee"} />
-        );
-    }
-    let assessorStr = "Assessor: ";
-    if (answered.graded) {
-        if (answered.autograded) {
-            assessorStr += "Auto-graded";
-        } else if (assessor && assessor.id === answered.assessorId) {
-            assessorStr += assessor.email;
-        } else if (trainee && trainee.id === answered.assessorId) {
-            assessorStr += trainee.email;
-        } else {
-            assessorStr = (
-                <UserEmail userId={answered.assessorId} label={"Assessor"} />
-            );
-        }
-    } else {
-        assessorStr += "Ungraded";
-    }
-    let score = null;
-    if (answered.graded) {
-        score = <div>Score: {answered.score}</div>;
-    }
-
     let field = (
         <QuestionView answered={answered} question={question} noChange={true} />
     );
@@ -132,11 +107,61 @@ export default function AnsweredView({ trainee, assessor, hideRubric }) {
     return (
         <React.Fragment>
             <Title title="Answered" />
-            <div>{traineeStr}</div>
-            <div>{assessorStr}</div>
+            <AnsweredInfo answered={answered} />
             {score}
             {gradeButton}
             {field}
+        </React.Fragment>
+    );
+}
+
+function AnsweredInfo({ answered }) {
+    const [anonymous, setAnonymous] = useState(true);
+
+    function handleToggleAnonymous() {
+        setAnonymous(!anonymous);
+    }
+
+    // could turn this into a toggle button instead of a checkbox
+    const anonymousToggle = (
+        <div className="form-check form-check-inline">
+            <input
+                type="checkbox"
+                className="form-check-input"
+                id="anonymousCheckbox"
+                checked={anonymous}
+                onChange={handleToggleAnonymous}
+            />
+            <label className="form-check-label" htmlFor="anonymousCheckbox">
+                Anonymous
+            </label>
+        </div>
+    );
+
+    let traineeStr = "Trainee: ";
+    if (anonymous) {
+        traineeStr += "Anonymous";
+    } else {
+        traineeStr += answered.Trainee.User.email;
+    }
+    let assessorStr = "Assessor: ";
+    if (answered.graded) {
+        if (answered.autograded) {
+            assessorStr += "Auto-graded";
+        } else if (anonymous) {
+            assessorStr += "Graded";
+        } else {
+            assessorStr += answered.Assessor.User.email;
+        }
+    } else {
+        assessorStr += "Ungraded";
+    }
+
+    return (
+        <React.Fragment>
+            {anonymousToggle}
+            <div>{traineeStr}</div>
+            <div>{assessorStr}</div>
         </React.Fragment>
     );
 }
