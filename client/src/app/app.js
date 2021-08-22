@@ -71,6 +71,7 @@ export default function App() {
     const history = useHistory();
 
     function setUser(u, requiredRole = null) {
+        console.log("setting user to", u);
         if (!u) {
             // set to null
         } else if (!user || user.id !== u.id) {

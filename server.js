@@ -35,12 +35,13 @@ passport.use(
         (email, password, done) => {
             console.log("authenticating:", email);
             models.User.Pass.findOne({ where: { email } }).then((user) => {
+                // invalid email
                 if (!user) {
-                    return done(null, false, { message: "Invalid email." });
+                    return done(null, false);
                 }
                 // check password
                 if (!user.checkPassword(password)) {
-                    return done(null, false, { message: "Invalid password." });
+                    return done(null, false);
                 }
                 console.log(email, "authenticated");
                 // don't pass the password info
@@ -382,6 +383,7 @@ app.post("/api/users", (req, res) => {
 
 // log in
 app.post("/api/users/login", passport.authenticate("local"), (req, res) => {
+    console.log("log in request:", req);
     const { user } = req;
     console.log("Logged in:", user);
     res.json(user);
@@ -427,6 +429,7 @@ function checkRole(req, res, role) {
 
 // set role in cookie
 app.post("/api/users/role", (req, res) => {
+    console.log("set cookie request:", req);
     if (!checkAuth(req, res)) return;
     const { role } = req.body;
     if (role) {

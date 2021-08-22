@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
+import { Redirect } from "react-router-dom";
 import { Title, setElementValid, resetValid, resetValidId } from "../shared";
 import { signUpUser } from "../api";
 
 export default function SignUpView({ onLogIn }) {
+    const [redirect, setRedirect] = useState(false);
+
     function handleSignUp() {
         const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
@@ -57,7 +60,12 @@ export default function SignUpView({ onLogIn }) {
                 return;
             }
             onLogIn(user);
+            setRedirect(true);
         });
+    }
+
+    if (redirect) {
+        return <Redirect to="/" />;
     }
 
     return (
