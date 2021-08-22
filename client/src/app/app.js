@@ -77,12 +77,12 @@ export default function App() {
         } else if (!user || user.id !== u.id) {
             // replacing old user (no user or different user)
             if (u.roles.length === 1) {
-                // only one role
-                const role = u.roles[0];
-                if (!u.role) {
-                    setRoleCookie(role);
-                    u.role = role;
-                }
+                // only one role, already set by login
+                // const role = u.roles[0];
+                // if (!u.role) {
+                //     setRoleCookie(role);
+                //     u.role = role;
+                // }
             } else if (requiredRole && u.roles.includes(requiredRole)) {
                 // force user to take required role
                 if (u.role !== requiredRole) {

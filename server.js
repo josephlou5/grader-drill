@@ -18,10 +18,10 @@ const sess = {
         maxAge: 100 * 24 * 60 * 60 * 1000,
     },
 };
-// in production, use secure cookies
-if (process.env.NODE_ENV === "production") {
-    sess.cookie.secure = true;
-}
+// // in production, use secure cookies
+// if (process.env.NODE_ENV === "production") {
+//     sess.cookie.secure = true;
+// }
 app.use(require("express-session")(sess));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -45,7 +45,11 @@ passport.use(
                 }
                 console.log(email, "authenticated");
                 // don't pass the password info
-                return done(null, user.noPass());
+                user = user.noPass();
+                if (user.roles.length === 1) {
+                    user.role = user.roles[0];
+                }
+                return done(null, user);
             });
         }
     )
