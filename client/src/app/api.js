@@ -10,6 +10,7 @@ function postRequest(route, data = {}) {
     return new Promise((resolve, reject) => {
         fetch("/api" + route, {
             method: "POST",
+            credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data),
         })
