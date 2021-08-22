@@ -18,7 +18,8 @@ const sess = {
         maxAge: 100 * 24 * 60 * 60 * 1000,
     },
 };
-// // in production, use secure cookies
+// in production, use secure cookies
+// doesn't work with heroku (need to enable some proxy thing)
 // if (process.env.NODE_ENV === "production") {
 //     sess.cookie.secure = true;
 // }
@@ -57,11 +58,15 @@ passport.use(
 
 passport.serializeUser((user, done) => {
     // only include basic information
-    done(null, {
+    const cookie = {
         id: user.id,
         email: user.email,
         roles: user.roles,
-    });
+    };
+    if (user.role) {
+        cookie.role = user.role;
+    }
+    done(null, cookie);
 });
 passport.deserializeUser((user, done) => {
     done(null, user);
@@ -334,6 +339,9 @@ app.post("/api/users", (req, res) => {
     models.User.add(user)
         .then((user) => {
             user = user.noPass();
+            if (user.roles.length === 1) {
+                user.role = user.roles[0];
+            }
             console.log("created user:", user);
             req.login(user, (err) => res.json(err || user));
         })
@@ -387,7 +395,6 @@ app.post("/api/users", (req, res) => {
 
 // log in
 app.post("/api/users/login", passport.authenticate("local"), (req, res) => {
-    console.log("log in request:", req);
     const { user } = req;
     console.log("Logged in:", user);
     res.json(user);
@@ -433,7 +440,6 @@ function checkRole(req, res, role) {
 
 // set role in cookie
 app.post("/api/users/role", (req, res) => {
-    console.log("set cookie request:", req);
     if (!checkAuth(req, res)) return;
     const { role } = req.body;
     if (role) {
@@ -607,18 +613,22 @@ app.get("/api/questions/:questionId/:version", (req, res) => {
 });
 
 // helper method to add a new question version
-function addQuestion(question) {
+function addQuestion(question, res) {
     return models.Question.add(question).catch((err) => {
-        const error = err.errors[0];
-        let response = { error: true, message: error.message };
         // TODO: test and fix
-        switch (error.type) {
-            case "notNull Violation":
-                response.msg = "something is null";
-                response.null_violation = true;
-                break;
-            default:
-                break;
+        console.log(err);
+        const response = { error: true, msg: [], message: [] };
+        for (const error of err.errors) {
+            response.message.push(error.message);
+            switch (error.type) {
+                case "notNull Violation":
+                    // response.msg = "something is null";
+                    response.null_violation = true;
+                    break;
+                default:
+                    console.log("unknown error:", error);
+                    break;
+            }
         }
         res.json(response);
     });
@@ -633,7 +643,7 @@ app.post("/api/questions", (req, res) => {
     models.Question.max("id", { paranoid: false }).then((id) => {
         question["id"] = id ? id + 1 : 1;
         question["version"] = 1;
-        addQuestion(question).then((q) => res.json(q));
+        addQuestion(question, res).then((q) => res.json(q));
     });
 });
 
@@ -659,7 +669,7 @@ app.post("/api/questions/:questionId", (req, res) => {
 
         question["id"] = questionId;
         question["version"] = version + 1;
-        addQuestion(question).then((q) => res.json(q));
+        addQuestion(question, res).then((q) => res.json(q));
     });
 });
 

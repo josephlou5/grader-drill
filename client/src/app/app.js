@@ -49,6 +49,7 @@ function Protected({ user, setUser, role, children, ...rest }) {
             if (!user.roles.includes(role)) {
                 return <WrongRoleView role={role} />;
             } else if (user.role !== role) {
+                console.log(user);
                 return "Changing roles...";
             }
         }
@@ -71,18 +72,12 @@ export default function App() {
     const history = useHistory();
 
     function setUser(u, requiredRole = null) {
-        console.log("setting user to", u);
         if (!u) {
             // set to null
         } else if (!user || user.id !== u.id) {
             // replacing old user (no user or different user)
             if (u.roles.length === 1) {
-                // only one role, already set by login
-                // const role = u.roles[0];
-                // if (!u.role) {
-                //     setRoleCookie(role);
-                //     u.role = role;
-                // }
+                // only one role, which is already set by login
             } else if (requiredRole && u.roles.includes(requiredRole)) {
                 // force user to take required role
                 if (u.role !== requiredRole) {

@@ -1,4 +1,4 @@
-const CONSOLE = true;
+const CONSOLE = process.env.NODE_ENV !== "production";
 
 // API functions
 
@@ -10,7 +10,6 @@ function postRequest(route, data = {}) {
     return new Promise((resolve, reject) => {
         fetch("/api" + route, {
             method: "POST",
-            credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data),
         })

@@ -61,6 +61,7 @@ function Grading({ assessor, specificQuestion, answeredId }) {
                 setAnswered(q);
                 // get question
                 if (
+                    question &&
                     question.id === q.questionId &&
                     question.version === q.version
                 )
@@ -86,7 +87,7 @@ function Grading({ assessor, specificQuestion, answeredId }) {
         return <p>Nothing to grade!</p>;
     }
 
-    if (!answered) {
+    if (!answered || !question) {
         return <p>Getting answered...</p>;
     }
 
