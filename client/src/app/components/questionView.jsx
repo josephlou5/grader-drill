@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { ResizeTextareas, setElementValid } from "../shared";
+import React, { useState } from "react";
+import { useMountEffect, ResizeTextareas, setElementValid } from "../shared";
 import QuestionTextField from "./questionTextField";
 import CodeField from "./codeField";
 import AnswerField from "./answerField";
@@ -20,16 +20,16 @@ function Question({ answered, question: propsQuestion, noChange, onSubmit }) {
         setQuestionState({ ...question, ...updates });
     }
 
-    useEffect(() => {
-        const initial = { ...propsQuestion };
-        if (!initial.highlights) {
-            initial.highlights = [];
+    useMountEffect(() => {
+        const question = { ...propsQuestion };
+        if (!question.highlights) {
+            question.highlights = [];
         }
         if (propsQuestion.questionType === "Multiple Choice") {
-            initial.answer = null;
+            question.answer = null;
         }
-        setQuestionState(initial);
-    }, [propsQuestion]);
+        setQuestionState(question);
+    });
 
     if (noChange) {
         // displaying the question in answered view or grading view

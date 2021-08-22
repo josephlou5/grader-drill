@@ -43,10 +43,10 @@ export default function DrillView() {
         <React.Fragment>
             <Title title="Drill" />
             <h1>Drill</h1>
-            <p>Name: {name}</p>
-            <p>Code: {code}</p>
-            <p>Number Questions: {numQuestions}</p>
-            <p>Due Date: {dueDate}</p>
+            <div>Name: {name}</div>
+            <div>Code: {code}</div>
+            <div>Number Questions: {numQuestions}</div>
+            <div className="mb-2">Due Date: {dueDate}</div>
             <TraineeDrillsTable drill={drill} />
         </React.Fragment>
     );

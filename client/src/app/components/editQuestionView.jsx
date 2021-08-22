@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { Link, useHistory } from "react-router-dom";
+import React, { useState } from "react";
+import { useHistory, Link } from "react-router-dom";
 import {
+    useMountEffect,
     Title,
     ResizeTextareas,
     TextareaLine,
@@ -33,7 +34,6 @@ export default function EditQuestionView({ newQuestion, questionId }) {
         tags: "",
     };
 
-    const [invalid, setInvalid] = useState(false);
     const [question, setQuestionState] = useState(initial);
     const [canToggleCodeField, setToggleCodeField] = useState(false);
 
@@ -43,16 +43,13 @@ export default function EditQuestionView({ newQuestion, questionId }) {
 
     const history = useHistory();
 
-    useEffect(() => {
-        if (invalid || newQuestion) return;
-        if (question.id != null) return;
-
+    useMountEffect(() => {
+        if (newQuestion) return;
         getQuestion(questionId, (q) => {
             if (!q) {
-                setInvalid(true);
+                setQuestionState(null);
                 return;
             }
-
             // want to create new version, so keep version as null
             delete q.version;
             setQuestion(q);
@@ -65,21 +62,22 @@ export default function EditQuestionView({ newQuestion, questionId }) {
     const title = newQuestion ? "New Question" : "Edit Question";
 
     if (!question) {
-        return (
-            <React.Fragment>
-                <Title title={title} />
-                <h1>{title}</h1>
-                <p>Getting question...</p>
-            </React.Fragment>
-        );
-    }
-
-    if (invalid) {
         // `title` can only be "Edit Question"
         return (
             <React.Fragment>
                 <Title title={title} />
                 <h1>Invalid question</h1>
+            </React.Fragment>
+        );
+    }
+
+    // need to get question
+    if (!newQuestion && question.id == null) {
+        return (
+            <React.Fragment>
+                <Title title={title} />
+                <h1>{title}</h1>
+                <p>Getting question...</p>
             </React.Fragment>
         );
     }

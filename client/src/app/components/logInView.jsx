@@ -1,8 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
+import { useLocation, Redirect } from "react-router-dom";
 import { Title, setElementValid, resetValid, resetValidId } from "../shared";
 import { logInUser } from "../api";
 
 export default function LogInView({ onLogIn }) {
+    const [redirect, setRedirect] = useState(false);
+    const { state } = useLocation();
+
     function handleLogIn() {
         const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
@@ -26,7 +30,12 @@ export default function LogInView({ onLogIn }) {
                 return;
             }
             onLogIn(user);
+            setRedirect(true);
         });
+    }
+
+    if (redirect) {
+        return <Redirect to={state?.from || "/"} />;
     }
 
     return (

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { Link, useHistory } from "react-router-dom";
+import React, { useState } from "react";
+import { useHistory, Link } from "react-router-dom";
 import {
+    useMountEffect,
     Title,
     ResizeTextareas,
     TextareaLine,
@@ -17,10 +18,6 @@ export default function EditDrillView({ newDrill, drillId }) {
         dueDate: today,
         tags: "",
     };
-
-    console.log(newDrill, drillId);
-
-    const [invalid, setInvalid] = useState(false);
     const [drill, setDrillState] = useState(initial);
 
     function setDrill(updates) {
@@ -29,37 +26,36 @@ export default function EditDrillView({ newDrill, drillId }) {
 
     const history = useHistory();
 
-    useEffect(() => {
-        if (invalid || newDrill) return;
-        if (drill.id != null) return;
-
+    useMountEffect(() => {
+        if (newDrill) return;
         getDrill(drillId, (d) => {
             if (!d) {
-                setInvalid(true);
-                return;
+                setDrillState(null);
+            } else {
+                setDrill(d);
             }
-            setDrill(d);
         });
     });
 
     const title = newDrill ? "New Drill" : "Edit Drill";
 
     if (!drill) {
-        return (
-            <React.Fragment>
-                <Title title={title} />
-                <h1>{title}</h1>
-                <p>Getting drill...</p>
-            </React.Fragment>
-        );
-    }
-
-    if (invalid) {
         // `title` can only be "Edit Drill"
         return (
             <React.Fragment>
                 <Title title={title} />
                 <h1>Invalid drill</h1>
+            </React.Fragment>
+        );
+    }
+
+    // need to get drill
+    if (!newDrill && drill.id == null) {
+        return (
+            <React.Fragment>
+                <Title title={title} />
+                <h1>{title}</h1>
+                <p>Getting drill...</p>
             </React.Fragment>
         );
     }
@@ -98,7 +94,7 @@ export default function EditDrillView({ newDrill, drillId }) {
         setValid("drill-name", d.name.length > 0);
         setValid("num-questions", d.numQuestions > 0);
         // use string comparison in yyyy-mm-dd format
-        // time zones makes the comparison not work for same day
+        // time zones makes the Date object comparison not work for same day
         setValid("due-date", today <= d.dueDate);
 
         return formValid;
@@ -126,8 +122,9 @@ export default function EditDrillView({ newDrill, drillId }) {
                 <div className="row align-items-center mb-2">
                     <div className="col-2">Name</div>
                     <div className="col">
-                        <TextareaLine
-                            className="form-control textarea"
+                        <input
+                            type="text"
+                            className="form-control"
                             id="drill-name"
                             value={drill.name}
                             onChange={(event) => {

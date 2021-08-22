@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Title, QuestionType, setElementValid, resetValid } from "../shared";
+import {
+    useMountEffect,
+    Title,
+    QuestionType,
+    setElementValid,
+    resetValid,
+} from "../shared";
 import {
     getTraineeAnswered,
     addTraineeDrill,
@@ -28,9 +34,9 @@ function Dashboard() {
     const [needsDrills, setNeedsDrills] = useState(true);
     const [drills, setDrills] = useState(null);
 
-    useEffect(() => {
+    useMountEffect(() => {
         getTraineeAnswered((answered) => setAnswered(answered));
-    }, []);
+    });
 
     useEffect(() => {
         if (!needsDrills) return;
@@ -121,6 +127,14 @@ function AddDrillInput({ onAddDrill }) {
     );
 }
 
+function DrillNameCode({ name, code }) {
+    const [showing, setShowing] = useState(0);
+    function handleClick() {
+        setShowing(1 - showing);
+    }
+    return <span onClick={handleClick}>{[name, code][showing]}</span>;
+}
+
 function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
     const [hideCompleted, setHideCompleted] = useState(false);
 
@@ -130,14 +144,6 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
 
     if (!drills) {
         return <p>Getting drills...</p>;
-    }
-
-    function DrillNameCode({ name, code }) {
-        const [showing, setShowing] = useState(0);
-        function handleClick() {
-            setShowing(1 - showing);
-        }
-        return <span onClick={handleClick}>{[name, code][showing]}</span>;
     }
 
     let rowsShowing = 0;

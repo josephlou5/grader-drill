@@ -1,176 +1,160 @@
 import React, { useState, useEffect } from "react";
 import {
+    useHistory,
+    useParams,
     Switch,
     Route,
     Link,
     Redirect,
-    useParams,
-    useHistory,
 } from "react-router-dom";
 import "./app.css";
-import { Title } from "./shared";
-import { isLoggedIn, logOutUser, setRoleCookie } from "./api";
+import { useMountEffect } from "./shared";
+import { isLoggedIn, setRoleCookie, logOutUser } from "./api";
 
 import PageNotFound from "./components/pageNotFound";
+import WrongRoleView from "./components/wrongRoleView";
 
 import HomeView from "./components/homeView";
 import AboutView from "./components/aboutView";
 import LogInView from "./components/logInView";
 import SignUpView from "./components/signUpView";
+
 import ProfileView from "./components/profileView";
+import ChooseRoleView from "./components/chooseRoleView";
+import AnsweredView from "./components/answeredView";
 
 import AdminDashboard from "./components/adminDashboard";
 import UsersView from "./components/usersView";
 import QuestionsView from "./components/questionsView";
 import EditQuestionView from "./components/editQuestionView";
 import DrillsView from "./components/drillsView";
-import DrillView from "./components/drillView";
 import EditDrillView from "./components/editDrillView";
-
-import TraineeDashboard from "./components/traineeDashboard";
-import JoinDrillView from "./components/joinDrillView";
-import TrainingView from "./components/trainingView";
-import AnsweredView from "./components/answeredView";
+import DrillView from "./components/drillView";
 
 import AssessorDashboard from "./components/assessorDashboard";
 import GradingView from "./components/gradingView";
 
-export default function App() {
-    return (
-        <div className="App">
-            <AppView />
-        </div>
-    );
-}
+import TraineeDashboard from "./components/traineeDashboard";
+import JoinDrillView from "./components/joinDrillView";
+import TrainingView from "./components/trainingView";
 
-function PrivateRoute({ user, children, ...rest }) {
-    const render = ({ location }) => {
-        if (user) return children;
+// protected route
+function Protected({ user, setUser, role, children, ...rest }) {
+    useEffect(() => {
+        isLoggedIn((u) => setUser(u, role));
+    });
+
+    if (user) {
+        if (role) {
+            if (!user.roles.includes(role)) {
+                return <WrongRoleView role={role} />;
+            } else if (user.role !== role) {
+                return "Changing roles...";
+            }
+        }
+        return <Route {...rest}>{children}</Route>;
+    }
+    const renderFunc = ({ location }) => {
         const to = {
             pathname: "/login",
             state: { from: location },
         };
         return <Redirect to={to} />;
     };
-    return <Route {...rest} render={render} />;
+    return <Route {...rest} render={renderFunc} />;
 }
 
-function AppView() {
+export default function App() {
     const [loading, setLoading] = useState(true);
-    const [loggedIn, setLoggedIn] = useState(false);
-    const [user, setUser] = useState(null);
-    const [role, setRoleState] = useState();
+    const [user, setUserState] = useState(null);
 
     const history = useHistory();
 
-    function setRole(role) {
-        setRoleCookie(role);
-        setRoleState(role);
+    function setUser(u, requiredRole = null) {
+        if (!u) {
+            // set to null
+        } else if (!user || user.id !== u.id) {
+            // replacing old user (no user or different user)
+            if (u.roles.length === 1) {
+                // only one role
+                const role = u.roles[0];
+                if (!u.role) {
+                    setRoleCookie(role);
+                    u.role = role;
+                }
+            } else if (requiredRole && u.roles.includes(requiredRole)) {
+                // force user to take required role
+                if (u.role !== requiredRole) {
+                    setRoleCookie(requiredRole);
+                    u.role = requiredRole;
+                }
+            }
+        } else {
+            // updating same user
+            // role should already be set, so do nothing
+            if (u.roles.length === 1) return;
+            if (requiredRole) {
+                // if user already has role, do nothing
+                if (user.role === requiredRole) return;
+                if (u.roles.includes(requiredRole)) {
+                    // force user to take required role
+                    if (u.role !== requiredRole) {
+                        setRoleCookie(requiredRole);
+                        u.role = requiredRole;
+                    }
+                }
+            }
+            // if user already has role, do nothing
+            if (user.role === u.role) return;
+        }
+        setUserState(u);
     }
 
-    // in the first render, check if the user is logged in through cookies
-    useEffect(() => {
-        if (!loading) return;
-        isLoggedIn((user) => {
+    function setRole(role) {
+        if (!user) return;
+        const currRole = user.role || null;
+        if (!role && !currRole) return;
+        if (role === currRole) return;
+        setRoleCookie(role);
+        setUserState({ ...user, role });
+    }
+
+    useMountEffect(() => {
+        isLoggedIn((u) => {
+            setUser(u);
             setLoading(false);
-            if (user && !user.error) {
-                console.log("user is already logged in:", user);
-                setUserRole(user);
-                setLoggedIn(true);
-            } else {
-                console.log("no one is logged in");
-            }
         });
     });
 
-    function setUserRole(user) {
-        setUser(user);
-
-        // check role
-        const { roles } = user;
-        if (roles.length === 0) {
-            return;
-        } else if (roles.length === 1) {
-            setRole(roles[0]);
-        } else {
-            setRole(user.role || null);
-        }
-    }
+    if (loading) return "Loading...";
 
     function handleLogIn(user) {
-        setLoggedIn(true);
-        setUserRole(user);
-        history.push("/");
+        setUser(user);
     }
 
     function handleLogOut() {
-        setLoggedIn(false);
-        setUser(null);
-        setRole(null);
-        logOutUser(() => history.push("/"));
+        logOutUser(() => {
+            setUser(null);
+            history.push("/");
+        });
     }
 
     function handleChooseRole(role) {
         setRole(role);
     }
 
-    if (loading) {
-        return "Loading...";
-    }
-
-    if (loggedIn) {
-        if (!user) {
-            return "Loading...";
-        }
-        return (
-            <LoggedInView
-                user={user}
-                role={role}
-                onChooseRole={handleChooseRole}
-                onLogOut={handleLogOut}
-            />
-        );
-    }
-
-    const logInButtons = (
-        <div className="d-flex">
-            <Link to="/login">
-                <button type="button" className="btn btn-success me-2">
-                    Log In
-                </button>
-            </Link>
-            <Link to="/signup">
-                <button type="button" className="btn btn-success">
-                    Sign Up
-                </button>
-            </Link>
-        </div>
-    );
-
-    const navbar = (
-        <nav className="navbar navbar-expand-lg navbar-light bg-light">
-            <div className="container-fluid">
-                <Link to="/" className="navbar-brand">
-                    Grader Drill
-                </Link>
-                <div className="collapse navbar-collapse">
-                    <div className="navbar-nav">
-                        <Link to="/about" className="nav-link">
-                            About
-                        </Link>
-                    </div>
-                </div>
-                {logInButtons}
-            </div>
-        </nav>
-    );
+    // props for private routes
+    const props = { exact: true, user, setUser };
+    const admin = { ...props, role: "Admin" };
+    const assessor = { ...props, role: "Assessor" };
+    const trainee = { ...props, role: "Trainee" };
 
     return (
-        <React.Fragment>
-            {navbar}
+        <div className="App">
+            <Navbar user={user} onLogOut={handleLogOut} />
             <Switch>
                 <Route exact path="/">
-                    <HomeView />
+                    <Home user={user} onChooseRole={handleChooseRole} />
                 </Route>
                 <Route exact path="/about">
                     <AboutView />
@@ -183,86 +167,129 @@ function AppView() {
                     <SignUpView onLogIn={handleLogIn} />
                 </Route>
 
+                <Protected exact path="/profile" {...props}>
+                    <ProfileView user={user} />
+                </Protected>
+
+                <Protected exact path="/dashboard" {...props}>
+                    <Dashboard user={user} />
+                </Protected>
+                <Protected exact path="/answered/:answeredId">
+                    <AnsweredView user={user} />
+                </Protected>
+
+                {/* ADMIN ROLE */}
+
+                {/* users */}
+                <Protected path="/users" {...admin}>
+                    <UsersView />
+                </Protected>
+
+                {/* questions */}
+                <Protected path="/questions" {...admin}>
+                    <QuestionsView />
+                </Protected>
+                <Protected path="/questions/new" {...admin}>
+                    <EditQuestionView newQuestion={true} />
+                </Protected>
+                <Protected path="/questions/edit/:questionId" {...admin}>
+                    <EditQuestion />
+                </Protected>
+
+                {/* drills */}
+                <Protected path="/drills" {...admin}>
+                    <DrillsView />
+                </Protected>
+                <Protected path="/drills/new" {...admin}>
+                    <EditDrillView newDrill={true} />
+                </Protected>
+                <Protected path="/drills/edit/:drillId" {...admin}>
+                    <EditDrill />
+                </Protected>
+                <Protected path="/drills/:drillId" {...admin}>
+                    <DrillView />
+                </Protected>
+
+                {/* ASSESSOR ROLE */}
+
+                {/* grading */}
+                <Protected path="/grading" {...assessor}>
+                    <GradingView assessor={user} />
+                </Protected>
+                <Protected path="/grading/:answeredId" {...assessor}>
+                    <GradeQuestion assessor={user} />
+                </Protected>
+
+                {/* TRAINEE ROLE */}
+
+                {/* join drill */}
+                <Protected path="/join/:drillCode" {...trainee}>
+                    <JoinDrillView />
+                </Protected>
+
+                {/* training */}
+                <Protected path="/training" {...trainee}>
+                    <TrainingView />
+                </Protected>
+
                 <Route path="*">
                     <PageNotFound />
                 </Route>
             </Switch>
-        </React.Fragment>
+        </div>
     );
 }
 
-function LoggedInView({ user, role, onChooseRole, onLogOut }) {
-    let navbar = null;
-    let other = <PageNotFound />;
-    switch (role) {
-        case "Admin":
-            navbar = (
-                <div className="collapse navbar-collapse">
-                    <div className="navbar-nav">
-                        <Link to="/dashboard" className="nav-link">
-                            Dashboard
-                        </Link>
-                        <Link to="/users" className="nav-link">
-                            Users
-                        </Link>
-                        <Link to="/questions" className="nav-link">
-                            Questions
-                        </Link>
-                        <Link to="/drills" className="nav-link">
-                            Drills
-                        </Link>
-                    </div>
-                </div>
-            );
-            other = <AdminView admin={user} />;
-            break;
-        case "Trainee":
-            navbar = (
-                <div className="collapse navbar-collapse">
-                    <div className="navbar-nav">
-                        <Link to="/dashboard" className="nav-link">
-                            Dashboard
-                        </Link>
-                        <Link to="/training" className="nav-link">
-                            Training
-                        </Link>
-                    </div>
-                </div>
-            );
-            other = <TraineeView trainee={user} />;
-            break;
-        case "Assessor":
-            navbar = (
-                <div className="collapse navbar-collapse">
-                    <div className="navbar-nav">
-                        <Link to="/dashboard" className="nav-link">
-                            Dashboard
-                        </Link>
-                        <Link to="/grading" className="nav-link">
-                            Grading
-                        </Link>
-                    </div>
-                </div>
-            );
-            other = <AssessorView assessor={user} />;
-            break;
-        default:
-            break;
-    }
-
-    const logOutButton = (
-        <div className="d-flex">
-            {user && role && (
-                <Link to="/" className="nav-link text-secondary">
-                    {role}
+function Navbar({ user, onLogOut }) {
+    let homeLink = "/";
+    let buttons;
+    const navbarLinks = [];
+    if (!user) {
+        buttons = (
+            <React.Fragment>
+                <Link to="/login">
+                    <button type="button" className="btn btn-success me-2">
+                        Log In
+                    </button>
                 </Link>
-            )}
-            {user && (
+                <Link to="/signup">
+                    <button type="button" className="btn btn-success">
+                        Sign Up
+                    </button>
+                </Link>
+            </React.Fragment>
+        );
+        navbarLinks.push(["/about", "About"]);
+    } else {
+        let roleLabel = null;
+        if (user.role) {
+            if (user.roles.length === 1) {
+                homeLink = "/dashboard";
+                roleLabel = <div className="navbar-text me-3">{user.role}</div>;
+            } else {
+                roleLabel = (
+                    <Link to="/" className="nav-link text-secondary">
+                        {user.role}
+                    </Link>
+                );
+            }
+            navbarLinks.push(["/dashboard", "Dashboard"]);
+            if (user.role === "Admin") {
+                navbarLinks.push(["/users", "Users"]);
+                navbarLinks.push(["/questions", "Questions"]);
+                navbarLinks.push(["/drills", "Drills"]);
+            } else if (user.role === "Assessor") {
+                navbarLinks.push(["/grading", "Grading"]);
+            } else if (user.role === "Trainee") {
+                navbarLinks.push(["/training", "Training"]);
+            }
+        }
+        buttons = (
+            <React.Fragment>
+                {roleLabel}
                 <Link to="/profile" className="navbar-brand">
                     {user.email}
                 </Link>
-            )}
-            <Link to="/">
                 <button
                     type="button"
                     className="btn btn-outline-danger"
@@ -270,136 +297,52 @@ function LoggedInView({ user, role, onChooseRole, onLogOut }) {
                 >
                     Log Out
                 </button>
-            </Link>
-        </div>
-    );
-
-    navbar = (
+            </React.Fragment>
+        );
+    }
+    return (
         <nav className="navbar navbar-expand-lg navbar-light bg-light">
             <div className="container-fluid">
-                <Link to="/" className="navbar-brand">
+                <Link to={homeLink} className="navbar-brand">
                     Grader Drill
                 </Link>
-                {navbar}
-                {logOutButton}
+                <div className="collapse navbar-collapse">
+                    <div className="navbar-nav">
+                        {navbarLinks.map(([link, title], index) => (
+                            <Link key={index} to={link} className="nav-link">
+                                {title}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+                <div className="d-flex">{buttons}</div>
             </div>
         </nav>
     );
-
-    return (
-        <React.Fragment>
-            {navbar}
-            <Switch>
-                <Route exact path="/">
-                    <ChooseRole user={user} onChooseRole={onChooseRole} />
-                </Route>
-                <Route exact path="/profile">
-                    <ProfileView user={user} />
-                </Route>
-                <Route path="*">{other}</Route>
-            </Switch>
-        </React.Fragment>
-    );
 }
 
-function ChooseRole({ user, onChooseRole }) {
+function Home({ user, onChooseRole }) {
     if (!user) {
-        return (
-            <React.Fragment>
-                <Title title="Invalid user" />
-                <h1>Invalid user</h1>
-            </React.Fragment>
-        );
+        return <HomeView />;
+    } else {
+        return <ChooseRoleView user={user} onChooseRole={onChooseRole} />;
     }
-
-    if (user.roles.length === 0) {
-        return (
-            <React.Fragment>
-                <Title title="Invalid user" />
-                <h1>Invalid user: has no roles</h1>
-            </React.Fragment>
-        );
-    }
-
-    if (user.roles.length === 1) {
-        return <Redirect to="/dashboard" />;
-    }
-
-    return (
-        <React.Fragment>
-            <Title title="Choose Role" />
-            <h1>Choose Role</h1>
-            <Link to="/dashboard">
-                {user.roles.map((role, index) => (
-                    <button
-                        key={index}
-                        className="btn btn-success m-1"
-                        onClick={() => onChooseRole(role)}
-                    >
-                        {role}
-                    </button>
-                ))}
-            </Link>
-        </React.Fragment>
-    );
 }
 
-function AdminView({ admin }) {
-    return (
-        <React.Fragment>
-            <Switch>
-                {/* dashboard */}
-                <Route exact path="/dashboard">
-                    <AdminDashboard />
-                </Route>
-
-                {/* users */}
-                <Route exact path="/users">
-                    <UsersView admin={admin} />
-                </Route>
-
-                {/* questions */}
-                <Route exact path="/questions">
-                    <QuestionsView />
-                </Route>
-                <Route exact path="/questions/new">
-                    <EditQuestionView newQuestion={true} />
-                </Route>
-                <Route exact path="/questions/edit/:questionId">
-                    <EditQuestion />
-                </Route>
-
-                {/* drills */}
-                <Route exact path="/drills">
-                    <DrillsView />
-                </Route>
-                <Route exact path="/drills/new">
-                    <EditDrillView newDrill={true} />
-                </Route>
-                <Route exact path="/drills/edit/:drillId">
-                    <EditDrill />
-                </Route>
-                <Route exact path="/drills/:drillId">
-                    <DrillView />
-                </Route>
-
-                {/* answered */}
-                <Route exact path="/answered/:answeredId">
-                    <AnsweredView admin={admin} />
-                </Route>
-
-                {/* catch-all for page not found */}
-                <Route path="*">
-                    <PageNotFound />
-                </Route>
-            </Switch>
-        </React.Fragment>
-    );
-}
-
-function EditDrill() {
-    const { drillId } = useParams();
-    return <EditDrillView drillId={drillId} />;
+function Dashboard({ user }) {
+    if (!user.role) {
+        return <Redirect to="/" />;
+    }
+    switch (user.role) {
+        case "Admin":
+            return <AdminDashboard />;
+        case "Assessor":
+            return <AssessorDashboard />;
+        case "Trainee":
+            return <TraineeDashboard />;
+        default:
+            return <h1>Unknown user role</h1>;
+    }
 }
 
 function EditQuestion() {
@@ -407,68 +350,9 @@ function EditQuestion() {
     return <EditQuestionView questionId={questionId} />;
 }
 
-function TraineeView({ trainee }) {
-    return (
-        <React.Fragment>
-            <Switch>
-                {/* dashboard */}
-                <Route exact path="/dashboard">
-                    <TraineeDashboard />
-                </Route>
-
-                {/* join drill */}
-                <Route exact path="/join/:drillCode">
-                    <JoinDrillView />
-                </Route>
-
-                {/* training */}
-                <Route exact path="/training">
-                    <TrainingView trainee={trainee} />
-                </Route>
-
-                {/* view answered */}
-                <Route exact path="/answered/:answeredId">
-                    <AnsweredView trainee={trainee} hideRubric={true} />
-                </Route>
-
-                {/* catch-all for page not found */}
-                <Route path="*">
-                    <PageNotFound />
-                </Route>
-            </Switch>
-        </React.Fragment>
-    );
-}
-
-function AssessorView({ assessor }) {
-    return (
-        <React.Fragment>
-            <Switch>
-                {/* dashboard */}
-                <Route exact path="/dashboard">
-                    <AssessorDashboard assessor={assessor} />
-                </Route>
-
-                {/* grading */}
-                <Route exact path="/grading">
-                    <GradingView assessor={assessor} />
-                </Route>
-                <Route exact path="/grading/:answeredId">
-                    <GradeQuestion assessor={assessor} />
-                </Route>
-
-                {/* view answered */}
-                <Route exact path="/answered/:answeredId">
-                    <AnsweredView assessor={assessor} />
-                </Route>
-
-                {/* catch-all for page not found */}
-                <Route path="*">
-                    <PageNotFound />
-                </Route>
-            </Switch>
-        </React.Fragment>
-    );
+function EditDrill() {
+    const { drillId } = useParams();
+    return <EditDrillView drillId={drillId} />;
 }
 
 function GradeQuestion({ assessor }) {

@@ -5,7 +5,11 @@ import { getAnswered, getQuestionVersion } from "../api";
 import QuestionView from "./questionView";
 import RubricField from "./rubricField";
 
-export default function AnsweredView({ admin, trainee, assessor, hideRubric }) {
+export default function AnsweredView({ user }) {
+    // const admin = user?.role === "Admin" ? user : null;
+    const assessor = user?.role === "Assessor" ? user : null;
+    const trainee = user?.role === "Trainee" ? user : null;
+
     const [invalid, setInvalid] = useState(false);
     const [answered, setAnswered] = useState(null);
     const [question, setQuestion] = useState(null);
@@ -19,27 +23,35 @@ export default function AnsweredView({ admin, trainee, assessor, hideRubric }) {
                 return;
             }
             setAnswered(a);
-            getQuestionVersion(a.questionId, a.version, (q) => {
-                // assume question must exist
-                setQuestion(q);
-            });
+            getQuestionVersion(a.questionId, a.version, (q) => setQuestion(q));
         });
     }, [answeredId]);
 
     if (invalid) {
-        return <h1>Invalid question</h1>;
+        return (
+            <React.Fragment>
+                <Title title="Invalid Answered" />
+                <h1>Invalid Answered</h1>
+            </React.Fragment>
+        );
     }
 
-    if (!question) {
-        return <p>Getting answered...</p>;
-    }
-
-    if (trainee && trainee.id !== answered.traineeId) {
+    if (answered && trainee && trainee.id !== answered.traineeId) {
         return (
             <React.Fragment>
                 <Title title="Access Denied" />
                 <h1>Sorry! Access Denied</h1>
                 <p>Trainees can only view their own answered questions.</p>
+            </React.Fragment>
+        );
+    }
+
+    if (!question) {
+        return (
+            <React.Fragment>
+                <Title title="Answered" />
+                <h1>Answered</h1>
+                <p>Getting answered...</p>
             </React.Fragment>
         );
     }
@@ -85,7 +97,9 @@ export default function AnsweredView({ admin, trainee, assessor, hideRubric }) {
                 const link = "/grading/" + answered.id;
                 gradeButton = <Link to={link}>{gradeButton}</Link>;
             }
-        } else if (!hideRubric) {
+        } else if (trainee) {
+            // trainee doesn't get to see the rubric
+        } else {
             rubricField = (
                 <RubricField rubric={answered.rubric} noChange={true} />
             );

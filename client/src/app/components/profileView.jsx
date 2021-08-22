@@ -3,20 +3,10 @@ import { Title, resetValid, resetValidId, setElementValid } from "../shared";
 import { changeUserPassword } from "../api";
 
 export default function ProfileView({ user }) {
-    if (!user) {
-        return (
-            <React.Fragment>
-                <Title title="Invalid user" />
-                <h1>Invalid user</h1>
-            </React.Fragment>
-        );
-    }
-
     const { roles } = user;
     if (roles.length === 0) {
         roles.push("No roles");
     }
-
     return (
         <React.Fragment>
             <Title title="Profile" />

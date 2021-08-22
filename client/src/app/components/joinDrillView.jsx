@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router";
 import { Title } from "../shared";
 import { addTraineeDrill } from "../api";

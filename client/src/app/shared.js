@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import { getQuestionVersion } from "./api.js";
 
+export function useMountEffect(callback) {
+    // eslint-disable-next-line
+    useEffect(callback, []);
+}
+
 // component to set the document title
 export function Title({ title }) {
     useEffect(() => {

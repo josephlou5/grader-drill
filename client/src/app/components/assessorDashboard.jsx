@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Title, QuestionType } from "../shared";
+import { useMountEffect, Title, QuestionType } from "../shared";
 import { getAllAnswered, getAssessorGraded } from "../api";
 
 export default function AssessorDashboard(props) {
@@ -13,7 +13,7 @@ export default function AssessorDashboard(props) {
     );
 }
 
-function Dashboard({ assessor }) {
+function Dashboard() {
     const [answered, setAnswered] = useState(null);
     const [anonymous, setAnonymous] = useState(true);
 
@@ -21,11 +21,9 @@ function Dashboard({ assessor }) {
         setAnonymous(!anonymous);
     }
 
-    useEffect(() => {
-        getAllAnswered((answered) => {
-            setAnswered(answered);
-        });
-    }, []);
+    useMountEffect(() => {
+        getAllAnswered((answered) => setAnswered(answered));
+    });
 
     if (!answered) {
         return <p>Getting answered...</p>;
@@ -56,18 +54,18 @@ function Dashboard({ assessor }) {
             </Link>
             <div>{anonymousToggle}</div>
 
-            <GradedTable assessor={assessor} anonymous={anonymous} />
+            <GradedTable anonymous={anonymous} />
             <AnsweredTable answered={answered} anonymous={anonymous} />
         </React.Fragment>
     );
 }
 
-function GradedTable({ assessor, anonymous }) {
+function GradedTable({ anonymous }) {
     const [graded, setGraded] = useState(null);
 
-    useEffect(() => {
-        getAssessorGraded((g) => setGraded(g));
-    }, []);
+    useMountEffect(() => {
+        getAssessorGraded((graded) => setGraded(graded));
+    });
 
     if (!graded) {
         return <p>Getting graded...</p>;

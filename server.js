@@ -14,8 +14,8 @@ const sess = {
     resave: false,
     saveUninitialized: false,
     cookie: {
-        // set the max age to 180 days
-        maxAge: 180 * 24 * 60 * 60 * 1000,
+        // set the max age to 100 days
+        maxAge: 100 * 24 * 60 * 60 * 1000,
     },
 };
 // in production, use secure cookies
@@ -295,7 +295,7 @@ if (process.env.NODE_ENV !== "production") {
         await models.User.add({
             email: "assessor@test.com",
             password: "password",
-            roles: ["Admin", "Trainee", "Assessor"],
+            roles: ["Admin", "Assessor", "Trainee"],
         }).catch((err) => console.log(err));
         for (let num = 1; num <= 3; num++) {
             await models.User.add({
@@ -394,23 +394,6 @@ app.post("/api/users/logout", (req, res) => {
     res.json({ success: true });
 });
 
-// set role in cookie
-app.post("/api/users/role", (req, res) => {
-    if (!req.isAuthenticated()) {
-        res.json({ success: false });
-        return;
-    }
-    const { role } = req.body;
-    if (role) {
-        req.session.passport.user.role = role;
-        console.log("Set user role as", role);
-    } else {
-        delete req.session.passport.user.role;
-        console.log("Removed user role");
-    }
-    res.json({ success: true });
-});
-
 // the user currently logged in
 app.get("/api/users/loggedin", (req, res) => {
     res.json(req.isAuthenticated() ? req.user : null);
@@ -441,6 +424,20 @@ function checkRole(req, res, role) {
     });
     return false;
 }
+
+// set role in cookie
+app.post("/api/users/role", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    const { role } = req.body;
+    if (role) {
+        req.session.passport.user.role = role;
+        console.log("Set user role as", role);
+    } else {
+        delete req.session.passport.user.role;
+        console.log("Removed user role");
+    }
+    res.json({ success: true });
+});
 
 // get all users
 app.get("/api/users", (req, res) => {
@@ -1069,17 +1066,21 @@ app.post("/api/answered", (req, res) => {
         });
 });
 
-// update answered
+// update answered (it's been graded)
 app.post("/api/answered/:answeredId", (req, res) => {
     if (!checkAuth(req, res)) return;
     // only update answered when grading
     if (!checkRole(req, res, "Assessor")) return;
     const { answeredId } = req.params;
-    const question = req.body;
-    models.Answered.update(question, { where: { id: answeredId } }).then(
+    const answered = req.body;
+    // set assessor id
+    answered.assessorId = req.user.id;
+    // set graded
+    answered.graded = true;
+    models.Answered.update(answered, { where: { id: answeredId } }).then(
         (num) => {
             if (num == 1) {
-                res.json(question);
+                res.json(answered);
             } else {
                 res.json({
                     error: true,

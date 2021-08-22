@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Title } from "../shared";
+import React, { useState } from "react";
+import { useMountEffect, Title } from "../shared";
 import { getAllUsers, resetUserPassword } from "../api";
 
 export default function UsersView() {
@@ -15,9 +15,9 @@ export default function UsersView() {
 function UsersTable() {
     const [users, setUsers] = useState(null);
 
-    useEffect(() => {
+    useMountEffect(() => {
         getAllUsers((u) => setUsers(u));
-    }, []);
+    });
 
     if (!users) {
         return <p>Loading...</p>;
@@ -85,6 +85,8 @@ function NewPassword({ user }) {
             </button>
         );
     } else if (count === 1) {
+        // after 3 seconds, go back to first button
+        setTimeout(() => setCount(0), 3 * 1000);
         return (
             <button
                 type="button"

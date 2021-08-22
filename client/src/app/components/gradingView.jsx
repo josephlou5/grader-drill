@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Link, Redirect, useHistory } from "react-router-dom";
-import { Title } from "../shared";
+import { useHistory, Link, Redirect } from "react-router-dom";
+import { useMountEffect, Title } from "../shared";
 import {
     getAnswered,
     getAssessorUngraded,
@@ -21,79 +21,73 @@ export default function GradingView(props) {
 }
 
 function Grading({ assessor, specificQuestion, answeredId }) {
-    const [noMoreQuestions, setNoMoreQuestions] = useState(false);
     const [invalid, setInvalid] = useState(false);
+    const [alreadyGraded, setAlreadyGraded] = useState(false);
+    const [noMoreQuestions, setNoMoreQuestions] = useState(false);
     const [answered, setAnswered] = useState(null);
     const [question, setQuestion] = useState(null);
 
-    function synced() {
-        return (
-            answered &&
-            question &&
-            answered.questionId === question.id &&
-            answered.version === question.version
-        );
-    }
+    useMountEffect(() => {
+        if (!specificQuestion) return;
+        // get the specified answered
+        getAnswered(answeredId, (answered) => {
+            if (!answered) {
+                setInvalid(true);
+                return;
+            }
+            setAnswered(answered);
+            if (answered.graded && assessor.id !== answered.assessorId) {
+                // question was graded by someone else,
+                // so this assessor can't grade it
+                setAlreadyGraded(true);
+                return;
+            }
+            // get question
+            getQuestionVersion(answered.questionId, answered.version, (q) =>
+                setQuestion(q)
+            );
+        });
+    });
 
     useEffect(() => {
-        if (noMoreQuestions || invalid) return;
-        if (synced()) return;
-
-        if (!answered) {
-            // get answered
-            if (specificQuestion) {
-                // get the specified question
-                getAnswered(answeredId, (answered) => {
-                    if (answered == null) {
-                        setInvalid(true);
-                        return;
-                    }
-                    setAnswered(answered);
-                });
-            } else {
-                // get the next ungraded question
-                getAssessorUngraded((questions) => {
-                    for (const q of questions) {
-                        // if questions were skipped, don't grade them again
-                        if (answered && q.id <= answered.id) continue;
-                        setAnswered(q);
-                        return;
-                    }
-                    // no more to grade
-                    setNoMoreQuestions(true);
-                });
+        if (specificQuestion) return;
+        if (noMoreQuestions) return;
+        if (answered) return;
+        // get the next ungraded question
+        getAssessorUngraded((ungraded) => {
+            for (const q of ungraded) {
+                // if questions were skipped, don't grade them again
+                if (answered && q.id <= answered.id) continue;
+                setAnswered(q);
+                // get question
+                if (
+                    question.id === q.questionId &&
+                    question.version === q.version
+                )
+                    return;
+                getQuestionVersion(q.questionId, q.version, (question) =>
+                    setQuestion(question)
+                );
+                return;
             }
-        } else {
-            // get question
-            getQuestionVersion(answered.questionId, answered.version, (q) => {
-                // assume `q` must exist
-                setQuestion(q);
-            });
-        }
+            // no more to grade
+            setNoMoreQuestions(true);
+        });
     });
+
+    if (invalid) {
+        return <p>Invalid question</p>;
+    } else if (alreadyGraded) {
+        const link = "/answered/" + answered.id;
+        return <Redirect to={link} />;
+    }
 
     if (noMoreQuestions) {
         return <p>Nothing to grade!</p>;
     }
 
-    if (invalid) {
-        return <p>Invalid question</p>;
-    }
-
-    if (answered) {
-        if (
-            // trying to grade an already graded question
-            answered.graded &&
-            // question was graded by someone else, so you can't grade it
-            assessor.id !== answered.assessorId
-        ) {
-            const link = "/answered/" + answered.id;
-            return <Redirect to={link} />;
-        }
-    }
-
-    if (!synced()) {
-        return <p>Getting question...</p>;
+    if (!answered) {
+        return <p>Getting answered...</p>;
     }
 
     function handleNextQuestion() {
@@ -191,8 +185,6 @@ function GradeQuestion({
     function handleSave() {
         const savedQuestion = {
             ...answered,
-            assessorId: assessor.id,
-            graded: true,
             rubric,
             score,
         };

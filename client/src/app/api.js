@@ -410,6 +410,7 @@ export function addAnswered(question, callback = null) {
 }
 
 export function updateAnswered(question, callback = null) {
+    // infers assessor id from logged in user
     if (checkNull(question, callback)) return;
     const answeredId = question.id;
     postRequest(`/answered/${answeredId}`, question).then((q) => {

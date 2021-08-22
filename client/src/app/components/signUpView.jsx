@@ -143,7 +143,7 @@ export default function SignUpView({ onLogIn }) {
 
             <div>Roles</div>
             <div role="group" className="btn-group d-block mb-3">
-                {["Admin", "Trainee", "Assessor"].map((role, index) => {
+                {["Admin", "Assessor", "Trainee"].map((role, index) => {
                     return (
                         <React.Fragment key={index}>
                             <input
