@@ -521,13 +521,13 @@ app.get("/api/users/:userId", (req, res) => {
     });
 });
 
-// update user
-app.post("/api/users/:userId", (req, res) => {
+// update user roles
+app.post("/api/users/:userId/roles", (req, res) => {
     if (!checkAuth(req, res)) return;
     if (!checkRole(req, res, "Admin")) return;
     const { userId } = req.params;
-    const user = req.body;
-    models.User.updateById(userId, user).then((u) => {
+    const { roles } = req.body;
+    models.User.updateRoles(userId, roles).then((u) => {
         if (!u) {
             res.json({
                 error: true,
@@ -920,6 +920,7 @@ app.post("/api/traineeDrills", (req, res) => {
                 );
             })
             .catch((err) => {
+                console.log("error:", err);
                 const response = { error: true, msg: [], message: [] };
                 for (const error of err.errors) {
                     response.message.push(error.message);

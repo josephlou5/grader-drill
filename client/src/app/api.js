@@ -185,9 +185,9 @@ export function getUser(userId, callback = null) {
     });
 }
 
-export function updateUser(user, callback = null) {
+export function updateUserRoles(user, callback = null) {
     if (checkNull(user, callback)) return;
-    postRequest(`/users/${user.id}`, user).then((u) => {
+    postRequest(`/users/${user.id}/roles`, user).then((u) => {
         u = checkError(u, "update", "user");
         if (callback) callback(u);
     });

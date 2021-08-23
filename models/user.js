@@ -16,6 +16,19 @@ function hashPassword(password) {
     return { salt, hash: hash(password, salt) };
 }
 
+async function createRoles(user) {
+    const userId = user.id;
+    await Promise.all(
+        user.roles.map((role) => {
+            const create = user[`create${role}`];
+            if (!create) return null;
+            return create
+                .bind(user)({ userId })
+                .catch(() => null);
+        })
+    );
+}
+
 module.exports = (sequelize, DataTypes) => {
     class User extends Model {
         /**
@@ -27,28 +40,23 @@ module.exports = (sequelize, DataTypes) => {
             // define association here
         }
 
-        static add(user) {
+        static async add(user) {
             const { password } = user;
             delete user.password;
             if (password) {
                 Object.assign(user, hashPassword(password));
             }
-            return User.create(user).then(async (u) => {
-                if (u.roles.includes("Trainee")) {
-                    await u.createTrainee({ userId: u.id });
-                }
-                if (u.roles.includes("Assessor")) {
-                    await u.createAssessor({ userId: u.id });
-                }
-                return new Promise((resolve) => resolve(u));
-            });
+            const u = await User.create(user);
+            await createRoles(u);
+            return u;
         }
 
-        static updateById(userId, user) {
-            return User.update(user, { where: { id: userId } }).then((num) => {
-                if (num === 0) return null;
-                return User.findByPk(userId).then((u) => u.noPass());
-            });
+        static async updateRoles(userId, roles) {
+            const num = await User.update({ roles }, { where: { id: userId } });
+            if (num === 0) return null;
+            const user = await User.findByPk(userId);
+            await createRoles(user);
+            return user.noPass();
         }
 
         noPass() {
@@ -62,17 +70,17 @@ module.exports = (sequelize, DataTypes) => {
             return this.hash === hash(password, this.salt);
         }
 
-        resetPassword() {
+        async resetPassword() {
             const password = nanoid(16);
-            return this.update(hashPassword(password)).then((u) => {
-                u = u.noPass();
-                u.password = password;
-                return u;
-            });
+            const user = await this.update(hashPassword(password));
+            const response = user.noPass();
+            response.password = password;
+            return response;
         }
 
-        changePassword(password) {
-            return this.update(hashPassword(password)).then((u) => u.noPass());
+        async changePassword(password) {
+            const user = await this.update(hashPassword(password));
+            return user.noPass();
         }
     }
     User.init(

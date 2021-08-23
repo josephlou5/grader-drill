@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Title, setElementValid } from "../shared";
-import { getAllUsers, resetUserPassword, updateUser } from "../api";
+import { getAllUsers, updateUserRoles, resetUserPassword } from "../api";
 
 export default function UsersView(props) {
     return (
@@ -110,7 +110,7 @@ function Roles({ myself, user, onUpdateRoles }) {
             return;
         }
         const u = { ...user, roles };
-        updateUser(u, () => {
+        updateUserRoles(u, () => {
             onUpdateRoles();
             setEditing(false);
         });
