@@ -269,9 +269,8 @@ if (process.env.NODE_ENV !== "production") {
         ],
     };
 
-    app.get("/reset", async (req, res) => {
-        let response = {};
-        // reset all the tables
+    async function clearTables() {
+        const response = {};
         await Promise.all(
             Object.values(models).map(async (model) => {
                 if (model.name === "TraineeDrill") {
@@ -301,12 +300,23 @@ if (process.env.NODE_ENV !== "production") {
                     .catch(() => (response[sequence] = "Failed to reset to 1"));
             })
         );
+        return response;
+    }
+
+    app.get("/clear", async (req, res) => {
+        const response = await clearTables();
+        res.json(response);
+    });
+
+    app.get("/reset", async (req, res) => {
+        // clear all the tables
+        const response = await clearTables();
         // add new data
         await models.User.add({
             email: "assessor@test.com",
             password: "password",
             roles: ["Admin", "Assessor", "Trainee"],
-        }).catch((err) => console.log(err));
+        });
         for (let num = 1; num <= 3; num++) {
             await models.User.add({
                 email: `trainee${num}@test.com`,
@@ -430,6 +440,7 @@ function checkAuth(req, res) {
 function checkRole(req, res, role) {
     if (!checkAuth(req, res)) return false;
     if (req.user.roles.includes(role)) return true;
+    console.log("doesn't have proper role");
     res.json({
         error: true,
         msg: `needs role "${role}" for permission`,
@@ -543,16 +554,6 @@ app.get("/api/questions/all", (req, res) => {
 // get final versions of all questions
 app.get("/api/questions", (req, res) => {
     if (!checkAuth(req, res)) return;
-    if (!req.isAuthenticated()) {
-        console.log("not authenticated");
-        res.json({
-            error: true,
-            message: "not authenticated",
-            not_authenticated: true,
-        });
-        // res.json([]);
-        return;
-    }
     models.Question.findAll({
         order: [
             ["id", "ASC"],
@@ -638,13 +639,14 @@ function addQuestion(question, res) {
 app.post("/api/questions", (req, res) => {
     if (!checkAuth(req, res)) return;
     if (!checkRole(req, res, "Admin")) return;
-    let question = req.body;
+    const question = req.body;
     // get the next id
-    models.Question.max("id", { paranoid: false }).then((id) => {
-        question["id"] = id ? id + 1 : 1;
-        question["version"] = 1;
-        addQuestion(question, res).then((q) => res.json(q));
-    });
+    models.Question.max("id", { paranoid: false })
+        .then((id) => (id ? id + 1 : 1))
+        .then((id) => {
+            Object.assign(question, { id, version: 1 });
+            addQuestion(question, res).then((q) => res.json(q));
+        });
 });
 
 // update question (add new version)
@@ -652,7 +654,7 @@ app.post("/api/questions/:questionId", (req, res) => {
     if (!checkAuth(req, res)) return;
     if (!checkRole(req, res, "Admin")) return;
     const { questionId } = req.params;
-    let question = req.body;
+    const question = req.body;
     // get the next version number
     models.Question.max("version", {
         where: { id: questionId },
@@ -666,9 +668,7 @@ app.post("/api/questions/:questionId", (req, res) => {
             });
             return;
         }
-
-        question["id"] = questionId;
-        question["version"] = version + 1;
+        Object.assign(question, { id: questionId, version: version + 1 });
         addQuestion(question, res).then((q) => res.json(q));
     });
 });
@@ -678,18 +678,16 @@ app.post("/api/questions/:questionId/:version", (req, res) => {
     if (!checkAuth(req, res)) return;
     if (!checkRole(req, res, "Admin")) return;
     const { questionId, version } = req.params;
-    let question = req.body;
-    models.Question.update(question, {
-        where: { id: questionId, version },
-    }).then((num) => {
-        if (num === 1) {
-            res.json(question);
-        } else {
+    const question = req.body;
+    models.Question.updateById(questionId, version, question).then((q) => {
+        if (!q) {
             res.json({
                 error: true,
                 msg: `question ${questionId} version ${version} does not exist`,
                 dne_error: true,
             });
+        } else {
+            res.json(q);
         }
     });
 });
@@ -783,15 +781,15 @@ app.post("/api/drills/:drillId", (req, res) => {
     if (!checkRole(req, res, "Admin")) return;
     const { drillId } = req.params;
     const drill = req.body;
-    models.Drill.update(drill, { where: { id: drillId } }).then((num) => {
-        if (num === 1) {
-            res.json(drill);
-        } else {
+    models.Drill.updateById(drillId, drill).then((d) => {
+        if (!d) {
             res.json({
                 error: true,
                 msg: `drill ${drillId} does not exist`,
                 dne_error: true,
             });
+        } else {
+            res.json(d);
         }
     });
 });
@@ -869,6 +867,14 @@ app.post("/api/traineeDrills", (req, res) => {
             });
             return;
         }
+        if (drill.expired) {
+            res.json({
+                error: true,
+                msg: `drill with code "${code}" is expired`,
+                expiredError: true,
+            });
+            return;
+        }
         const drillId = drill.id;
         models.TraineeDrill.All.findOrCreate({
             where: { drillId, traineeId },
@@ -884,7 +890,7 @@ app.post("/api/traineeDrills", (req, res) => {
                     res.json({
                         error: true,
                         msg: `trainee ${traineeId} already in drill ${drillId}`,
-                        unique_violation: true,
+                        uniqueViolation: true,
                     });
                     return;
                 }
@@ -940,14 +946,9 @@ app.post("/api/traineeDrills/:traineeDrillId/increment", (req, res) => {
                     res.json(traineeDrill);
                     return;
                 }
-                models.TraineeDrill.update(
-                    { completedAt: sequelize.literal("CURRENT_TIMESTAMP") },
-                    where
-                ).then(() => {
-                    models.TraineeDrill.All.findByPk(traineeDrillId).then((d) =>
-                        res.json(d)
-                    );
-                });
+                models.TraineeDrill.complete(traineeDrillId).then((d) =>
+                    res.json(d)
+                );
             }
         );
     });
@@ -957,40 +958,23 @@ app.delete("/api/traineeDrills/:traineeDrillId", (req, res) => {
     if (!checkAuth(req, res)) return;
     if (!checkRole(req, res, "Trainee")) return;
     const { traineeDrillId } = req.params;
-    models.TraineeDrill.delete({ where: { id: traineeDrillId } }).then(
-        (drills) => {
-            if (!drills) {
-                res.json({
-                    error: true,
-                    msg: `trainee drill ${traineeDrillId} does not exist`,
-                    dne_error: true,
-                });
-            } else {
-                res.json(drills);
-            }
+    models.TraineeDrill.delete(traineeDrillId).then((drill) => {
+        if (!drill) {
+            res.json({
+                error: true,
+                msg: `trainee drill ${traineeDrillId} does not exist`,
+                dne_error: true,
+            });
+        } else {
+            res.json(drill);
         }
-    );
+    });
 });
 
 // get all answered
 app.get("/api/answered", (req, res) => {
     if (!checkAuth(req, res)) return;
     if (!checkRole(req, res, "Assessor")) return;
-    const { traineeDrillId, assessorId } = req.query;
-    const options = {
-        where: {},
-        include: [
-            models.Trainee.Include,
-            models.Assessor.Include,
-            models.TraineeDrill.Include,
-        ],
-    };
-    if (traineeDrillId) {
-        options.where.traineeDrillId = traineeDrillId;
-    }
-    if (assessorId) {
-        options.where.assessorId = assessorId;
-    }
     models.Answered.IncludeUsers.findAll().then((answered) =>
         res.json(answered)
     );
@@ -1060,6 +1044,7 @@ app.post("/api/answered", (req, res) => {
     if (!checkRole(req, res, "Trainee")) return;
     const traineeId = req.user.id;
     const question = req.body;
+    // set trainee
     question.traineeId = traineeId;
     models.Answered.add(question)
         .then((q) => res.json(q))
@@ -1094,19 +1079,17 @@ app.post("/api/answered/:answeredId", (req, res) => {
     answered.assessorId = req.user.id;
     // set graded
     answered.graded = true;
-    models.Answered.update(answered, { where: { id: answeredId } }).then(
-        (num) => {
-            if (num == 1) {
-                res.json(answered);
-            } else {
-                res.json({
-                    error: true,
-                    msg: `answered ${answeredId} does not exist`,
-                    dne_error: true,
-                });
-            }
+    models.Answered.updateById(answeredId, answered).then((question) => {
+        if (!question) {
+            res.json({
+                error: true,
+                msg: `answered ${answeredId} does not exist`,
+                dne_error: true,
+            });
+        } else {
+            res.json(question);
         }
-    );
+    });
 });
 
 // all other get requests (frontend)

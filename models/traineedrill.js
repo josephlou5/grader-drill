@@ -1,5 +1,5 @@
 "use strict";
-const { Model } = require("sequelize");
+const { Model, Op } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
     class TraineeDrill extends Model {
         /**
@@ -15,12 +15,25 @@ module.exports = (sequelize, DataTypes) => {
             return TraineeDrill.create(drill);
         }
 
-        static delete(options) {
-            return TraineeDrill.findAll(options).then((drills) => {
-                if (drills.length === 0)
-                    return new Promise((resolve) => resolve(null));
-                return TraineeDrill.destroy(options).then(() => drills);
+        static complete(traineeDrillId) {
+            return TraineeDrill.update(
+                { completedAt: new Date() },
+                { where: { id: traineeDrillId } }
+            ).then((num) => {
+                if (num === 0) return null;
+                return TraineeDrill.findByPk(traineeDrillId);
             });
+        }
+
+        static delete(traineeDrillId) {
+            return TraineeDrill.destroy({ where: { id: traineeDrillId } }).then(
+                (num) => {
+                    if (num === 0) return null;
+                    return TraineeDrill.findByPk(traineeDrillId, {
+                        paranoid: false,
+                    });
+                }
+            );
         }
     }
     TraineeDrill.init(
@@ -37,9 +50,7 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.VIRTUAL,
                 get() {
                     const completedAt = this.getDataValue("completedAt");
-                    return completedAt
-                        ? completedAt.toISOString().slice(0, 10)
-                        : "N/A";
+                    return completedAt?.toISOString().slice(0, 10) || "N/A";
                 },
             },
         },

@@ -16,6 +16,15 @@ module.exports = (sequelize, DataTypes) => {
             return Drill.create({ ...drill, code: nanoid(10) });
         }
 
+        static updateById(drillId, drill) {
+            return Drill.update(drill, { where: { id: drillId } }).then(
+                (num) => {
+                    if (num === 0) return null;
+                    return Drill.findByPk(drillId);
+                }
+            );
+        }
+
         static delete(drillId) {
             return Drill.destroy({ where: { id: drillId } }).then((num) => {
                 if (num === 0) return null;
@@ -49,6 +58,18 @@ module.exports = (sequelize, DataTypes) => {
             dueDate: {
                 type: DataTypes.DATEONLY,
                 allowNull: false,
+            },
+            expired: {
+                type: DataTypes.VIRTUAL,
+                get() {
+                    const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+                    const today = Date.now();
+                    // on the day of the due date, still valid
+                    const dueDate =
+                        Date.parse(this.getDataValue("dueDate")) +
+                        MILLISECONDS_PER_DAY * 1;
+                    return today > dueDate;
+                },
             },
             tags: {
                 type: DataTypes.TEXT,

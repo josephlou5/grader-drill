@@ -84,6 +84,15 @@ module.exports = (sequelize, DataTypes) => {
             }
             return Answered.create(question, { fields });
         }
+
+        static updateById(answeredId, answered) {
+            return Answered.update(answered, {
+                where: { id: answeredId },
+            }).then((num) => {
+                if (num === 0) return null;
+                return Answered.findByPk(answeredId);
+            });
+        }
     }
     Answered.init(
         {
