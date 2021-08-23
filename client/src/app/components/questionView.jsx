@@ -107,7 +107,7 @@ function Question({ answered, question: propsQuestion, noChange, onSubmit }) {
                 setValid("question-mc-choice", false);
             }
         } else {
-            if (!question.highlights.some((h) => h.byUser)) {
+            if (question.highlights.length === 0) {
                 setValid("question-code", false);
             } else if (question.questionType === "Comment") {
                 question.highlights.forEach((h, index) => {
