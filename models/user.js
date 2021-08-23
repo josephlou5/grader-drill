@@ -44,6 +44,13 @@ module.exports = (sequelize, DataTypes) => {
             });
         }
 
+        static updateById(userId, user) {
+            return User.update(user, { where: { id: userId } }).then((num) => {
+                if (num === 0) return null;
+                return User.findByPk(userId).then((u) => u.noPass());
+            });
+        }
+
         noPass() {
             const user = this.toJSON();
             delete user.salt;

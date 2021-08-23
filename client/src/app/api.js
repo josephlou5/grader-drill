@@ -185,6 +185,14 @@ export function getUser(userId, callback = null) {
     });
 }
 
+export function updateUser(user, callback = null) {
+    if (checkNull(user, callback)) return;
+    postRequest(`/users/${user.id}`, user).then((u) => {
+        u = checkError(u, "update", "user");
+        if (callback) callback(u);
+    });
+}
+
 export function changeUserPassword(oldPass, newPass, callback = null) {
     if (checkNull(oldPass, callback)) return;
     if (checkNull(newPass, callback)) return;

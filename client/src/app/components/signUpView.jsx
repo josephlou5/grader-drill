@@ -151,28 +151,26 @@ export default function SignUpView({ onLogIn }) {
 
             <div>Roles</div>
             <div role="group" className="btn-group d-block mb-3">
-                {["Admin", "Assessor", "Trainee"].map((role, index) => {
-                    return (
-                        <React.Fragment key={index}>
-                            <input
-                                type="checkbox"
-                                className="btn-check role"
-                                id={role}
-                                autoComplete="off"
-                                onChange={() => {
-                                    resetValidId("error");
-                                    resetValidId("roles");
-                                }}
-                            />
-                            <label
-                                className="btn btn-outline-success"
-                                htmlFor={role}
-                            >
-                                {role}
-                            </label>
-                        </React.Fragment>
-                    );
-                })}
+                {["Admin", "Assessor", "Trainee"].map((role, index) => (
+                    <React.Fragment key={index}>
+                        <input
+                            type="checkbox"
+                            className="btn-check role"
+                            id={role}
+                            autoComplete="off"
+                            onChange={() => {
+                                resetValidId("error");
+                                resetValidId("roles");
+                            }}
+                        />
+                        <label
+                            className="btn btn-outline-success"
+                            htmlFor={role}
+                        >
+                            {role}
+                        </label>
+                    </React.Fragment>
+                ))}
 
                 <div>
                     <input type="hidden" id="roles" />

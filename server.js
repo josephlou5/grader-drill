@@ -521,6 +521,26 @@ app.get("/api/users/:userId", (req, res) => {
     });
 });
 
+// update user
+app.post("/api/users/:userId", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
+    const { userId } = req.params;
+    const user = req.body;
+    models.User.updateById(userId, user).then((u) => {
+        if (!u) {
+            res.json({
+                error: true,
+                msg: `user ${userId} does not exist`,
+                dne_error: true,
+            });
+        } else {
+            console.log("updated user:", u);
+            res.json(u);
+        }
+    });
+});
+
 // reset user password
 app.post("/api/users/:userId/password", (req, res) => {
     if (!checkAuth(req, res)) return;

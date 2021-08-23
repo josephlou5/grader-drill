@@ -186,7 +186,7 @@ export default function App() {
 
                 {/* users */}
                 <Protected path="/users" {...admin}>
-                    <UsersView />
+                    <UsersView admin={user} />
                 </Protected>
 
                 {/* questions */}

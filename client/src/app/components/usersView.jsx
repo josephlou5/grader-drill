@@ -1,22 +1,30 @@
-import React, { useState } from "react";
-import { useMountEffect, Title } from "../shared";
-import { getAllUsers, resetUserPassword } from "../api";
+import React, { useState, useEffect } from "react";
+import { Title, setElementValid } from "../shared";
+import { getAllUsers, resetUserPassword, updateUser } from "../api";
 
-export default function UsersView() {
+export default function UsersView(props) {
     return (
         <React.Fragment>
             <Title title="Users" />
             <h1>Users</h1>
-            <UsersTable />
+            <div>
+                Note: Role updates require a user re-login to take effect.
+            </div>
+            <UsersTable {...props} />
         </React.Fragment>
     );
 }
 
-function UsersTable() {
+function UsersTable({ admin }) {
+    const [needsUsers, setNeedsUsers] = useState(true);
     const [users, setUsers] = useState(null);
 
-    useMountEffect(() => {
-        getAllUsers((u) => setUsers(u));
+    useEffect(() => {
+        if (!needsUsers) return;
+        getAllUsers((u) => {
+            setNeedsUsers(false);
+            setUsers(u);
+        });
     });
 
     if (!users) {
@@ -27,12 +35,22 @@ function UsersTable() {
         return <p>No users</p>;
     }
 
+    function handleUpdateRoles() {
+        setNeedsUsers(true);
+    }
+
     const rows = users.map((user, index) => {
         return (
             <tr key={index}>
                 <th>{index + 1}</th>
                 <td>{user.email}</td>
-                <td>{user.roles.join(", ")}</td>
+                <td>
+                    <Roles
+                        myself={admin.id === user.id}
+                        user={user}
+                        onUpdateRoles={handleUpdateRoles}
+                    />
+                </td>
                 <td>
                     <NewPassword user={user} />
                 </td>
@@ -53,6 +71,111 @@ function UsersTable() {
             <tbody>{rows}</tbody>
         </table>
     );
+}
+
+function Roles({ myself, user, onUpdateRoles }) {
+    const [editing, setEditing] = useState(false);
+    const [checked, setCheckedState] = useState(null);
+
+    function setChecked(updates) {
+        setCheckedState({ ...checked, ...updates });
+    }
+
+    const { roles } = user;
+
+    function handleEdit() {
+        const checked = { Admin: false, Assessor: false, Trainee: false };
+        roles.forEach((role) => {
+            checked[role] = true;
+        });
+        setCheckedState(checked);
+        setEditing(true);
+    }
+
+    function handleToggleRole(role) {
+        if (myself && role === "Admin") {
+            setElementValid("remove-admin", false);
+            return;
+        }
+        setElementValid("remove-admin", true);
+        setChecked({ [role]: !checked[role] });
+    }
+
+    function handleUpdateRoles() {
+        const roles = Object.entries(checked).flatMap(([role, val]) =>
+            val ? [role] : []
+        );
+        if (roles.length === 0) {
+            setElementValid("roles", false);
+            return;
+        }
+        const u = { ...user, roles };
+        updateUser(u, () => {
+            onUpdateRoles();
+            setEditing(false);
+        });
+    }
+
+    if (!editing) {
+        return (
+            <React.Fragment>
+                {roles.join(", ")}
+                <button
+                    type="button"
+                    className="btn btn-success btn-sm ms-2"
+                    onClick={handleEdit}
+                >
+                    Edit
+                </button>
+            </React.Fragment>
+        );
+    } else {
+        const rolesChecks = ["Admin", "Assessor", "Trainee"].map(
+            (role, index) => (
+                <React.Fragment key={index}>
+                    <input
+                        type="checkbox"
+                        className="btn-check"
+                        id={role}
+                        autoComplete="off"
+                        checked={checked[role]}
+                        onChange={() => handleToggleRole(role)}
+                    />
+                    <label className="btn btn-outline-success" htmlFor={role}>
+                        {role}
+                    </label>
+                </React.Fragment>
+            )
+        );
+        return (
+            <React.Fragment>
+                <div className="d-inline-block">
+                    <div role="group" className="btn-group btn-group-sm">
+                        {rolesChecks}
+                    </div>
+                    <button
+                        type="button"
+                        className="btn btn-success btn-sm ms-2"
+                        onClick={handleUpdateRoles}
+                    >
+                        Done
+                    </button>
+                </div>
+                <div>
+                    <input type="hidden" id="roles" />
+                    <div className="invalid-feedback">
+                        Must have at least one role.
+                    </div>
+                </div>
+                <div>
+                    <input type="hidden" id="remove-admin" />
+                    <div className="invalid-feedback">
+                        Can't remove Admin role from yourself.
+                    </div>
+                </div>
+            </React.Fragment>
+        );
+    }
 }
 
 function NewPassword({ user }) {
