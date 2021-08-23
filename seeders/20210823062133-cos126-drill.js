@@ -9,7 +9,7 @@ module.exports = {
                 code: nanoid(10),
                 name: "COS126",
                 numQuestions: 3,
-                dueDate: "2021-08-22",
+                dueDate: "2021-09-01",
                 tags: "course:126 old",
                 createdAt: new Date(),
                 updatedAt: new Date(),
