@@ -356,7 +356,7 @@ export function deleteTraineeDrill(traineeDrillId, callback = null) {
     if (checkNull(traineeDrillId, callback)) return;
     if (!checkInt(traineeDrillId, "delete", "trainee drill", callback)) return;
     deleteRequest(`/traineeDrills/${traineeDrillId}`).then((d) => {
-        d = checkError(d, "delete", "trainee drill", true);
+        d = checkError(d, "delete", "trainee drill");
         if (callback) callback(d);
     });
 }

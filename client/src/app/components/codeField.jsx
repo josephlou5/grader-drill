@@ -194,7 +194,6 @@ function handleHighlight(lines) {
 
     resetValidId("question-code");
 
-    console.log("added highlight:", highlight);
     return highlight;
 }
 

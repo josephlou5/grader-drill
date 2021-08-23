@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
     useMountEffect,
     Title,
+    DueDate,
     QuestionType,
     setElementValid,
     resetValid,
@@ -75,21 +76,22 @@ function AddDrillInput({ onAddDrill }) {
 
     function handleAddDrill() {
         setElementValid("drill-code", true);
+        const feedback = document.getElementById("drill-code-feedback");
 
         if (drillCode.length === 0) {
-            document.getElementById("drill-code-feedback").innerText =
-                "Please enter a drill code.";
+            feedback.innerHTML = "Please enter a drill code.";
             setElementValid("drill-code", false);
             return;
         }
 
         addTraineeDrill(drillCode, (drill) => {
             if (drill.error) {
-                const element = document.getElementById("drill-code-feedback");
-                if (drill.unique_violation) {
-                    element.innerText = "Already in drill.";
+                if (drill.uniqueViolation) {
+                    feedback.innerHTML = "Already in drill.";
+                } else if (drill.expiredError) {
+                    feedback.innerHTML = "Drill has expired.";
                 } else {
-                    element.innerText = "Invalid drill code.";
+                    feedback.innerHTML = "Invalid drill code.";
                 }
                 setElementValid("drill-code", false);
                 return;
@@ -127,7 +129,7 @@ function AddDrillInput({ onAddDrill }) {
     );
 }
 
-function DrillNameCode({ name, code }) {
+function DrillNameCode({ drill: { name, code } }) {
     const [showing, setShowing] = useState(0);
     function handleClick() {
         setShowing(1 - showing);
@@ -148,36 +150,42 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
 
     let rowsShowing = 0;
     const rows = drills.map((traineeDrill, index) => {
+        const { completedAt, completedDate, progress } = traineeDrill;
         const drill = traineeDrill.Drill;
 
         let classes = undefined;
-        if (hideCompleted && traineeDrill.completedAt) {
+        if (hideCompleted && completedAt) {
             classes = "d-none";
         } else {
             rowsShowing++;
         }
 
-        const removeDrillButton = (
-            <button
-                type="button"
-                className="btn btn-danger btn-sm"
-                onClick={() => onRemoveDrill(traineeDrill.id)}
-            >
-                Remove Drill
-            </button>
-        );
+        let removeDrillButton = null;
+        if (!completedAt) {
+            removeDrillButton = (
+                <button
+                    type="button"
+                    className="btn btn-danger btn-sm"
+                    onClick={() => onRemoveDrill(traineeDrill.id)}
+                >
+                    Remove Drill
+                </button>
+            );
+        }
 
         return (
             <tr key={index} className={classes}>
                 <th>{index + 1}</th>
                 <td>
-                    <DrillNameCode name={drill.name} code={drill.code} />
+                    <DrillNameCode drill={drill} />
                 </td>
-                <td>{drill.dueDate}</td>
+                <td>
+                    <DueDate drill={drill} completedAt={completedAt} />
+                </td>
                 <td>{drill.numQuestions}</td>
-                <td>{traineeDrill.progress}</td>
-                <td>{traineeDrill.completedDate}</td>
-                <td>{!traineeDrill.completedAt && removeDrillButton}</td>
+                <td>{progress}</td>
+                <td>{completedDate}</td>
+                <td>{removeDrillButton}</td>
             </tr>
         );
     });

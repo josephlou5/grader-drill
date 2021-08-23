@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Title } from "../shared";
+import { Title, DueDate } from "../shared";
 import { getDrill } from "../api";
 
 export default function DrillView() {
@@ -38,7 +38,7 @@ export default function DrillView() {
         );
     }
 
-    const { name, code, numQuestions, dueDate } = drill;
+    const { name, code, numQuestions } = drill;
     return (
         <React.Fragment>
             <Title title="Drill" />
@@ -46,7 +46,9 @@ export default function DrillView() {
             <div>Name: {name}</div>
             <div>Code: {code}</div>
             <div>Number Questions: {numQuestions}</div>
-            <div className="mb-2">Due Date: {dueDate}</div>
+            <div className="mb-2">
+                Due Date: <DueDate drill={drill} />
+            </div>
             <TraineeDrillsTable drill={drill} />
         </React.Fragment>
     );

@@ -149,9 +149,11 @@ export default function App() {
         <div className="App">
             <Navbar user={user} onLogOut={handleLogOut} />
             <Switch>
-                <Route exact path="/">
-                    <Home user={user} onChooseRole={handleChooseRole} />
-                </Route>
+                {!user && (
+                    <Route exact path="/">
+                        <HomeView />
+                    </Route>
+                )}
                 <Route exact path="/about">
                     <AboutView />
                 </Route>
@@ -163,14 +165,20 @@ export default function App() {
                     <SignUpView onLogIn={handleLogIn} />
                 </Route>
 
-                <Protected exact path="/profile" {...props}>
+                <Protected path="/" {...props}>
+                    <ChooseRoleView
+                        user={user}
+                        onChooseRole={handleChooseRole}
+                    />
+                </Protected>
+                <Protected path="/profile" {...props}>
                     <ProfileView user={user} />
                 </Protected>
 
-                <Protected exact path="/dashboard" {...props}>
+                <Protected path="/dashboard" {...props}>
                     <Dashboard user={user} />
                 </Protected>
-                <Protected exact path="/answered/:answeredId">
+                <Protected path="/answered/:answeredId" {...props}>
                     <AnsweredView user={user} />
                 </Protected>
 
@@ -315,14 +323,6 @@ function Navbar({ user, onLogOut }) {
             </div>
         </nav>
     );
-}
-
-function Home({ user, onChooseRole }) {
-    if (!user) {
-        return <HomeView />;
-    } else {
-        return <ChooseRoleView user={user} onChooseRole={onChooseRole} />;
-    }
 }
 
 function Dashboard({ user }) {

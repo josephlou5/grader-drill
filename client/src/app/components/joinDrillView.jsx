@@ -14,8 +14,10 @@ export default function JoinDrillView() {
                 setStatus("Successfully joined drill!");
             } else if (drill.notAuthenticated) {
                 setStatus("You're not signed in.");
-            } else if (drill.unique_violation) {
+            } else if (drill.uniqueViolation) {
                 setStatus("Already in drill!");
+            } else if (drill.expiredError) {
+                setStatus("Drill has expired.");
             } else {
                 setStatus("Invalid drill code.");
             }

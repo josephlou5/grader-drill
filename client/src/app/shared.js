@@ -33,6 +33,13 @@ export function ResizeTextareas() {
     return null;
 }
 
+// component to display a possibly expired due date
+export function DueDate({ drill, completedAt = null }) {
+    const { dueDate, expired } = drill;
+    if (completedAt || !expired) return dueDate;
+    return <span className="text-danger">{dueDate}</span>;
+}
+
 // component to load a question's type
 export function QuestionType({ questionId, version }) {
     const [state, setState] = useState({

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Title } from "../shared";
+import { Title, DueDate } from "../shared";
 import {
     getTraineeAnswered,
     getAllQuestions,
@@ -71,22 +71,29 @@ function Training() {
         setDrill(traineeDrill);
     }
 
-    if (drills.length === 1 && !drills[0].completedAt) {
-        handleChooseDrill(drills[0]);
-        return <p>Redirecting to drill...</p>;
+    if (drills.length === 1) {
+        const traineeDrill = drills[0];
+        if (!traineeDrill.completedAt && !traineeDrill.Drill.expired) {
+            handleChooseDrill(traineeDrill);
+            return <p>Redirecting to drill...</p>;
+        }
     }
 
     const choices = drills.map((traineeDrill, index) => {
+        const { completedAt, completedDate, progress } = traineeDrill;
         const drill = traineeDrill.Drill;
-        let completedOrTrain;
-        if (traineeDrill.completedAt) {
-            completedOrTrain = (
-                <div className="card-text">
-                    Completed: {traineeDrill.completedDate}
-                </div>
+
+        let statusOrAction;
+        if (completedAt) {
+            statusOrAction = (
+                <div className="card-text">Completed: {completedDate}</div>
+            );
+        } else if (drill.expired) {
+            statusOrAction = (
+                <div className="card-text text-danger">Expired</div>
             );
         } else {
-            completedOrTrain = (
+            statusOrAction = (
                 <button
                     type="button"
                     className="btn btn-success mt-2"
@@ -100,14 +107,15 @@ function Training() {
             <div key={index} className="card col-2 m-2">
                 <div className="card-body">
                     <h5 className="card-title">{drill.name}</h5>
-                    <div className="card-text">Due date: {drill.dueDate}</div>
+                    <div className="card-text">
+                        Due date:{" "}
+                        <DueDate drill={drill} completedAt={completedAt} />
+                    </div>
                     <div className="card-text">
                         Num questions: {drill.numQuestions}
                     </div>
-                    <div className="card-text">
-                        Progress: {traineeDrill.progress}
-                    </div>
-                    {completedOrTrain}
+                    <div className="card-text">Progress: {progress}</div>
+                    {statusOrAction}
                 </div>
             </div>
         );

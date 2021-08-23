@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Title } from "../shared";
+import { Title, DueDate } from "../shared";
 import { deleteDrill, getAllDrills } from "../api";
 
 export default function DrillsView() {
@@ -45,7 +45,7 @@ function DrillsTable() {
     }
 
     const rows = drills.map((drill, index) => {
-        const { id: drillId, name, code, numQuestions, dueDate, tags } = drill;
+        const { id: drillId, name, code, numQuestions, tags } = drill;
         const link = "/drills/" + drillId;
         const editLink = "/drills/edit/" + drillId;
         return (
@@ -54,7 +54,9 @@ function DrillsTable() {
                 <td>{name}</td>
                 <td>{code}</td>
                 <td>{numQuestions}</td>
-                <td>{dueDate}</td>
+                <td>
+                    <DueDate drill={drill} />
+                </td>
                 <td>{tags || "None"}</td>
                 <td>
                     <Link to={link}>
