@@ -535,7 +535,6 @@ app.post("/api/users/:userId/roles", (req, res) => {
                 dne_error: true,
             });
         } else {
-            console.log("updated user:", u);
             res.json(u);
         }
     });
