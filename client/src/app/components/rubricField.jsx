@@ -3,11 +3,18 @@ import ReactMarkdown from "react-markdown";
 import { TextareaLine, resetValid, resetValidId } from "../shared";
 
 export default function RubricField(props) {
-    const { rubric, previewMode, editMode, noChange } = props;
+    return (
+        <React.Fragment>
+            <h1>Rubric</h1>
+            <Rubric {...props} />
+        </React.Fragment>
+    );
+}
 
-    let field;
+function Rubric(props) {
+    const { rubric, previewMode, editMode, noChange } = props;
     if (previewMode || noChange) {
-        field = rubric.map((item, index) => (
+        return rubric.map((item, index) => (
             <div key={index} className="form-check">
                 <input
                     type="checkbox"
@@ -19,10 +26,16 @@ export default function RubricField(props) {
             </div>
         ));
     } else if (editMode) {
-        field = <EditRubric {...props} />;
+        return <EditRubric {...props} />;
     } else {
-        field = rubric.map((item, index) => {
+        return rubric.map((item, index) => {
             const idFor = "item" + index;
+            let points = item.points;
+            if (points === 0) {
+                points = " " + points;
+            } else if (points > 0) {
+                points = "+" + points;
+            }
             return (
                 <div key={index} className="form-check">
                     <input
@@ -33,19 +46,12 @@ export default function RubricField(props) {
                         onChange={() => props.onCheckChange(index)}
                     />
                     <label className="form-check-label" htmlFor={idFor}>
-                        <ReactMarkdown>{item.text}</ReactMarkdown>
+                        <ReactMarkdown>{`\`[${points}]\` ${item.text}`}</ReactMarkdown>
                     </label>
                 </div>
             );
         });
     }
-
-    return (
-        <React.Fragment>
-            <h1>Rubric</h1>
-            {field}
-        </React.Fragment>
-    );
 }
 
 function EditRubric(props) {

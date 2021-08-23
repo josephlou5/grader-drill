@@ -39,24 +39,22 @@ function UsersTable({ admin }) {
         setNeedsUsers(true);
     }
 
-    const rows = users.map((user, index) => {
-        return (
-            <tr key={index}>
-                <th>{index + 1}</th>
-                <td>{user.email}</td>
-                <td>
-                    <Roles
-                        myself={admin.id === user.id}
-                        user={user}
-                        onUpdateRoles={handleUpdateRoles}
-                    />
-                </td>
-                <td>
-                    <NewPassword user={user} />
-                </td>
-            </tr>
-        );
-    });
+    const rows = users.map((user, index) => (
+        <tr key={user.id}>
+            <th>{index + 1}</th>
+            <td>{user.email}</td>
+            <td>
+                <Roles
+                    myself={admin.id === user.id}
+                    user={user}
+                    onUpdateRoles={handleUpdateRoles}
+                />
+            </td>
+            <td>
+                <NewPassword user={user} />
+            </td>
+        </tr>
+    ));
 
     return (
         <table className="table table-hover align-middle">
@@ -116,6 +114,10 @@ function Roles({ myself, user, onUpdateRoles }) {
         });
     }
 
+    function handleCancel() {
+        setEditing(false);
+    }
+
     if (!editing) {
         return (
             <React.Fragment>
@@ -130,23 +132,21 @@ function Roles({ myself, user, onUpdateRoles }) {
             </React.Fragment>
         );
     } else {
-        const rolesChecks = ["Admin", "Assessor", "Trainee"].map(
-            (role, index) => (
-                <React.Fragment key={index}>
-                    <input
-                        type="checkbox"
-                        className="btn-check"
-                        id={role}
-                        autoComplete="off"
-                        checked={checked[role]}
-                        onChange={() => handleToggleRole(role)}
-                    />
-                    <label className="btn btn-outline-success" htmlFor={role}>
-                        {role}
-                    </label>
-                </React.Fragment>
-            )
-        );
+        const rolesChecks = ["Admin", "Assessor", "Trainee"].map((role) => (
+            <React.Fragment key={role}>
+                <input
+                    type="checkbox"
+                    className="btn-check"
+                    id={role}
+                    autoComplete="off"
+                    checked={checked[role]}
+                    onChange={() => handleToggleRole(role)}
+                />
+                <label className="btn btn-outline-success" htmlFor={role}>
+                    {role}
+                </label>
+            </React.Fragment>
+        ));
         return (
             <React.Fragment>
                 <div className="d-inline-block">
@@ -158,7 +158,14 @@ function Roles({ myself, user, onUpdateRoles }) {
                         className="btn btn-success btn-sm ms-2"
                         onClick={handleUpdateRoles}
                     >
-                        Done
+                        Update
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-danger btn-sm ms-2"
+                        onClick={handleCancel}
+                    >
+                        Cancel
                     </button>
                 </div>
                 <div>

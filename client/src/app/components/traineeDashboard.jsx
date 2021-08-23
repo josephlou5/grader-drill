@@ -150,7 +150,12 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
 
     let rowsShowing = 0;
     const rows = drills.map((traineeDrill, index) => {
-        const { completedAt, completedDate, progress } = traineeDrill;
+        const {
+            id: traineeDrillId,
+            completedAt,
+            completedDate,
+            progress,
+        } = traineeDrill;
         const drill = traineeDrill.Drill;
 
         let classes = undefined;
@@ -166,7 +171,7 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
                 <button
                     type="button"
                     className="btn btn-danger btn-sm"
-                    onClick={() => onRemoveDrill(traineeDrill.id)}
+                    onClick={() => onRemoveDrill(traineeDrillId)}
                 >
                     Remove Drill
                 </button>
@@ -174,7 +179,7 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
         }
 
         return (
-            <tr key={index} className={classes}>
+            <tr key={traineeDrillId} className={classes}>
                 <th>{index + 1}</th>
                 <td>
                     <DrillNameCode drill={drill} />
@@ -254,6 +259,7 @@ function AnsweredTable({ drills, answered }) {
 
     let rowsShowing = 0;
     const rows = answered.map((question, index) => {
+        const answeredId = question.id;
         const drill = question.TraineeDrill.Drill;
 
         let classes = undefined;
@@ -277,9 +283,9 @@ function AnsweredTable({ drills, answered }) {
             score = question.score;
         }
 
-        const link = "/answered/" + question.id;
+        const link = "/answered/" + answeredId;
         return (
-            <tr key={index} className={classes}>
+            <tr key={answeredId} className={classes}>
                 <th>{index + 1}</th>
                 <td>{drill.name}</td>
                 <td>{isGraded}</td>
@@ -333,10 +339,10 @@ function AnsweredTable({ drills, answered }) {
             >
                 <option value="None">None</option>
                 {drills &&
-                    drills.map((traineeDrill, index) => {
+                    drills.map((traineeDrill) => {
                         const drill = traineeDrill.Drill;
                         return (
-                            <option key={index} value={drill.id}>
+                            <option key={drill.id} value={drill.id}>
                                 {drill.name}
                             </option>
                         );

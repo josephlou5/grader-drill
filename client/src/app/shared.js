@@ -83,6 +83,36 @@ export function TextareaLine(props) {
     return <textarea {...updatedProps} />;
 }
 
+// component for providing help messages for buttons
+export function ButtonHelp({ help }) {
+    const [show, setShow] = useState(false);
+
+    const button = (
+        <button
+            type="button"
+            className="btn btn-outline-danger btn-sm"
+            onClick={() => setShow(!show)}
+        >
+            {show ? "Hide" : "Help"}
+        </button>
+    );
+
+    let helpMsg = null;
+    if (show) {
+        helpMsg = help.map((text, index) => {
+            if (!text) return null;
+            return <div key={index}>{text}</div>;
+        });
+    }
+
+    return (
+        <div className="m-1">
+            {button}
+            {helpMsg}
+        </div>
+    );
+}
+
 export function setElementValid(elementId, isValid) {
     document.getElementById(elementId).classList.toggle("is-invalid", !isValid);
 }

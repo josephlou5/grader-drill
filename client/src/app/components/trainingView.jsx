@@ -79,7 +79,7 @@ function Training() {
         }
     }
 
-    const choices = drills.map((traineeDrill, index) => {
+    const choices = drills.map((traineeDrill) => {
         const { completedAt, completedDate, progress } = traineeDrill;
         const drill = traineeDrill.Drill;
 
@@ -104,7 +104,7 @@ function Training() {
             );
         }
         return (
-            <div key={index} className="card col-2 m-2">
+            <div key={traineeDrill.id} className="card col-2 m-2">
                 <div className="card-body">
                     <h5 className="card-title">{drill.name}</h5>
                     <div className="card-text">
@@ -145,10 +145,10 @@ function TrainingDrill({ traineeDrill, backButton, onDrillDone }) {
                 <p>
                     Progress: {localProgress} / {drill.numQuestions}
                 </p>
-                {backButton}
             </div>
             <TrainingQuestion
                 traineeDrill={traineeDrill}
+                backButton={backButton}
                 onDrillDone={onDrillDone}
                 onProgress={handleProgress}
             />
@@ -156,7 +156,13 @@ function TrainingDrill({ traineeDrill, backButton, onDrillDone }) {
     );
 }
 
-function TrainingQuestion({ traineeDrill, onDrillDone, onProgress }) {
+function TrainingQuestion({
+    traineeDrill,
+    backButton,
+    onDrillDone,
+    onProgress,
+}) {
+    const [needsQuestion, setNeedsQuestion] = useState(true);
     const [question, setQuestion] = useState(null);
     const [noMoreQuestions, setNoMoreQuestions] = useState(false);
 
@@ -166,18 +172,20 @@ function TrainingQuestion({ traineeDrill, onDrillDone, onProgress }) {
 
     useEffect(() => {
         if (noMoreQuestions) return;
-        if (question) return;
+        if (!needsQuestion) return;
 
-        // get all questions answered by this trainee
         getTraineeAnswered((answered) => {
+            // the ids of the questions already answered by this trainee
             const answeredIds = new Set(answered.map((q) => q.questionId));
-
-            // get the next question not answered by this trainee
             getAllQuestions((questions) => {
+                // find the next question not answered by this trainee
                 for (const q of questions) {
                     if (answeredIds.has(q.id)) continue;
                     // fits the drill requirements
                     if (!q.tags.includes(drill.tags)) continue;
+                    // if questions were skipped, don't answer them again
+                    if (question && q.id <= question.id) continue;
+                    setNeedsQuestion(false);
                     setQuestion(q);
                     return;
                 }
@@ -191,31 +199,43 @@ function TrainingQuestion({ traineeDrill, onDrillDone, onProgress }) {
         return <p>No more questions!</p>;
     }
 
-    if (!question) {
+    if (needsQuestion || !question) {
         return <p>Getting question...</p>;
+    }
+
+    function handleNext() {
+        setNeedsQuestion(true);
     }
 
     function handleSubmit(q) {
         // update drill progress
         traineeDrillProgress(traineeDrillId, (d) => {
+            if (!d) return;
             let callback;
             if (d.completedAt) {
                 onDrillDone();
                 callback = null;
             } else {
                 onProgress();
-                callback = () => setQuestion(null);
+                callback = handleNext;
             }
             // add answered
-            const question = {
+            const answered = {
                 ...q,
                 questionId: q.id,
                 traineeDrillId,
                 drillId,
             };
-            addAnswered(question, callback);
+            addAnswered(answered, callback);
         });
     }
 
-    return <QuestionView question={question} onSubmit={handleSubmit} />;
+    return (
+        <QuestionView
+            question={question}
+            backButton={backButton}
+            onSubmit={handleSubmit}
+            onSkip={handleNext}
+        />
+    );
 }

@@ -5,6 +5,7 @@ import {
     Title,
     ResizeTextareas,
     TextareaLine,
+    ButtonHelp,
     setElementValid,
 } from "../shared";
 import {
@@ -460,23 +461,30 @@ export default function EditQuestionView({ newQuestion, questionId }) {
             <div>
                 <button
                     type="button"
-                    className="btn btn-danger m-2"
+                    className="btn btn-danger m-1"
                     onClick={handleCancel}
                 >
                     Cancel
                 </button>
                 <button
                     type="button"
-                    className="btn btn-success m-2"
+                    className="btn btn-success m-1"
                     onClick={handleSave}
                 >
                     Save
                 </button>
                 <Link to="/questions">
-                    <button type="button" className="btn btn-light m-2">
+                    <button type="button" className="btn btn-light m-1">
                         Done
                     </button>
                 </Link>
+                <ButtonHelp
+                    help={[
+                        '"Cancel" goes back to the last page without saving.',
+                        '"Save" saves the current state of the question (but doesn\'t go anywhere).',
+                        '"Done" redirects back to the Questions page without saving.',
+                    ]}
+                />
             </div>
         </React.Fragment>
     );

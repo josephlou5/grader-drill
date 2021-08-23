@@ -11,9 +11,9 @@ export default function ChooseRoleView({ user, onChooseRole }) {
             <Title title="Choose Role" />
             <h1>Choose Role</h1>
             <Link to="/dashboard">
-                {user.roles.map((role, index) => (
+                {user.roles.map((role) => (
                     <button
-                        key={index}
+                        key={role}
                         className="btn btn-success m-1"
                         onClick={() => onChooseRole(role)}
                     >

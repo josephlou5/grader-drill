@@ -72,6 +72,8 @@ function GradedTable({ anonymous }) {
     }
 
     const rows = graded.map((question, index) => {
+        const answeredId = question.id;
+
         let traineeStr;
         if (anonymous) {
             traineeStr = "Anonymous";
@@ -79,9 +81,9 @@ function GradedTable({ anonymous }) {
             traineeStr = question.Trainee.User.email;
         }
 
-        const link = "/answered/" + question.id;
+        const link = "/answered/" + answeredId;
         return (
-            <tr key={index}>
+            <tr key={answeredId}>
                 <th>{index + 1}</th>
                 <td>{traineeStr}</td>
                 <td>{question.questionId}</td>
@@ -140,6 +142,8 @@ function AnsweredTable({ answered, anonymous }) {
 
     let rowsShowing = 0;
     const rows = answered.map((question, index) => {
+        const answeredId = question.id;
+
         let classes = undefined;
         if (question.graded && hideGraded) {
             classes = "d-none";
@@ -170,9 +174,9 @@ function AnsweredTable({ answered, anonymous }) {
             score = question.score;
         }
 
-        const link = "/answered/" + question.id;
+        const link = "/answered/" + answeredId;
         return (
-            <tr key={index} className={classes}>
+            <tr key={answeredId} className={classes}>
                 <th>{index + 1}</th>
                 <td>{traineeStr}</td>
                 <td>{assessorStr}</td>

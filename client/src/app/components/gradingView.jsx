@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useHistory, Link, Redirect } from "react-router-dom";
-import { useMountEffect, Title } from "../shared";
+import { useMountEffect, Title, ButtonHelp } from "../shared";
 import {
     getAnswered,
     getAssessorUngraded,
@@ -206,16 +206,8 @@ function GradeQuestion({
     ];
     if (!specificQuestion) {
         buttons.push({
-            variant: "secondary",
-            onClick: handleNext,
-            text: "Skip",
-        });
-        buttons.push({
             variant: "warning",
-            onClick: () => {
-                handleSave();
-                handleNext();
-            },
+            onClick: handleNext,
             text: "Next",
         });
     }
@@ -243,21 +235,30 @@ function GradeQuestion({
             <div className="row">
                 <div className="col-6"></div>
                 <div className="col-6">
-                    {buttons.map(({ variant, onClick, text }, index) => (
+                    {buttons.map(({ variant, onClick, text }) => (
                         <button
-                            key={index}
+                            key={text}
                             type="button"
-                            className={"btn btn-" + variant + " m-2"}
+                            className={"btn btn-" + variant + " m-1"}
                             onClick={onClick}
                         >
                             {text}
                         </button>
                     ))}
                     <Link to="/dashboard">
-                        <button type="button" className="btn btn-light m-2">
+                        <button type="button" className="btn btn-light m-1">
                             Done
                         </button>
                     </Link>
+                    <ButtonHelp
+                        help={[
+                            '"Cancel" goes back to the last page without saving.',
+                            '"Save" saves the current state of grading this question (but doesn\'t go anywhere).',
+                            !specificQuestion &&
+                                '"Next" goes to the next question without saving.',
+                            '"Done" redirects back to the Dashboard without saving.',
+                        ]}
+                    />
                 </div>
             </div>
         </div>

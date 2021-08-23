@@ -49,8 +49,8 @@ function DrillsTable() {
         const link = "/drills/" + drillId;
         const editLink = "/drills/edit/" + drillId;
         return (
-            <tr key={index}>
-                <th>{drillId}</th>
+            <tr key={drillId}>
+                <th>{index + 1}</th>
                 <td>{name}</td>
                 <td>{code}</td>
                 <td>{numQuestions}</td>
@@ -93,7 +93,7 @@ function DrillsTable() {
         <table className="table table-hover align-middle">
             <thead className="table-light">
                 <tr>
-                    <th>Id</th>
+                    <th></th>
                     <th>Name</th>
                     <th>Code</th>
                     <th>Num Questions</th>

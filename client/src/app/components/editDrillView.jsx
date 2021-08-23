@@ -5,6 +5,7 @@ import {
     Title,
     ResizeTextareas,
     TextareaLine,
+    ButtonHelp,
     setElementValid,
     resetValid,
 } from "../shared";
@@ -104,7 +105,10 @@ export default function EditDrillView({ newDrill, drillId }) {
         if (!validate(drill)) return;
         if (drill.id == null) {
             // add the new drill
-            addDrill(drill, (d) => setDrill({ id: d.id }));
+            addDrill(drill, (d) => {
+                if (!d) return;
+                setDrill({ id: d.id });
+            });
         } else {
             // update the drill
             updateDrill(drill);
@@ -196,23 +200,30 @@ export default function EditDrillView({ newDrill, drillId }) {
             <div>
                 <button
                     type="button"
-                    className="btn btn-danger m-2"
+                    className="btn btn-danger m-1"
                     onClick={handleCancel}
                 >
                     Cancel
                 </button>
                 <button
                     type="button"
-                    className="btn btn-success m-2"
+                    className="btn btn-success m-1"
                     onClick={handleSave}
                 >
                     Save
                 </button>
                 <Link to="/drills">
-                    <button type="button" className="btn btn-light m-2">
+                    <button type="button" className="btn btn-light m-1">
                         Done
                     </button>
                 </Link>
+                <ButtonHelp
+                    help={[
+                        '"Cancel" goes back to the last page without saving.',
+                        '"Save" saves the current state of the drill (but doesn\'t go anywhere).',
+                        '"Done" redirects back to the Drills page without saving.',
+                    ]}
+                />
             </div>
         </React.Fragment>
     );

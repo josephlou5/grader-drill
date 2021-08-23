@@ -26,13 +26,14 @@ export default function HelpView() {
             <p>
                 Drills are "assignments" represented by a set of questions (set
                 by an Admin). Each Drill requires a certain number of questions
-                to be answered before it is considered complete.
+                to be answered before a set due date.
             </p>
 
             <h2>Trainee: How can I join a Drill?</h2>
             <p>
                 Trainees can join Drills from the Trainee Dashboard or by going
-                to a drill's code link (e.g., graderdrills.io/join/drillcode).
+                to a drill's code link (e.g.,
+                http://graderdrills.io/join/drillcode).
             </p>
 
             <h2>Trainee: How do I answer questions?</h2>
@@ -41,6 +42,29 @@ export default function HelpView() {
                 your previously answered questions. To answer questions, go to
                 the Training tab, select a Drill, and you will be given
                 questions automatically.
+            </p>
+            <p>
+                For "Comment" questions, you will have to highlight portions of
+                the code according to the prompt and then write corresponding
+                comments for each highlight. (This mimics the grading on{" "}
+                <a
+                    href="https://codepost.io/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    codepost.io
+                </a>
+                .)
+            </p>
+            <p>
+                For "Highlight" questions, you only need to highlight portions
+                of the code without writing corresponding comments.
+            </p>
+            <p>
+                For "Multiple Choice" questions, you will select the answer you
+                think is the most correct. It is still possible to highlight
+                portions of the code, which you might have to do depending on
+                the question prompt.
             </p>
 
             <h2>Assessor: How do I grade questions?</h2>

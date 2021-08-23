@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { useMountEffect, ResizeTextareas, setElementValid } from "../shared";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { ResizeTextareas, ButtonHelp, setElementValid } from "../shared";
 import QuestionTextField from "./questionTextField";
 import CodeField from "./codeField";
 import AnswerField from "./answerField";
@@ -13,14 +14,21 @@ export default function QuestionView(props) {
     );
 }
 
-function Question({ answered, question: propsQuestion, noChange, onSubmit }) {
+function Question({
+    answered,
+    question: propsQuestion,
+    noChange,
+    backButton = null,
+    onSubmit,
+    onSkip,
+}) {
     const [question, setQuestionState] = useState(null);
 
     function setQuestion(updates) {
         setQuestionState({ ...question, ...updates });
     }
 
-    useMountEffect(() => {
+    useEffect(() => {
         const question = { ...propsQuestion };
         if (!question.highlights) {
             question.highlights = [];
@@ -29,7 +37,7 @@ function Question({ answered, question: propsQuestion, noChange, onSubmit }) {
             question.answer = null;
         }
         setQuestionState(question);
-    });
+    }, [propsQuestion]);
 
     if (noChange) {
         // displaying the question in answered view or grading view
@@ -93,8 +101,7 @@ function Question({ answered, question: propsQuestion, noChange, onSubmit }) {
     }
 
     function handleSubmit() {
-        // validate and submit the question
-
+        // validate
         let formValid = true;
 
         function setValid(elementId, isValid) {
@@ -121,6 +128,7 @@ function Question({ answered, question: propsQuestion, noChange, onSubmit }) {
 
         if (!formValid) return;
 
+        // submit question
         onSubmit(question);
     }
 
@@ -140,17 +148,41 @@ function Question({ answered, question: propsQuestion, noChange, onSubmit }) {
     return (
         <React.Fragment>
             <ResizeTextareas />
+
             <p>Question Type: {question.questionType}</p>
             <QuestionTextField question={question} />
             {question.hasCodeField && <CodeField {...codeFieldProps} />}
             {question.hasAnswerField && <AnswerField {...answerFieldProps} />}
+
+            {backButton}
             <button
                 type="button"
-                className="btn btn-success"
+                className="btn btn-success m-1"
                 onClick={handleSubmit}
             >
                 Submit
             </button>
+            <button
+                type="button"
+                className="btn btn-secondary m-1"
+                onClick={onSkip}
+            >
+                Skip
+            </button>
+            <Link to="/dashboard">
+                <button type="button" className="btn btn-light m-1">
+                    Done
+                </button>
+            </Link>
+            <ButtonHelp
+                help={[
+                    backButton &&
+                        '"Back" goes back to the drills without saving.',
+                    '"Submit" submits the question and goes to the next one.',
+                    '"Skip" goes to the next question without saving.',
+                    '"Done" redirects back to the Dashboard without saving.',
+                ]}
+            />
         </React.Fragment>
     );
 }

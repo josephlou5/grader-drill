@@ -317,8 +317,8 @@ function Navbar({ user, onLogOut }) {
                 </Link>
                 <div className="collapse navbar-collapse">
                     <div className="navbar-nav">
-                        {navbarLinks.map(([link, title], index) => (
-                            <Link key={index} to={link} className="nav-link">
+                        {navbarLinks.map(([link, title]) => (
+                            <Link key={link} to={link} className="nav-link">
                                 {title}
                             </Link>
                         ))}

@@ -68,10 +68,11 @@ function TraineeDrillsTable({ drill }) {
         if (answered.length === 0) {
             questions = "No questions";
         } else {
-            questions = answered.map((q, i) => {
-                const link = "/answered/" + q.id;
+            questions = answered.map((question, i) => {
+                const answeredId = question.id;
+                const link = "/answered/" + answeredId;
                 return (
-                    <Link to={link} key={i}>
+                    <Link to={link} key={answeredId}>
                         <button
                             type="button"
                             className="btn btn-success btn-sm me-1"
@@ -84,7 +85,7 @@ function TraineeDrillsTable({ drill }) {
         }
 
         return (
-            <tr key={index}>
+            <tr key={traineeDrill.id}>
                 <th>{index + 1}</th>
                 <td>{traineeDrill.Trainee.User.email}</td>
                 <td>{traineeDrill.progress}</td>

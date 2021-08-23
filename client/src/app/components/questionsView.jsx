@@ -63,10 +63,7 @@ const QuestionsTable = () => {
 
         const link = "/questions/edit/" + questionId;
         return (
-            <tr
-                key={`question-${questionId}-v-${question.version}`}
-                className={classes}
-            >
+            <tr key={`${questionId}v${question.version}`} className={classes}>
                 <th>{question.id}</th>
                 <td>{question.version}</td>
                 <td>{question.questionType || "N/A"}</td>
