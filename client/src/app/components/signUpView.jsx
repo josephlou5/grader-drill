@@ -49,12 +49,12 @@ export default function SignUpView({ onLogIn }) {
             // validate
             if (user.error) {
                 setElementValid("error", false);
-                if (user.email_violation) {
+                if (user.emailViolation) {
                     setElementValid("email-invalid", false);
-                } else if (user.unique_violation) {
+                } else if (user.emailUniqueViolation) {
                     setElementValid("email-taken", false);
                 }
-                if (user.role_violation) {
+                if (user.roleViolation) {
                     setElementValid("roles", false);
                 }
                 return;

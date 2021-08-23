@@ -334,7 +334,7 @@ if (process.env.NODE_ENV !== "production") {
             await models.Question.add(q);
         }
         for (const q of data.answered) {
-            await models.Answered.add_raw(q);
+            await models.Answered.addRaw(q);
         }
         res.json(response);
     });
@@ -363,34 +363,34 @@ app.post("/api/users", (req, res) => {
                     case "notNull Violation":
                         if (error.path === "email") {
                             response.msg.push("email is null");
-                            response.email_violation = true;
+                            response.emailViolation = true;
                         } else if (
                             error.path === "salt" ||
                             error.path === "hash"
                         ) {
-                            if (!response.password_violation) {
+                            if (!response.passwordViolation) {
                                 response.msg.push("password is null");
-                                response.password_violation = true;
+                                response.passwordViolation = true;
                             }
                         }
-                        response.null_violation = true;
+                        response.nullViolation = true;
                         break;
                     case "unique violation":
                         response.msg.push(
                             `email "${user.email}" is not unique`
                         );
-                        response.unique_violation = true;
+                        response.emailUniqueViolation = true;
                         break;
                     case "Validation error":
                         if (error.validatorKey === "isEmail") {
                             response.msg.push(
                                 `"${user.email}" is not a valid email`
                             );
-                            response.email_violation = true;
+                            response.emailViolation = true;
                             break;
                         } else if (error.validatorKey === "validRoles") {
                             response.msg.push("user must have a role");
-                            response.role_violation = true;
+                            response.roleViolation = true;
                             break;
                         }
                     // fall through
@@ -483,7 +483,7 @@ app.post("/api/users/password", (req, res) => {
             res.json({
                 error: true,
                 msg: `user ${userId} does not exist`,
-                dne: true,
+                dneError: true,
             });
         } else if (!user.checkPassword(oldPass)) {
             res.json({
@@ -513,7 +513,7 @@ app.get("/api/users/:userId", (req, res) => {
             res.json({
                 error: true,
                 msg: `user ${userId} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
         } else {
             res.json(user);
@@ -532,7 +532,7 @@ app.post("/api/users/:userId/roles", (req, res) => {
             res.json({
                 error: true,
                 msg: `user ${userId} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
         } else {
             res.json(u);
@@ -550,7 +550,7 @@ app.post("/api/users/:userId/password", (req, res) => {
             res.json({
                 error: true,
                 msg: `user ${userId} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
         } else {
             user.resetPassword().then((u) => res.json(u));
@@ -603,7 +603,7 @@ app.get("/api/questions/:questionId", (req, res) => {
             res.json({
                 error: true,
                 msg: `question ${questionId} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
         } else {
             res.json(question);
@@ -624,7 +624,7 @@ app.get("/api/questions/:questionId/:version", (req, res) => {
             res.json({
                 error: true,
                 msg: `question ${questionId} version ${version} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
         } else {
             res.json(question);
@@ -643,7 +643,7 @@ function addQuestion(question, res) {
             switch (error.type) {
                 case "notNull Violation":
                     // response.msg = "something is null";
-                    response.null_violation = true;
+                    response.nullViolation = true;
                     break;
                 default:
                     console.log("unknown error:", error);
@@ -683,7 +683,7 @@ app.post("/api/questions/:questionId", (req, res) => {
             res.json({
                 error: true,
                 msg: `question ${questionId} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
             return;
         }
@@ -703,7 +703,7 @@ app.post("/api/questions/:questionId/:version", (req, res) => {
             res.json({
                 error: true,
                 msg: `question ${questionId} version ${version} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
         } else {
             res.json(q);
@@ -721,7 +721,7 @@ app.delete("/api/questions/:questionId", (req, res) => {
             res.json({
                 error: true,
                 msg: `question ${questionId} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
         } else {
             res.json(questions);
@@ -746,7 +746,7 @@ app.get("/api/drills/:drillId", (req, res) => {
             res.json({
                 error: true,
                 msg: `drill ${drillId} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
         } else {
             res.json(drill);
@@ -777,7 +777,7 @@ app.post("/api/drills", (req, res) => {
                             response.msg.push("dueDate is null");
                             response.dueDateViolation = true;
                         }
-                        response.null_violation = true;
+                        response.nullViolation = true;
                         break;
                     case "unique violation":
                         response.msg.push(
@@ -805,7 +805,7 @@ app.post("/api/drills/:drillId", (req, res) => {
             res.json({
                 error: true,
                 msg: `drill ${drillId} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
         } else {
             res.json(d);
@@ -823,7 +823,7 @@ app.delete("/api/drills/:drillId", (req, res) => {
             res.json({
                 error: true,
                 msg: `drill ${drillId} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
         } else {
             res.json(drill);
@@ -863,7 +863,7 @@ app.get("/api/traineeDrills/:traineeDrillId", (req, res) => {
             res.json({
                 error: true,
                 msg: `trainee drill ${traineeDrillId} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
         } else {
             res.json(drill);
@@ -882,7 +882,7 @@ app.post("/api/traineeDrills", (req, res) => {
             res.json({
                 error: true,
                 msg: `drill with code "${code}" does not exist`,
-                dne_error: true,
+                dneError: true,
             });
             return;
         }
@@ -930,7 +930,7 @@ app.post("/api/traineeDrills", (req, res) => {
                             } else if (error.path === "traineeId") {
                                 response.msg.push("traineeId is null");
                             }
-                            response.null_violation = true;
+                            response.nullViolation = true;
                             break;
                         default:
                             console.log("unknown error:", error);
@@ -955,7 +955,7 @@ app.post("/api/traineeDrills/:traineeDrillId/increment", (req, res) => {
             res.json({
                 error: true,
                 msg: `trainee drill ${traineeDrillId} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
             return;
         }
@@ -983,7 +983,7 @@ app.delete("/api/traineeDrills/:traineeDrillId", (req, res) => {
             res.json({
                 error: true,
                 msg: `trainee drill ${traineeDrillId} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
         } else {
             res.json(drill);
@@ -1050,7 +1050,7 @@ app.get("/api/answered/:answeredId", (req, res) => {
             res.json({
                 error: true,
                 msg: `answered ${answeredId} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
         } else {
             res.json(question);
@@ -1077,7 +1077,7 @@ app.post("/api/answered", (req, res) => {
                 switch (error.type) {
                     case "notNull Violation":
                         // response.msg = "something is null";
-                        response.null_violation = true;
+                        response.nullViolation = true;
                         break;
                     default:
                         console.log("unknown error:", error);
@@ -1104,7 +1104,7 @@ app.post("/api/answered/:answeredId", (req, res) => {
             res.json({
                 error: true,
                 msg: `answered ${answeredId} does not exist`,
-                dne_error: true,
+                dneError: true,
             });
         } else {
             res.json(question);
