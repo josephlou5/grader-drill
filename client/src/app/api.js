@@ -1,4 +1,5 @@
-const CONSOLE = process.env.NODE_ENV !== "production";
+// const CONSOLE = process.env.NODE_ENV !== "production";
+const CONSOLE = true;
 
 // API functions
 
