@@ -15,25 +15,21 @@ module.exports = (sequelize, DataTypes) => {
             return TraineeDrill.create(drill);
         }
 
-        static complete(traineeDrillId) {
-            return TraineeDrill.update(
+        static async complete(traineeDrillId) {
+            const num = await TraineeDrill.update(
                 { completedAt: new Date() },
                 { where: { id: traineeDrillId } }
-            ).then((num) => {
-                if (num === 0) return null;
-                return TraineeDrill.findByPk(traineeDrillId);
-            });
+            );
+            if (num === 0) return null;
+            return TraineeDrill.findByPk(traineeDrillId);
         }
 
-        static delete(traineeDrillId) {
-            return TraineeDrill.destroy({ where: { id: traineeDrillId } }).then(
-                (num) => {
-                    if (num === 0) return null;
-                    return TraineeDrill.findByPk(traineeDrillId, {
-                        paranoid: false,
-                    });
-                }
-            );
+        static async delete(traineeDrillId) {
+            const num = await TraineeDrill.destroy({
+                where: { id: traineeDrillId },
+            });
+            if (num === 0) return null;
+            return TraineeDrill.findByPk(traineeDrillId, { paranoid: false });
         }
     }
     TraineeDrill.init(

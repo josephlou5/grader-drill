@@ -16,28 +16,19 @@ module.exports = (sequelize, DataTypes) => {
             return Drill.create({ ...drill, code: nanoid(10) });
         }
 
-        static updateById(drillId, drill) {
-            return Drill.update(drill, { where: { id: drillId } }).then(
-                (num) => {
-                    if (num === 0) return null;
-                    return Drill.findByPk(drillId);
-                }
-            );
+        static async updateById(drillId, drill) {
+            const num = await Drill.update(drill, { where: { id: drillId } });
+            if (num === 0) return null;
+            return Drill.findByPk(drillId);
         }
 
-        static delete(drillId) {
-            return Drill.destroy({ where: { id: drillId } }).then((num) => {
-                if (num === 0) return null;
-                return Drill.findByPk(drillId, { paranoid: false }).then(
-                    (drill) =>
-                        drill
-                            .getTraineeDrills()
-                            .then((drills) =>
-                                Promise.all(drills.map((d) => d.destroy()))
-                            )
-                            .then(() => drill)
-                );
-            });
+        static async delete(drillId) {
+            const num = await Drill.destroy({ where: { id: drillId } });
+            if (num === 0) return null;
+            const drill = await Drill.findByPk(drillId, { paranoid: false });
+            const traineeDrills = await drill.getTraineeDrills();
+            await Promise.all(traineeDrills.map((d) => d.destroy()));
+            return drill;
         }
     }
     Drill.init(

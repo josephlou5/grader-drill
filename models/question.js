@@ -39,24 +39,22 @@ module.exports = (sequelize, DataTypes) => {
             return Question.create(question, { fields });
         }
 
-        static updateById(questionId, version, question) {
+        static async updateById(questionId, version, question) {
             const options = { where: { id: questionId, version } };
-            return Question.update(question, options).then((num) => {
-                if (num === 0) return null;
-                return Question.findOne(options);
-            });
+            const num = await Question.update(question, options);
+            if (num === 0) return null;
+            return Question.findOne(options);
         }
 
-        static delete(questionId) {
+        static async delete(questionId) {
             const where = { id: questionId };
-            return Question.destroy({ where }).then((num) => {
-                if (num === 0) return null;
-                return Question.findAll({
-                    where,
-                    order: [["deletedAt", "DESC"]],
-                    limit: num,
-                    paranoid: false,
-                });
+            const num = await Question.destroy({ where });
+            if (num === 0) return null;
+            return Question.findAll({
+                where,
+                order: [["deletedAt", "DESC"]],
+                limit: num,
+                paranoid: false,
             });
         }
     }

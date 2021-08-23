@@ -51,7 +51,7 @@ module.exports = (sequelize, DataTypes) => {
         }
 
         // for the "reset" route in `server.js`
-        static add_raw(question) {
+        static addRaw(question) {
             let fields = [
                 "autograded",
                 "graded",
@@ -85,13 +85,12 @@ module.exports = (sequelize, DataTypes) => {
             return Answered.create(question, { fields });
         }
 
-        static updateById(answeredId, answered) {
-            return Answered.update(answered, {
+        static async updateById(answeredId, answered) {
+            const num = await Answered.update(answered, {
                 where: { id: answeredId },
-            }).then((num) => {
-                if (num === 0) return null;
-                return Answered.findByPk(answeredId);
             });
+            if (num === 0) return null;
+            return await Answered.findByPk(answeredId);
         }
     }
     Answered.init(
