@@ -10,7 +10,7 @@ module.exports = {
                 hasCodeField: true,
                 hasAnswerField: true,
                 questionText:
-                    "What feedback would you give a student about the following Java code, where `x` is a boolean variable?",
+                    "What feedback would you give a student about the following code?",
                 code: "public boolean isTrue(boolean x) {\n    if (x == true) {\n        return true;\n    }\n    else {\n        return false;\n    }\n}",
                 highlights: JSON.stringify([
                     {
