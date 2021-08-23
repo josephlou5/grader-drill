@@ -16,6 +16,7 @@ import WrongRoleView from "./components/wrongRoleView";
 
 import HomeView from "./components/homeView";
 import AboutView from "./components/aboutView";
+import HelpView from "./components/helpView";
 import LogInView from "./components/logInView";
 import SignUpView from "./components/signUpView";
 
@@ -157,6 +158,9 @@ export default function App() {
                 <Route exact path="/about">
                     <AboutView />
                 </Route>
+                <Route exact path="/help">
+                    <HelpView />
+                </Route>
 
                 <Route exact path="/login">
                     <LogInView onLogIn={handleLogIn} />
@@ -264,6 +268,7 @@ function Navbar({ user, onLogOut }) {
             </React.Fragment>
         );
         navbarLinks.push(["/about", "About"]);
+        navbarLinks.push(["/help", "Help"]);
     } else {
         let roleLabel = null;
         if (user.role) {
