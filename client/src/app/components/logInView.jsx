@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { useLocation, Redirect } from "react-router-dom";
+import { parse as queryParse } from "query-string";
 import { Title, setElementValid, resetValid, resetValidId } from "../shared";
 import { logInUser } from "../api";
 
 export default function LogInView({ onLogIn }) {
     const [redirect, setRedirect] = useState(false);
-    const { state } = useLocation();
+    const { redirect: redirectLink } = queryParse(useLocation().search);
 
     function handleLogIn() {
         const email = document.getElementById("email").value;
@@ -35,7 +36,7 @@ export default function LogInView({ onLogIn }) {
     }
 
     if (redirect) {
-        return <Redirect to={state?.from || "/"} />;
+        return <Redirect to={redirectLink || "/"} />;
     }
 
     return (

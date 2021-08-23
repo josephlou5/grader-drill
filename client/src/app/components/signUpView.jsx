@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { Redirect } from "react-router-dom";
+import { useLocation, Redirect } from "react-router-dom";
+import { parse as queryParse } from "query-string";
 import { Title, setElementValid, resetValid, resetValidId } from "../shared";
 import { signUpUser } from "../api";
 
 export default function SignUpView({ onLogIn }) {
     const [redirect, setRedirect] = useState(false);
+    const { redirect: redirectLink } = queryParse(useLocation().search);
 
     function handleSignUp() {
         const email = document.getElementById("email").value;
@@ -65,7 +67,7 @@ export default function SignUpView({ onLogIn }) {
     }
 
     if (redirect) {
-        return <Redirect to="/" />;
+        return <Redirect to={redirectLink || "/"} />;
     }
 
     return (

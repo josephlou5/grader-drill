@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
     useHistory,
+    useLocation,
     useParams,
     Switch,
     Route,
@@ -57,10 +58,7 @@ function Protected({ user, setUser, role, children, ...rest }) {
         return <Route {...rest}>{children}</Route>;
     }
     const renderFunc = ({ location }) => {
-        const to = {
-            pathname: "/login",
-            state: { from: location },
-        };
+        const to = "/login?redirect=" + location.pathname;
         return <Redirect to={to} />;
     };
     return <Route {...rest} render={renderFunc} />;
@@ -249,18 +247,19 @@ export default function App() {
 }
 
 function Navbar({ user, onLogOut }) {
+    const { search: query } = useLocation();
     let homeLink = "/";
     let buttons;
     const navbarLinks = [];
     if (!user) {
         buttons = (
             <React.Fragment>
-                <Link to="/login">
+                <Link to={"/login" + query}>
                     <button type="button" className="btn btn-success me-2">
                         Log In
                     </button>
                 </Link>
-                <Link to="/signup">
+                <Link to={"/signup" + query}>
                     <button type="button" className="btn btn-success">
                         Sign Up
                     </button>
