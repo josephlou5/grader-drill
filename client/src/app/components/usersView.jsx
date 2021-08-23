@@ -107,8 +107,7 @@ function Roles({ myself, user, onUpdateRoles }) {
             setElementValid("roles", false);
             return;
         }
-        const u = { ...user, roles };
-        updateUserRoles(u, () => {
+        updateUserRoles({ ...user, roles }, () => {
             onUpdateRoles();
             setEditing(false);
         });

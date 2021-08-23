@@ -43,8 +43,19 @@ function Grading({ assessor, specificQuestion, answeredId }) {
                 return;
             }
             // get question
-            getQuestionVersion(answered.questionId, answered.version, (q) =>
-                setQuestion(q)
+            getQuestionVersion(
+                answered.questionId,
+                answered.version,
+                (question) => {
+                    if (!question) {
+                        // question id & version should exist,
+                        // so either answered was not from the app
+                        // or not authenticated
+                        setInvalid(true);
+                    } else {
+                        setQuestion(question);
+                    }
+                }
             );
         });
     });
@@ -66,9 +77,16 @@ function Grading({ assessor, specificQuestion, answeredId }) {
                     question.version === q.version
                 )
                     return;
-                getQuestionVersion(q.questionId, q.version, (question) =>
-                    setQuestion(question)
-                );
+                getQuestionVersion(q.questionId, q.version, (question) => {
+                    if (!question) {
+                        // question id & version should exist,
+                        // so either answered was not from the app
+                        // or not authenticated
+                        setInvalid(true);
+                    } else {
+                        setQuestion(question);
+                    }
+                });
                 return;
             }
             // no more to grade

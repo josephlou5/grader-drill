@@ -17,13 +17,15 @@ export default function AnsweredView({ user }) {
     const { answeredId } = useParams();
 
     useEffect(() => {
-        getAnswered(answeredId, (a) => {
-            if (!a) {
+        getAnswered(answeredId, (q) => {
+            if (!q) {
                 setInvalid(true);
                 return;
             }
-            setAnswered(a);
-            getQuestionVersion(a.questionId, a.version, (q) => setQuestion(q));
+            setAnswered(q);
+            getQuestionVersion(q.questionId, q.version, (question) =>
+                setQuestion(question)
+            );
         });
     }, [answeredId]);
 

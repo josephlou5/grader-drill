@@ -314,14 +314,16 @@ export default function EditQuestionView({ newQuestion, questionId }) {
         if (!validate(question)) return;
         if (question.id == null) {
             // add the new question
-            addQuestion(question, (q) =>
-                setQuestion({ id: q.id, version: q.version })
-            );
+            addQuestion(question, (q) => {
+                if (!q) return;
+                setQuestion({ id: q.id, version: q.version });
+            });
         } else if (question.version == null) {
             // make a new version of the current question
-            updateQuestion(question, (q) =>
-                setQuestion({ version: q.version })
-            );
+            updateQuestion(question, (q) => {
+                if (!q) return;
+                setQuestion({ version: q.version });
+            });
         } else {
             // keep updating the current version
             updateQuestionVersion(question);

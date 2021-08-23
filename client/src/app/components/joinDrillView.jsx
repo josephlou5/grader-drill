@@ -12,8 +12,6 @@ export default function JoinDrillView() {
         addTraineeDrill(drillCode, (drill) => {
             if (!drill.error) {
                 setStatus("Successfully joined drill!");
-            } else if (drill.notAuthenticated) {
-                setStatus("You're not signed in.");
             } else if (drill.uniqueViolation) {
                 setStatus("Already in drill!");
             } else if (drill.expiredError) {

@@ -3,8 +3,9 @@ const CONSOLE = true;
 
 // API functions
 
-function getRequest(route) {
-    return fetch("/api" + route).then((res) => res.json());
+async function getRequest(route) {
+    const res = await fetch("/api" + route);
+    return await res.json();
 }
 
 function postRequest(route, data = {}) {
@@ -19,10 +20,11 @@ function postRequest(route, data = {}) {
     });
 }
 
-function deleteRequest(route) {
-    return fetch("/api" + route, {
+async function deleteRequest(route) {
+    const res = await fetch("/api" + route, {
         method: "DELETE",
-    }).then((res) => res.json());
+    });
+    return await res.json();
 }
 
 // arg checking
@@ -36,29 +38,15 @@ function checkNull(arg, callback) {
 }
 
 function getMsg(requestType, resource) {
-    let action;
-    switch (requestType) {
-        case "log in":
-            action = "logged in";
-            break;
-        case "get":
-            action = "got";
-            break;
-        case "add":
-            action = "added";
-            break;
-        case "update":
-            action = "updated";
-            break;
-        case "reset":
-            action = "reset";
-            break;
-        case "delete":
-            action = "deleted";
-            break;
-        default:
-            break;
-    }
+    const actions = {
+        login: "logged in",
+        get: "got",
+        add: "added",
+        update: "updated",
+        reset: "reset",
+        delete: "deleted",
+    };
+    const action = actions[requestType];
     if (action) {
         return `${action} ${resource}:`;
     } else {
@@ -67,29 +55,15 @@ function getMsg(requestType, resource) {
 }
 
 function getErrMsg(requestType, resource) {
-    let action;
-    switch (requestType) {
-        case "log in":
-            action = "logging in";
-            break;
-        case "get":
-            action = "getting";
-            break;
-        case "add":
-            action = "adding";
-            break;
-        case "update":
-            action = "updating";
-            break;
-        case "reset":
-            action = "resetting";
-            break;
-        case "delete":
-            action = "deleting";
-            break;
-        default:
-            break;
-    }
+    const actions = {
+        login: "logging in",
+        get: "getting",
+        add: "adding",
+        update: "updating",
+        reset: "resetting",
+        delete: "deleting",
+    };
+    const action = actions[requestType];
     if (action) {
         return `error while ${action} ${resource}:`;
     } else {
@@ -137,7 +111,7 @@ export function signUpUser(email, password, roles, callback = null) {
 export function logInUser(email, password, callback = null) {
     postRequest("/users/login", { email, password })
         .then((u) => {
-            checkError(u, "log in", "user");
+            checkError(u, "login", "user");
             if (callback) callback(u);
         })
         .catch(() => {
@@ -150,7 +124,7 @@ export function logInUser(email, password, callback = null) {
 
 export function logOutUser(callback = null) {
     postRequest("/users/logout").then((data) => {
-        console.log("logged out user");
+        if (CONSOLE) console.log("logged out user");
         if (callback) callback(data);
     });
 }
@@ -404,9 +378,9 @@ export function getAssessorGraded(callback = null) {
 
 export function getAssessorUngraded(callback = null) {
     // infers assessor id from logged in user
-    getRequest("/answered/ungraded").then((answered) => {
-        answered = checkError(answered, "get", "ungraded answered", true);
-        if (callback) callback(answered);
+    getRequest("/answered/ungraded").then((ungraded) => {
+        ungraded = checkError(ungraded, "get", "ungraded answered", true);
+        if (callback) callback(ungraded);
     });
 }
 

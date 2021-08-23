@@ -61,23 +61,24 @@ function ChangePassword() {
         if (!formValid) return;
 
         changeUserPassword(password, newPassword, (user) => {
-            if (!user.error) {
-                Object.values(elements).forEach((e) => {
-                    resetValid(e);
-                    e.value = "";
-                });
-                elements.successful.classList.add("is-valid");
+            if (user.error) {
+                if (user.passwordIncorrect) {
+                    setElementValid("password", false);
+                }
+                if (user.samePassword) {
+                    elements.newFeedback.innerHTML =
+                        "New password should be different.";
+                    setElementValid("new-password", false);
+                }
                 return;
             }
-            // errors
-            if (user.passwordIncorrect) {
-                setElementValid("password", false);
-            }
-            if (user.samePassword) {
-                elements.newFeedback.innerHTML =
-                    "New password should be different.";
-                setElementValid("new-password", false);
-            }
+            // clear the inputs
+            Object.values(elements).forEach((e) => {
+                resetValid(e);
+                e.value = "";
+            });
+            // show success message
+            elements.successful.classList.add("is-valid");
         });
     }
 
