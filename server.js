@@ -31,7 +31,7 @@ passport.use(
     new CASStrategy(
         { casURL: "https://fed.princeton.edu/cas" },
         (username, profile, done) => {
-            console.log("username:", username);
+            console.log("logged in:", username);
             models.User.findOrCreate({
                 where: { username },
                 defaults: { roles: ["Trainee"] },
