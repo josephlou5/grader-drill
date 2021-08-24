@@ -27,23 +27,24 @@ app.use(require("express-session")(sess));
 app.use(passport.initialize());
 app.use(passport.session());
 
-const cas = new CASStrategy(
-    { casURL: "https://fed.princeton.edu/cas" },
-    (username, profile, done) => {
-        console.log("username:", username);
-        models.User.findOrCreate({
-            where: { username },
-            defaults: { roles: ["Trainee"] },
-        }).then(([user, created]) => {
-            user = user.toJSON();
-            if (user.roles.length === 1) {
-                user.role = user.roles[0];
-            }
-            return done(null, user);
-        });
-    }
+passport.use(
+    new CASStrategy(
+        { casURL: "https://fed.princeton.edu/cas" },
+        (username, profile, done) => {
+            console.log("username:", username);
+            models.User.findOrCreate({
+                where: { username },
+                defaults: { roles: ["Trainee"] },
+            }).then(([user, created]) => {
+                user = user.toJSON();
+                if (user.roles.length === 1) {
+                    user.role = user.roles[0];
+                }
+                return done(null, user);
+            });
+        }
+    )
 );
-passport.use(cas);
 
 passport.serializeUser((user, done) => {
     // only include basic information
@@ -59,10 +60,6 @@ passport.serializeUser((user, done) => {
 });
 passport.deserializeUser((user, done) => {
     done(null, user);
-});
-
-app.get("/test", passport.authenticate("cas"), (req, res) => {
-    res.json("success");
 });
 
 // for debugging: reset the database
@@ -897,6 +894,7 @@ app.post("/api/traineeDrills/:traineeDrillId/increment", (req, res) => {
     });
 });
 
+// delete trainee drill
 app.delete("/api/traineeDrills/:traineeDrillId", (req, res) => {
     if (!checkAuth(req, res)) return;
     if (!checkRole(req, res, "Trainee")) return;
@@ -1039,8 +1037,6 @@ app.post("/api/answered/:answeredId", (req, res) => {
 app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, "client/build/index.html"));
 });
-if (process.env.NODE_ENV === "production") {
-}
 
 // listen
 const PORT = process.env.PORT || 3001;
