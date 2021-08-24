@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Title, setElementValid } from "../shared";
-import { getAllUsers, updateUserRoles, resetUserPassword } from "../api";
+import { Title, setElementValid, resetValid } from "../shared";
+import { getAllUsers, addUser, updateUserRoles } from "../api";
 
 export default function UsersView(props) {
     return (
@@ -10,12 +10,12 @@ export default function UsersView(props) {
             <div>
                 Note: Role updates require a user re-login to take effect.
             </div>
-            <UsersTable {...props} />
+            <Users {...props} />
         </React.Fragment>
     );
 }
 
-function UsersTable({ admin }) {
+function Users({ admin }) {
     const [needsUsers, setNeedsUsers] = useState(true);
     const [users, setUsers] = useState(null);
 
@@ -31,27 +31,93 @@ function UsersTable({ admin }) {
         return <p>Loading...</p>;
     }
 
-    if (users.length === 0) {
-        return <p>No users</p>;
+    function handleRefresh() {
+        setNeedsUsers(true);
     }
 
-    function handleUpdateRoles() {
-        setNeedsUsers(true);
+    return (
+        <React.Fragment>
+            <AddUserInput onAddUser={handleRefresh} />
+            <UsersTable
+                admin={admin}
+                users={users}
+                onUpdateRoles={handleRefresh}
+            />
+        </React.Fragment>
+    );
+}
+
+function AddUserInput({ onAddUser }) {
+    const [username, setUsername] = useState("");
+
+    function handleUsernameChange(username) {
+        setUsername(username);
+    }
+
+    function handleAddUser() {
+        const feedback = document.getElementById("username-feedback");
+
+        if (username === "") {
+            feedback.innerHTML = "Please enter a username.";
+            setElementValid("username", false);
+            return;
+        }
+        setElementValid("username", true);
+
+        addUser(username, (user) => {
+            if (!user) {
+                feedback.innerHTML = "User already exists.";
+                setElementValid("username", false);
+                return;
+            }
+            onAddUser();
+            setUsername("");
+        });
+    }
+
+    return (
+        <div
+            className="input-group has-validation mb-2"
+            style={{ width: "400px" }}
+        >
+            <input
+                type="text"
+                id="username"
+                className="form-control"
+                placeholder="Username"
+                value={username}
+                onChange={(event) => {
+                    resetValid(event.target);
+                    handleUsernameChange(event.target.value);
+                }}
+            />
+            <button
+                type="button"
+                className="btn btn-success"
+                onClick={handleAddUser}
+            >
+                Add User
+            </button>
+            <div className="invalid-feedback" id="username-feedback"></div>
+        </div>
+    );
+}
+
+function UsersTable({ admin, users, onUpdateRoles }) {
+    if (users.length === 0) {
+        return <p>No users</p>;
     }
 
     const rows = users.map((user, index) => (
         <tr key={user.id}>
             <th>{index + 1}</th>
-            <td>{user.email}</td>
+            <td>{user.username}</td>
             <td>
                 <Roles
                     myself={admin.id === user.id}
                     user={user}
-                    onUpdateRoles={handleUpdateRoles}
+                    onUpdateRoles={onUpdateRoles}
                 />
-            </td>
-            <td>
-                <NewPassword user={user} />
             </td>
         </tr>
     ));
@@ -61,9 +127,8 @@ function UsersTable({ admin }) {
             <thead className="table-light">
                 <tr>
                     <th></th>
-                    <th>Email</th>
+                    <th>Username</th>
                     <th>Roles</th>
-                    <th>Reset Password</th>
                 </tr>
             </thead>
             <tbody>{rows}</tbody>
@@ -181,51 +246,5 @@ function Roles({ myself, user, onUpdateRoles }) {
                 </div>
             </React.Fragment>
         );
-    }
-}
-
-function NewPassword({ user }) {
-    const [count, setCount] = useState(0);
-    const [password, setPassword] = useState(null);
-
-    function buttonPressed() {
-        setCount(count + 1);
-    }
-
-    function generatePassword() {
-        buttonPressed();
-        resetUserPassword(user.id, (u) => {
-            if (!u) {
-                setPassword("Error");
-            } else {
-                setPassword(u.password);
-            }
-        });
-    }
-
-    if (count === 0) {
-        return (
-            <button
-                type="button"
-                className="btn btn-success btn-sm"
-                onClick={buttonPressed}
-            >
-                New Password
-            </button>
-        );
-    } else if (count === 1) {
-        // after 3 seconds, go back to first button
-        setTimeout(() => setCount(0), 3 * 1000);
-        return (
-            <button
-                type="button"
-                className="btn btn-danger btn-sm"
-                onClick={generatePassword}
-            >
-                Confirm
-            </button>
-        );
-    } else {
-        return password || "Generating password...";
     }
 }

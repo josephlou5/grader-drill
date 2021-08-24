@@ -9,9 +9,8 @@ export default function HelpView() {
 
             <h2>General</h2>
             <p>
-                If you forgot your password, contact an Admin, who can generate
-                a random password for you. You can then log in and change your
-                password on the Profile page.
+                Logging in is through Princeton CAS. Your username is your
+                netid.
             </p>
 
             <h2>Roles</h2>

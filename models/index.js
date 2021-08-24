@@ -109,7 +109,7 @@ db.User.addScope("include", {
         exclude: ["createdAt", "updatedAt"],
     },
 });
-db.User.Include = db.User.scope(["include", "noPass"]);
+db.User.Include = db.User.scope("include");
 db.Trainee.addScope("include", {
     attributes: {
         exclude: ["createdAt", "updatedAt"],
@@ -191,10 +191,6 @@ db.Answered.IncludeTraineeDrill = db.Answered.scope(
 );
 
 // other scopes
-
-// default is no password
-db.User.Pass = db.User;
-db.User = db.User.scope("noPass");
 
 // default is uncompleted
 db.TraineeDrill.All = db.TraineeDrill;

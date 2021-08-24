@@ -78,7 +78,7 @@ function GradedTable({ anonymous }) {
         if (anonymous) {
             traineeStr = "Anonymous";
         } else {
-            traineeStr = question.Trainee.User.email;
+            traineeStr = question.Trainee.User.username;
         }
 
         const link = "/answered/" + answeredId;
@@ -155,7 +155,7 @@ function AnsweredTable({ answered, anonymous }) {
         if (anonymous) {
             traineeStr = "Anonymous";
         } else {
-            traineeStr = question.Trainee.User.email;
+            traineeStr = question.Trainee.User.username;
         }
 
         let assessorStr;
@@ -166,7 +166,7 @@ function AnsweredTable({ answered, anonymous }) {
         } else if (anonymous) {
             assessorStr = "Graded";
         } else {
-            assessorStr = question.Assessor.User.email;
+            assessorStr = question.Assessor.User.username;
         }
 
         let score = "-";

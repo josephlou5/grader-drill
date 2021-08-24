@@ -2,7 +2,7 @@ const path = require("path");
 const express = require("express");
 const { sequelize, Sequelize, ...models } = require("./models/index.js");
 const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
+const CASStrategy = require("passport-cas2").Strategy;
 
 const app = express();
 app.use(express.json());
@@ -27,40 +27,29 @@ app.use(require("express-session")(sess));
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.use(
-    new LocalStrategy(
-        {
-            usernameField: "email",
-            passwordField: "password",
-        },
-        (email, password, done) => {
-            console.log("authenticating:", email);
-            models.User.Pass.findOne({ where: { email } }).then((user) => {
-                // invalid email
-                if (!user) {
-                    return done(null, false);
-                }
-                // check password
-                if (!user.checkPassword(password)) {
-                    return done(null, false);
-                }
-                console.log(email, "authenticated");
-                // don't pass the password info
-                user = user.noPass();
-                if (user.roles.length === 1) {
-                    user.role = user.roles[0];
-                }
-                return done(null, user);
-            });
-        }
-    )
+const cas = new CASStrategy(
+    { casURL: "https://fed.princeton.edu/cas" },
+    (username, profile, done) => {
+        console.log("username:", username);
+        models.User.findOrCreate({
+            where: { username },
+            defaults: { roles: ["Trainee"] },
+        }).then(([user, created]) => {
+            user = user.toJSON();
+            if (user.roles.length === 1) {
+                user.role = user.roles[0];
+            }
+            return done(null, user);
+        });
+    }
 );
+passport.use(cas);
 
 passport.serializeUser((user, done) => {
     // only include basic information
     const cookie = {
         id: user.id,
-        email: user.email,
+        username: user.username,
         roles: user.roles,
     };
     if (user.role) {
@@ -70,6 +59,10 @@ passport.serializeUser((user, done) => {
 });
 passport.deserializeUser((user, done) => {
     done(null, user);
+});
+
+app.get("/test", passport.authenticate("cas"), (req, res) => {
+    res.json("success");
 });
 
 // for debugging: reset the database
@@ -313,14 +306,12 @@ if (process.env.NODE_ENV !== "production") {
         const response = await clearTables();
         // add new data
         await models.User.add({
-            email: "assessor@test.com",
-            password: "password",
+            username: "assessor",
             roles: ["Admin", "Assessor", "Trainee"],
         });
         for (let num = 1; num <= 3; num++) {
             await models.User.add({
-                email: `trainee${num}@test.com`,
-                password: "password",
+                username: `trainee${num}`,
                 roles: ["Trainee"],
             });
         }
@@ -342,72 +333,10 @@ if (process.env.NODE_ENV !== "production") {
 
 // Authentication Routes
 
-// sign up
-app.post("/api/users", (req, res) => {
-    const user = req.body;
-    console.log("signing up:", user.email);
-    models.User.add(user)
-        .then((user) => {
-            user = user.noPass();
-            if (user.roles.length === 1) {
-                user.role = user.roles[0];
-            }
-            console.log("created user:", user);
-            req.login(user, (err) => res.json(err || user));
-        })
-        .catch((err) => {
-            const response = { error: true, msg: [], message: [] };
-            for (const error of err.errors) {
-                response.message.push(error.message);
-                switch (error.type) {
-                    case "notNull Violation":
-                        if (error.path === "email") {
-                            response.msg.push("email is null");
-                            response.emailViolation = true;
-                        } else if (
-                            error.path === "salt" ||
-                            error.path === "hash"
-                        ) {
-                            if (!response.passwordViolation) {
-                                response.msg.push("password is null");
-                                response.passwordViolation = true;
-                            }
-                        }
-                        response.nullViolation = true;
-                        break;
-                    case "unique violation":
-                        response.msg.push(
-                            `email "${user.email}" is not unique`
-                        );
-                        response.emailUniqueViolation = true;
-                        break;
-                    case "Validation error":
-                        if (error.validatorKey === "isEmail") {
-                            response.msg.push(
-                                `"${user.email}" is not a valid email`
-                            );
-                            response.emailViolation = true;
-                            break;
-                        } else if (error.validatorKey === "validRoles") {
-                            response.msg.push("user must have a role");
-                            response.roleViolation = true;
-                            break;
-                        }
-                    // fall through
-                    default:
-                        console.log("unknown error:", error);
-                        break;
-                }
-            }
-            res.json(response);
-        });
-});
-
 // log in
-app.post("/api/users/login", passport.authenticate("local"), (req, res) => {
-    const { user } = req;
-    console.log("Logged in:", user);
-    res.json(user);
+app.get("/login", passport.authenticate("cas"), (req, res) => {
+    const { redirect } = req.query;
+    res.redirect(redirect || "/");
 });
 
 // log out
@@ -472,37 +401,6 @@ app.get("/api/users", (req, res) => {
     );
 });
 
-// change user password
-app.post("/api/users/password", (req, res) => {
-    if (!checkAuth(req, res)) return;
-    const userId = req.user.id;
-    const { oldPass, newPass } = req.body;
-    models.User.Pass.findByPk(userId).then((user) => {
-        if (!user) {
-            // shouldn't happen because user is logged in
-            res.json({
-                error: true,
-                msg: `user ${userId} does not exist`,
-                dneError: true,
-            });
-        } else if (!user.checkPassword(oldPass)) {
-            res.json({
-                error: true,
-                msg: "wrong password",
-                passwordIncorrect: true,
-            });
-        } else if (newPass === oldPass) {
-            res.json({
-                error: true,
-                msg: "same password",
-                samePassword: true,
-            });
-        } else {
-            user.changePassword(newPass).then((u) => res.json(u));
-        }
-    });
-});
-
 // get user by id
 // not used
 app.get("/api/users/:userId", (req, res) => {
@@ -540,22 +438,47 @@ app.post("/api/users/:userId/roles", (req, res) => {
     });
 });
 
-// reset user password
-app.post("/api/users/:userId/password", (req, res) => {
-    if (!checkAuth(req, res)) return;
-    if (!checkRole(req, res, "Admin")) return;
-    const { userId } = req.params;
-    models.User.findByPk(userId).then((user) => {
-        if (!user) {
-            res.json({
-                error: true,
-                msg: `user ${userId} does not exist`,
-                dneError: true,
-            });
-        } else {
-            user.resetPassword().then((u) => res.json(u));
-        }
-    });
+// add user
+app.post("/api/users", (req, res) => {
+    const { username } = req.body;
+    const user = { username, roles: ["Trainee"] };
+    models.User.add(user)
+        .then((user) => {
+            console.log("added user:", user);
+            res.json(user);
+        })
+        .catch((err) => {
+            const response = { error: true, msg: [], message: [] };
+            for (const error of err.errors) {
+                response.message.push(error.message);
+                switch (error.type) {
+                    case "notNull Violation":
+                        if (error.path === "username") {
+                            response.msg.push("username is null");
+                            response.usernameViolation = true;
+                        }
+                        response.nullViolation = true;
+                        break;
+                    case "unique violation":
+                        response.msg.push(
+                            `username "${username}" is not unique`
+                        );
+                        response.uniqueViolation = true;
+                        break;
+                    case "Validation error":
+                        if (error.validatorKey === "validRoles") {
+                            response.msg.push("user must have a role");
+                            response.roleViolation = true;
+                            break;
+                        }
+                    // fall through
+                    default:
+                        console.log("unknown error:", error);
+                        break;
+                }
+            }
+            res.json(response);
+        });
 });
 
 // get all questions and all versions
@@ -1113,10 +1036,10 @@ app.post("/api/answered/:answeredId", (req, res) => {
 });
 
 // all other get requests (frontend)
+app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "client/build/index.html"));
+});
 if (process.env.NODE_ENV === "production") {
-    app.get("*", (req, res) => {
-        res.sendFile(path.join(__dirname, "client/build/index.html"));
-    });
 }
 
 // listen

@@ -87,7 +87,7 @@ function TraineeDrillsTable({ drill }) {
         return (
             <tr key={traineeDrill.id}>
                 <th>{index + 1}</th>
-                <td>{traineeDrill.Trainee.User.email}</td>
+                <td>{traineeDrill.Trainee.User.username}</td>
                 <td>{traineeDrill.progress}</td>
                 <td>{traineeDrill.completedDate}</td>
                 <td>{questions}</td>

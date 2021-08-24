@@ -7,16 +7,13 @@ async function getRequest(route) {
     return await res.json();
 }
 
-function postRequest(route, data = {}) {
-    return new Promise((resolve, reject) => {
-        fetch("/api" + route, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-        })
-            .then((res) => resolve(res.json()))
-            .catch(reject);
+async function postRequest(route, data = {}) {
+    const res = await fetch("/api" + route, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
     });
+    return await res.json();
 }
 
 async function deleteRequest(route) {
@@ -99,26 +96,11 @@ function checkError(data, requestType, resource, array = false) {
 
 // authentication
 
-export function signUpUser(email, password, roles, callback = null) {
-    const user = { email, password, roles };
-    postRequest("/users", user).then((u) => {
-        checkError(u, "add", "user");
+export function logInUser(callback = null) {
+    postRequest("/users/login").then((u) => {
+        checkError(u, "login", "user");
         if (callback) callback(u);
     });
-}
-
-export function logInUser(email, password, callback = null) {
-    postRequest("/users/login", { email, password })
-        .then((u) => {
-            checkError(u, "login", "user");
-            if (callback) callback(u);
-        })
-        .catch(() => {
-            // authentication failed
-            const msg = "Invalid email or password.";
-            if (CONSOLE) console.log("error while logging in:", msg);
-            if (callback) callback({ error: true, message: msg });
-        });
 }
 
 export function logOutUser(callback = null) {
@@ -167,21 +149,10 @@ export function updateUserRoles(user, callback = null) {
     });
 }
 
-export function changeUserPassword(oldPass, newPass, callback = null) {
-    if (checkNull(oldPass, callback)) return;
-    if (checkNull(newPass, callback)) return;
-    // infers id from logged in user
-    postRequest("/users/password", { oldPass, newPass }).then((u) => {
-        checkError(u, "update", "user password");
-        if (callback) callback(u);
-    });
-}
-
-export function resetUserPassword(userId, callback = null) {
-    if (checkNull(userId, callback)) return;
-    if (!checkInt(userId, "reset", "user password", callback)) return;
-    postRequest(`/users/${userId}/password`).then((u) => {
-        u = checkError(u, "reset", "user password");
+export function addUser(username, callback = null) {
+    if (checkNull(username, callback)) return;
+    postRequest("/users", { username }).then((u) => {
+        u = checkError(u, "add", "user");
         if (callback) callback(u);
     });
 }

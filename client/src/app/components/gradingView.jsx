@@ -151,7 +151,7 @@ function TraineeInfo({ answered }) {
     if (anonymous) {
         traineeStr += "Anonymous";
     } else {
-        traineeStr += answered.Trainee.User.email;
+        traineeStr += answered.Trainee.User.username;
     }
 
     return (
@@ -234,7 +234,7 @@ function GradeQuestion({
         <div className="container-fluid">
             <div className="row">
                 <TraineeInfo answered={answered} />
-                <div>Assessor: {assessor.email}</div>
+                <div>Assessor: {assessor.username}</div>
                 <div className="col-6">
                     <QuestionView
                         answered={answered}

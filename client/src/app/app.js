@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-    useHistory,
     useLocation,
     useParams,
     Switch,
@@ -18,8 +17,6 @@ import WrongRoleView from "./components/wrongRoleView";
 import HomeView from "./components/homeView";
 import AboutView from "./components/aboutView";
 import HelpView from "./components/helpView";
-import LogInView from "./components/logInView";
-import SignUpView from "./components/signUpView";
 
 import ProfileView from "./components/profileView";
 import ChooseRoleView from "./components/chooseRoleView";
@@ -59,6 +56,7 @@ function Protected({ user, setUser, role, children, ...rest }) {
     }
     const renderFunc = ({ location }) => {
         const to = "/login?redirect=" + location.pathname;
+        window.location.assign(to);
         return <Redirect to={to} />;
     };
     return <Route {...rest} render={renderFunc} />;
@@ -67,8 +65,6 @@ function Protected({ user, setUser, role, children, ...rest }) {
 export default function App() {
     const [loading, setLoading] = useState(true);
     const [user, setUserState] = useState(null);
-
-    const history = useHistory();
 
     function setUser(u, requiredRole = null) {
         if (!u) {
@@ -123,14 +119,10 @@ export default function App() {
 
     if (loading) return "Loading...";
 
-    function handleLogIn(user) {
-        setUser(user);
-    }
-
     function handleLogOut() {
         logOutUser(() => {
             setUser(null);
-            history.push("/");
+            window.location.assign("/");
         });
     }
 
@@ -161,10 +153,7 @@ export default function App() {
                 </Route>
 
                 <Route exact path="/login">
-                    <LogInView onLogIn={handleLogIn} />
-                </Route>
-                <Route exact path="/signup">
-                    <SignUpView onLogIn={handleLogIn} />
+                    Redirecting to login...
                 </Route>
 
                 <Protected path="/" {...props}>
@@ -253,18 +242,9 @@ function Navbar({ user, onLogOut }) {
     const navbarLinks = [];
     if (!user) {
         buttons = (
-            <React.Fragment>
-                <Link to={"/login" + query}>
-                    <button type="button" className="btn btn-success me-2">
-                        Log In
-                    </button>
-                </Link>
-                <Link to={"/signup" + query}>
-                    <button type="button" className="btn btn-success">
-                        Sign Up
-                    </button>
-                </Link>
-            </React.Fragment>
+            <a href={"/login" + query} className="btn btn-success">
+                Log In
+            </a>
         );
         navbarLinks.push(["/about", "About"]);
         navbarLinks.push(["/help", "Help"]);
@@ -296,7 +276,7 @@ function Navbar({ user, onLogOut }) {
             <React.Fragment>
                 {roleLabel}
                 <Link to="/profile" className="navbar-brand">
-                    {user.email}
+                    {user.username}
                 </Link>
                 <button
                     type="button"
