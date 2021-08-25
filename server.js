@@ -32,16 +32,20 @@ passport.use(
         { casURL: "https://fed.princeton.edu/cas" },
         (username, profile, done) => {
             console.log("logged in:", username);
-            models.User.findOrCreate({
-                where: { username },
-                defaults: { roles: ["Trainee"] },
-            }).then(([user, created]) => {
-                user = user.toJSON();
-                if (user.roles.length === 1) {
-                    user.role = user.roles[0];
-                }
-                return done(null, user);
-            });
+            models.User.find({ where: { username } })
+                .then((user) => {
+                    return (
+                        user ||
+                        models.User.add({ username, roles: ["Trainee"] })
+                    );
+                })
+                .then((user) => {
+                    user = user.toJSON();
+                    if (user.roles.length === 1) {
+                        user.role = user.roles[0];
+                    }
+                    done(null, user);
+                });
         }
     )
 );
