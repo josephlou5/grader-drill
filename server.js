@@ -32,7 +32,7 @@ passport.use(
         { casURL: "https://fed.princeton.edu/cas" },
         (username, profile, done) => {
             console.log("logged in:", username);
-            models.User.find({ where: { username } })
+            models.User.findOne({ where: { username } })
                 .then((user) => {
                     return (
                         user ||
