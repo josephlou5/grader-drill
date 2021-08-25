@@ -158,7 +158,7 @@ function AnsweredInfo({ answered }) {
     if (anonymous) {
         traineeStr += "Anonymous";
     } else {
-        traineeStr += answered.Trainee.User.email;
+        traineeStr += answered.Trainee.User.username;
     }
     let assessorStr = "Assessor: ";
     if (answered.graded) {
@@ -167,7 +167,7 @@ function AnsweredInfo({ answered }) {
         } else if (anonymous) {
             assessorStr += "Graded";
         } else {
-            assessorStr += answered.Assessor.User.email;
+            assessorStr += answered.Assessor.User.username;
         }
     } else {
         assessorStr += "Ungraded";
