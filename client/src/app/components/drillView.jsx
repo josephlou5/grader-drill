@@ -39,6 +39,7 @@ export default function DrillView() {
     }
 
     const { name, code, numQuestions } = drill;
+    const link = "/drills/edit/" + drillId;
     return (
         <React.Fragment>
             <Title title="Drill" />
@@ -49,6 +50,11 @@ export default function DrillView() {
             <div className="mb-2">
                 Due Date: <DueDate drill={drill} />
             </div>
+            <Link to={link}>
+                <button type="button" className="btn btn-success">
+                    Edit Drill
+                </button>
+            </Link>
             <TraineeDrillsTable drill={drill} />
         </React.Fragment>
     );
