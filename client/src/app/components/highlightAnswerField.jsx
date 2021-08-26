@@ -11,7 +11,7 @@ export default function HighlightAnswerField(props) {
 
     let clearButton = null;
     if (!noChange) {
-        let buttonProps = {
+        const buttonProps = {
             type: "button",
             className: "btn btn-danger",
         };
@@ -30,7 +30,7 @@ export default function HighlightAnswerField(props) {
     const classes = "form-control textarea";
     let textClasses = classes;
     if (!previewMode && noChange) {
-        textClasses = classes + " bg-transparent text-body";
+        textClasses += " bg-transparent text-body";
     }
 
     const field = highlights.map((highlight, index) => {
@@ -74,17 +74,6 @@ export default function HighlightAnswerField(props) {
             // display the existing comment
             input = (
                 <div className="flex-grow-1" style={{ padding: "0 0.75rem" }}>
-                    {/*
-                    // the div will annoyingly go to the next line when wrapping,
-                    // so using a disabled textarea solves the problem very well.
-                    // but it feels a bit janky so i don't really like it.
-                    <div
-                        className="row input-group-text text-start text-wrap flex-grow-1"
-                        style={{borderBottom: "0px", borderRadius: "0 0.25rem 0 0"}}
-                    >
-                        {highlight.text}
-                    </div>
-                    */}
                     <div className="row">
                         <textarea
                             className={classes}
@@ -111,14 +100,14 @@ export default function HighlightAnswerField(props) {
 
         let deleteButton = null;
         if ((editMode && !previewMode) || highlight.byUser) {
-            let buttonProps = {
+            const buttonProps = {
                 type: "button",
                 className: "btn-close btn-close-white",
             };
             if (noChange) {
-                buttonProps["disabled"] = true;
+                buttonProps.disabled = true;
             } else {
-                buttonProps["onClick"] = () => props.onDeleteHighlight(index);
+                buttonProps.onClick = () => props.onDeleteHighlight(index);
             }
             deleteButton = (
                 <div className="input-group-text bg-danger">

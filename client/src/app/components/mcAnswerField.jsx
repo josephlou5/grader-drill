@@ -91,12 +91,6 @@ export default function MCAnswerField(props) {
         // todo: use font awesome for correct/incorrect icons?
         // https://fontawesome.com/v5.15/how-to-use/on-the-web/using-with/react
         return question.answerChoices.map((text, index) => {
-            const classes = ["form-check-input", "pe-none"];
-            if (index === correct) {
-                classes.push("bg-success");
-            } else if (index === answer) {
-                classes.push("bg-danger");
-            }
             // // can use this to change the color of the markdown text
             // let components = undefined;
             // if (index === correct) {
@@ -112,17 +106,21 @@ export default function MCAnswerField(props) {
             //         ),
             //     };
             // }
+            const classes = ["form-check-input", "pe-none"];
+            if (index === correct) {
+                classes.push("bg-success");
+            } else if (index === answer) {
+                classes.push("bg-danger");
+            }
             return (
                 <div key={index} className="form-check">
                     <input
                         type="radio"
                         className={classes.join(" ")}
                         tabIndex={-1}
-                        // defaultChecked={index === answer}
                         onClick={(event) => event.preventDefault()}
-                        // disabled={true}
                     />
-                    <ReactMarkdown>{text}</ReactMarkdown>
+                    =<ReactMarkdown>{text}</ReactMarkdown>
                 </div>
             );
         });

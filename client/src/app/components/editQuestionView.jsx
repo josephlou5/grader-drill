@@ -129,9 +129,9 @@ export default function EditQuestionView({ newQuestion, questionId }) {
         const numLines = lines.length;
         const lineLengths = lines.map((line) => line.length);
 
-        let removing = [];
+        const removing = [];
         const highlights = question.highlights.flatMap((h, i) => {
-            let highlight = { ...h };
+            const highlight = { ...h };
             let { startLine, startChar, endLine, endChar } = highlight;
             if (startLine >= numLines) return [];
             if (endLine >= numLines) {
@@ -146,7 +146,7 @@ export default function EditQuestionView({ newQuestion, questionId }) {
                 }
                 // the end of the highlight got cut off
                 if (endChar >= lineLengths[endLine]) {
-                    highlight["endChar"] = lineLengths[endLine];
+                    highlight.endChar = lineLengths[endLine];
                 }
                 return [highlight];
             }
@@ -232,13 +232,13 @@ export default function EditQuestionView({ newQuestion, questionId }) {
     }
 
     function handleAddRubricItem() {
-        let rubric = [...question.rubric];
+        const rubric = [...question.rubric];
         rubric.push({ points: 1, text: "" });
         setQuestion({ rubric });
     }
 
     function handleChangeRubricItemPoints(index, points) {
-        let rubric = [...question.rubric];
+        const rubric = [...question.rubric];
         let pointsNum = parseInt(points);
         if (isNaN(pointsNum)) {
             pointsNum = 0;
@@ -248,13 +248,13 @@ export default function EditQuestionView({ newQuestion, questionId }) {
     }
 
     function handleChangeRubricItemText(index, text) {
-        let rubric = [...question.rubric];
+        const rubric = [...question.rubric];
         rubric[index] = { ...rubric[index], text };
         setQuestion({ rubric });
     }
 
     function handleDeleteRubricItem(index) {
-        let rubric = [...question.rubric];
+        const rubric = [...question.rubric];
         rubric.splice(index, 1);
         setQuestion({ rubric });
     }
@@ -373,7 +373,7 @@ export default function EditQuestionView({ newQuestion, questionId }) {
 
     let rubricField = null;
     if (question.questionType !== "Multiple Choice") {
-        const rubricFieldProps = {
+        const editRubricFieldProps = {
             rubric: question.rubric,
             editMode: true,
             onAddRubricItem: handleAddRubricItem,
@@ -384,7 +384,7 @@ export default function EditQuestionView({ newQuestion, questionId }) {
         rubricField = (
             <div className="row">
                 <div className="col">
-                    <RubricField {...rubricFieldProps} />
+                    <RubricField {...editRubricFieldProps} />
                 </div>
                 <div className="col">
                     <RubricField rubric={question.rubric} previewMode={true} />

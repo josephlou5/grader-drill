@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
         }
 
         static add(question) {
-            let fields = [
+            const fields = [
                 "id",
                 "version",
                 "questionType",

@@ -180,12 +180,7 @@ function handleHighlight(lines) {
         return;
     }
 
-    const highlight = {
-        startLine: startLine,
-        startChar: startChar,
-        endLine: endLine,
-        endChar: endChar,
-    };
+    const highlight = { startLine, startChar, endLine, endChar };
     if (DEBUG) console.log(highlight);
 
     // if single click on a highlighted portion, adds another highlight
@@ -198,8 +193,11 @@ function handleHighlight(lines) {
 }
 
 export default function CodeField(props) {
-    const { question, noChange, editMode } = props;
-    const { code, highlights } = question;
+    const {
+        question: { code, highlights },
+        noChange,
+        editMode,
+    } = props;
     const lines = code.split("\n");
 
     let onMouseUp = undefined;
@@ -207,7 +205,7 @@ export default function CodeField(props) {
         onMouseUp = () => {
             const highlight = handleHighlight(lines);
             if (!highlight) return;
-            highlight["byUser"] = !editMode;
+            highlight.byUser = !editMode;
             props.onAddHighlight(highlight);
         };
     }
@@ -309,7 +307,7 @@ function CodeLines({
     const numLines = lines.length;
 
     // create inHighlight array, which determines where highlights are
-    let inHighlight = new Array(numLines);
+    const inHighlight = new Array(numLines);
     for (let i = 0; i < numLines; i++) {
         inHighlight[i] = new Array(lines[i].length).fill(0);
     }
@@ -333,7 +331,7 @@ function CodeLines({
         }
     }
 
-    let elements = [];
+    const elements = [];
     let prevHighlight = 0;
     let key = 0;
     for (let i = 0; i < numLines; i++) {
@@ -341,7 +339,7 @@ function CodeLines({
 
         let lineKey = 0;
         let text = "";
-        let line = [];
+        const line = [];
         for (let j = 0; j < lines[i].length; j++) {
             const currentHighlight = inHighlight[i][j];
             if (prevHighlight === currentHighlight) {
