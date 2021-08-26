@@ -8,7 +8,7 @@ export default function UsersView(props) {
             <Title title="Users" />
             <h1>Users</h1>
             <div>
-                Note: Role updates require a user re-login to take effect.
+                Note: Role updates require the user to re-login to take effect.
             </div>
             <Users {...props} />
         </React.Fragment>
