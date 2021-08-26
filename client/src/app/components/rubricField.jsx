@@ -3,50 +3,67 @@ import ReactMarkdown from "react-markdown";
 import { TextareaLine, resetValid, resetValidId } from "../shared";
 
 export default function RubricField(props) {
+    let rubric;
+    if (props.editMode) {
+        rubric = <EditRubric {...props} />;
+    } else {
+        rubric = <Rubric {...props} />;
+    }
     return (
         <React.Fragment>
             <h1>Rubric</h1>
-            <Rubric {...props} />
+            {rubric}
         </React.Fragment>
     );
 }
 
-function Rubric(props) {
-    const { rubric, previewMode, editMode, noChange } = props;
-    if (previewMode || noChange) {
-        return rubric.map((item, index) => (
-            <div key={index} className="form-check">
-                <input
-                    type="checkbox"
-                    className="form-check-input"
-                    checked={noChange && item.checked}
-                    disabled={true}
-                />
-                <ReactMarkdown>{item.text}</ReactMarkdown>
-            </div>
-        ));
-    } else if (editMode) {
-        return <EditRubric {...props} />;
+function formatPoints(points) {
+    if (points === 0) {
+        return " " + points;
+    } else if (points > 0) {
+        return "+" + points;
     } else {
+        return "" + points;
+    }
+}
+
+function Rubric({ rubric, checked, previewMode, noChange, onCheckChange }) {
+    if (previewMode || noChange) {
+        // answered view or preview on edit question
         return rubric.map((item, index) => {
-            const idFor = "item" + index;
-            let points = item.points;
-            if (points === 0) {
-                points = " " + points;
-            } else if (points > 0) {
-                points = "+" + points;
+            let text = item.text;
+            if (previewMode) {
+                // include the point values
+                text = `\`[${formatPoints(item.points)}]\` ${text}`;
             }
             return (
                 <div key={index} className="form-check">
                     <input
                         type="checkbox"
                         className="form-check-input"
+                        checked={noChange && checked[index]}
+                        disabled={true}
+                    />
+                    <ReactMarkdown>{text}</ReactMarkdown>
+                </div>
+            );
+        });
+    } else {
+        // grading
+        return rubric.map((item, index) => {
+            const idFor = "item" + index;
+            const text = `\`[${formatPoints(item.points)}]\` ${item.text}`;
+            return (
+                <div key={index} className="form-check">
+                    <input
+                        type="checkbox"
+                        className="form-check-input"
                         id={idFor}
-                        checked={item.checked}
-                        onChange={() => props.onCheckChange(index)}
+                        checked={checked[index]}
+                        onChange={() => onCheckChange(index)}
                     />
                     <label className="form-check-label" htmlFor={idFor}>
-                        <ReactMarkdown>{`\`[${points}]\` ${item.text}`}</ReactMarkdown>
+                        <ReactMarkdown>{text}</ReactMarkdown>
                     </label>
                 </div>
             );
@@ -54,9 +71,13 @@ function Rubric(props) {
     }
 }
 
-function EditRubric(props) {
-    const { rubric } = props;
-
+function EditRubric({
+    rubric,
+    onAddRubricItem,
+    onChangeRubricItemPoints,
+    onChangeRubricItemText,
+    onDeleteRubricItem,
+}) {
     const addButton = (
         <React.Fragment>
             <div>
@@ -70,7 +91,7 @@ function EditRubric(props) {
                 className="btn btn-success"
                 onClick={() => {
                     resetValidId("question-edit-rubric");
-                    props.onAddRubricItem();
+                    onAddRubricItem();
                 }}
             >
                 Add Rubric Item
@@ -97,10 +118,8 @@ function EditRubric(props) {
                     value={item.points}
                     onChange={(event) => {
                         resetValid(event.target);
-                        props.onChangeRubricItemPoints(
-                            index,
-                            event.target.value
-                        );
+                        const points = event.target.value;
+                        onChangeRubricItemPoints(index, points);
                     }}
                 />
                 <div className="invalid-feedback">Invalid value.</div>
@@ -115,10 +134,8 @@ function EditRubric(props) {
                             value={item.text}
                             onChange={(event) => {
                                 resetValid(event.target);
-                                props.onChangeRubricItemText(
-                                    index,
-                                    event.target.value
-                                );
+                                const text = event.target.value;
+                                onChangeRubricItemText(index, text);
                             }}
                         />
                     </div>
@@ -126,7 +143,7 @@ function EditRubric(props) {
                         <button
                             type="button"
                             className="btn-close"
-                            onClick={() => props.onDeleteRubricItem(index)}
+                            onClick={() => onDeleteRubricItem(index)}
                         />
                     </div>
                 </div>

@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
             // an Answered and a Question, so we can use the
             // `questionType` field to figure out which fields to keep
             // and to auto-grade multiple choice questions
-            let fields = [
+            const fields = [
                 "questionId",
                 "version",
                 "traineeId",
@@ -31,9 +31,10 @@ module.exports = (sequelize, DataTypes) => {
                 // fall through
                 case "Highlight":
                     fields.push("rubric");
-                    question["rubric"] = question.rubric.map((item) => {
-                        return { checked: false, ...item };
-                    });
+                    // question["rubric"] = question.rubric.map((item) => {
+                    //     return { checked: false, ...item };
+                    // });
+                    question.rubric = question.rubric.map(() => false);
                     break;
                 case "Multiple Choice":
                     fields.push("answer", "autograded", "graded", "score");
@@ -52,7 +53,7 @@ module.exports = (sequelize, DataTypes) => {
 
         // for the "reset" route in `server.js`
         static addRaw(question) {
-            let fields = [
+            const fields = [
                 "autograded",
                 "graded",
                 "score",
@@ -72,9 +73,10 @@ module.exports = (sequelize, DataTypes) => {
                 // fall through
                 case "Highlight":
                     fields.push("rubric");
-                    question["rubric"] = question.rubric.map((item) => {
-                        return { checked: false, ...item };
-                    });
+                    // question["rubric"] = question.rubric.map((item) => {
+                    //     return { checked: false, ...item };
+                    // });
+                    question.rubric = question.rubric.map(() => false);
                     break;
                 case "Multiple Choice":
                     fields.push("answer", "score");

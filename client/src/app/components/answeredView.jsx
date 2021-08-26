@@ -69,7 +69,11 @@ export default function AnsweredView({ user }) {
         if (answered.graded) {
             // if already graded, show the rubric
             rubricField = (
-                <RubricField rubric={answered.rubric} noChange={true} />
+                <RubricField
+                    rubric={question.rubric}
+                    checked={answered.rubric}
+                    noChange={true}
+                />
             );
             // if same assessor, let them "regrade"
             if (assessor && assessor.id === answered.assessorId) {
@@ -103,7 +107,11 @@ export default function AnsweredView({ user }) {
             // trainee doesn't get to see the rubric
         } else {
             rubricField = (
-                <RubricField rubric={answered.rubric} noChange={true} />
+                <RubricField
+                    rubric={question.rubric}
+                    checked={answered.rubric}
+                    noChange={true}
+                />
             );
         }
     }

@@ -49,8 +49,8 @@ function Grading({ assessor, specificQuestion, answeredId }) {
                 (question) => {
                     if (!question) {
                         // question id & version should exist,
-                        // so either answered was not from the app
-                        // or not authenticated
+                        // so either answered is invalid
+                        // or user not authenticated
                         setInvalid(true);
                     } else {
                         setQuestion(question);
@@ -96,7 +96,8 @@ function Grading({ assessor, specificQuestion, answeredId }) {
 
     if (invalid) {
         return <p>Invalid question</p>;
-    } else if (alreadyGraded) {
+    }
+    if (alreadyGraded) {
         const link = "/answered/" + answered.id;
         return <Redirect to={link} />;
     }
@@ -169,27 +170,34 @@ function GradeQuestion({
     specificQuestion,
     onNextQuestion,
 }) {
-    const [rubric, setRubric] = useState(answered.rubric);
+    const [checked, setChecked] = useState(answered.rubric);
     const [score, setScore] = useState(
         answered.graded || answered.score ? answered.score : 0
     );
 
     const history = useHistory();
 
+    const { rubric } = question;
+
     // event handlers
 
     function handleCheckChange(index) {
-        const checked = !rubric[index].checked;
-        const multiplier = checked ? 1 : -1;
-        setRubric(
-            rubric.map((item, i) => {
-                if (i === index) {
-                    return { ...item, checked };
-                } else {
-                    return item;
-                }
-            })
-        );
+        // const checked = !rubric[index].checked;
+        // const multiplier = checked ? 1 : -1;
+        // setRubric(
+        //     rubric.map((item, i) => {
+        //         if (i === index) {
+        //             return { ...item, checked };
+        //         } else {
+        //             return item;
+        //         }
+        //     })
+        // );
+        // setScore(score + multiplier * rubric[index].points);
+        const updated = [...checked];
+        updated[index] = !updated[index];
+        setChecked(updated);
+        const multiplier = updated[index] ? 1 : -1;
         setScore(score + multiplier * rubric[index].points);
     }
 
@@ -204,7 +212,7 @@ function GradeQuestion({
     function handleSave() {
         const savedQuestion = {
             ...answered,
-            rubric,
+            rubric: checked,
             score,
         };
         updateAnswered(savedQuestion);
@@ -246,6 +254,7 @@ function GradeQuestion({
                     {"Score: " + score}
                     <RubricField
                         rubric={rubric}
+                        checked={checked}
                         onCheckChange={handleCheckChange}
                     />
                 </div>
