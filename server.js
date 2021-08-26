@@ -342,8 +342,10 @@ app.get("/login", passport.authenticate("cas"), (req, res) => {
 
 // log out
 app.post("/api/users/logout", (req, res) => {
+    if (!req.isAuthenticated()) return;
+    const username = req.user.username;
     req.logout();
-    console.log("Logged out user");
+    console.log("Logged out user:", username);
     res.json({ success: true });
 });
 
