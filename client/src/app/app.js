@@ -35,17 +35,35 @@ import {
 } from "./components/trainee";
 
 // protected route
-function Protected({ user, setUser, role, children, ...rest }) {
+function Protected({
+    user: propsUser,
+    setUser: setAppUser,
+    role,
+    children,
+    ...rest
+}) {
+    const [state, setState] = useState({ loading: true });
+
+    function setUser(u) {
+        const user = setAppUser(u, role);
+        if (state.loading || user !== state.user) {
+            setState({ user });
+        }
+    }
+
     useEffect(() => {
-        isLoggedIn((u) => setUser(u, role));
+        isLoggedIn((user) => setUser(user));
     });
 
+    if (state.loading) {
+        return null;
+    }
+    const { user } = state;
     if (user) {
         if (role) {
             if (!user.roles.includes(role)) {
                 return <WrongRoleView role={role} />;
             } else if (user.role !== role) {
-                console.log(user);
                 return "Changing roles...";
             }
         }
@@ -80,10 +98,10 @@ export default function App() {
         } else {
             // updating same user
             // role should already be set, so do nothing
-            if (u.roles.length === 1) return;
+            if (u.roles.length === 1) return null;
             if (requiredRole) {
                 // if user already has role, do nothing
-                if (user.role === requiredRole) return;
+                if (user.role === requiredRole) return null;
                 if (u.roles.includes(requiredRole)) {
                     // force user to take required role
                     if (u.role !== requiredRole) {
@@ -93,9 +111,10 @@ export default function App() {
                 }
             }
             // if user already has role, do nothing
-            if (user.role === u.role) return;
+            if (user.role === u.role) return null;
         }
         setUserState(u);
+        return u;
     }
 
     function setRole(role) {
@@ -128,15 +147,24 @@ export default function App() {
     }
 
     // props for private routes
-    const props = { exact: true, user, setUser };
-    const admin = { ...props, role: "Admin" };
-    const assessor = { ...props, role: "Assessor" };
-    const trainee = { ...props, role: "Trainee" };
+    // use key to refresh state
+    let count = 0;
+    function props(role = null) {
+        return {
+            key: count++,
+            exact: true,
+            user,
+            setUser,
+            role: role || undefined,
+        };
+    }
 
     return (
         <div className="App">
             <Navbar user={user} onLogOut={handleLogOut} />
             <Switch>
+                {/* PUBLIC */}
+
                 {!user && (
                     <Route exact path="/">
                         <HomeView />
@@ -153,74 +181,79 @@ export default function App() {
                     Redirecting to login...
                 </Route>
 
-                <Protected path="/" {...props}>
+                {/* PROTECTED */}
+
+                <Protected path="/" {...props()}>
                     <ChooseRoleView
                         user={user}
                         onChooseRole={handleChooseRole}
                     />
                 </Protected>
-                <Protected path="/profile" {...props}>
+                <Protected path="/profile" {...props()}>
                     <ProfileView user={user} />
                 </Protected>
 
-                <Protected path="/dashboard" {...props}>
+                <Protected path="/dashboard" {...props()}>
                     <Dashboard user={user} />
                 </Protected>
-                <Protected path="/answered/:answeredId" {...props}>
+                <Protected path="/answered/:answeredId" {...props()}>
                     <AnsweredView user={user} />
                 </Protected>
 
                 {/* ADMIN ROLE */}
 
                 {/* users */}
-                <Protected path="/users" {...admin}>
+                <Protected path="/users" {...props("Admin")}>
                     <UsersView admin={user} />
                 </Protected>
 
                 {/* questions */}
-                <Protected path="/questions" {...admin}>
+                <Protected path="/questions" {...props("Admin")}>
                     <QuestionsView />
                 </Protected>
-                <Protected path="/questions/new" {...admin}>
+                <Protected path="/questions/new" {...props("Admin")}>
                     <EditQuestionView newQuestion={true} />
                 </Protected>
-                <Protected path="/questions/edit/:questionId" {...admin}>
+                <Protected
+                    path="/questions/edit/:questionId"
+                    {...props("Admin")}
+                >
                     <EditQuestion />
                 </Protected>
 
                 {/* drills */}
-                <Protected path="/drills" {...admin}>
+                <Protected path="/drills" {...props("Admin")}>
                     <DrillsView />
                 </Protected>
-                <Protected path="/drills/new" {...admin}>
+                <Protected path="/drills/new" {...props("Admin")}>
                     <EditDrillView newDrill={true} />
                 </Protected>
-                <Protected path="/drills/edit/:drillId" {...admin}>
+                <Protected path="/drills/edit/:drillId" {...props("Admin")}>
                     <EditDrill />
                 </Protected>
-                <Protected path="/drills/:drillId" {...admin}>
+                <Protected path="/drills/:drillId" {...props("Admin")}>
                     <DrillView />
                 </Protected>
 
                 {/* ASSESSOR ROLE */}
 
                 {/* grading */}
-                <Protected path="/grading" {...assessor}>
+                <Protected path="/grading" {...props("Assessor")}>
                     <GradingView assessor={user} />
                 </Protected>
-                <Protected path="/grading/:answeredId" {...assessor}>
+                <Protected path="/grading/:answeredId" {...props("Assessor")}>
                     <GradeQuestion assessor={user} />
                 </Protected>
 
                 {/* TRAINEE ROLE */}
 
                 {/* join drill */}
-                <Protected path="/join/:drillCode" {...trainee}>
+                <Protected path="/join/:drillCode" {...props("Trainee")}>
                     <JoinDrillView />
                 </Protected>
 
                 {/* training */}
-                <Protected path="/training" {...trainee}>
+                <Protected path="/training" {...props("Trainee")}>
                     <TrainingView />
                 </Protected>
 
