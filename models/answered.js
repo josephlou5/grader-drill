@@ -31,9 +31,6 @@ module.exports = (sequelize, DataTypes) => {
                 // fall through
                 case "Highlight":
                     fields.push("rubric");
-                    // question["rubric"] = question.rubric.map((item) => {
-                    //     return { checked: false, ...item };
-                    // });
                     question.rubric = question.rubric.map(() => false);
                     break;
                 case "Multiple Choice":
@@ -73,9 +70,6 @@ module.exports = (sequelize, DataTypes) => {
                 // fall through
                 case "Highlight":
                     fields.push("rubric");
-                    // question["rubric"] = question.rubric.map((item) => {
-                    //     return { checked: false, ...item };
-                    // });
                     question.rubric = question.rubric.map(() => false);
                     break;
                 case "Multiple Choice":
@@ -153,7 +147,7 @@ module.exports = (sequelize, DataTypes) => {
             validate: {
                 checkGraded() {
                     if (!this.graded) return;
-                    if (!this.assessorId && !this.autograded) {
+                    if (!this.autograded && this.assessorId == null) {
                         console.log(this);
                         throw new Error(
                             "A graded question must have an assessor."
