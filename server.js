@@ -337,7 +337,7 @@ if (process.env.NODE_ENV !== "production") {
 // log in
 app.get("/login", passport.authenticate("cas"), (req, res) => {
     const { redirect } = req.query;
-    res.redirect(redirect || "/");
+    res.redirect(redirect ?? "/");
 });
 
 // log out
@@ -1045,7 +1045,7 @@ app.get("*", (req, res) => {
 });
 
 // listen
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT ?? 3001;
 app.listen(PORT, () => {
     console.log(`Server listening on ${PORT}`);
 });

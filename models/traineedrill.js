@@ -46,7 +46,7 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.VIRTUAL,
                 get() {
                     const completedAt = this.getDataValue("completedAt");
-                    return completedAt?.toISOString().slice(0, 10) || "N/A";
+                    return completedAt?.toISOString?.().slice(0, 10) || "N/A";
                 },
             },
         },
