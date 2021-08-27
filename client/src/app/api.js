@@ -1,4 +1,5 @@
-const CONSOLE = process.env.NODE_ENV !== "production";
+// const CONSOLE = process.env.NODE_ENV !== "production";
+const CONSOLE = true;
 
 // API functions
 
@@ -27,7 +28,7 @@ async function deleteRequest(route) {
 
 function checkNull(arg, callback) {
     if (arg == null) {
-        if (callback) callback(null);
+        callback?.(null);
         return true;
     }
     return false;
@@ -74,7 +75,7 @@ function checkInt(arg, requestType, resource, callback) {
                 getErrMsg(requestType, resource),
                 `Invalid id "${arg}"`
             );
-        if (callback) callback(null);
+        callback?.(null);
         return false;
     }
     return true;
@@ -90,6 +91,10 @@ function checkError(data, requestType, resource, array = false) {
                 getErrMsg(requestType, resource),
                 data ? data.msg || data.message : "null"
             );
+        if (data.notAuthenticated) {
+            // reload the page to redirect back to login
+            window.location.reload();
+        }
         return array ? [] : null;
     }
 }
@@ -99,26 +104,26 @@ function checkError(data, requestType, resource, array = false) {
 export function logInUser(callback = null) {
     postRequest("/users/login").then((u) => {
         checkError(u, "login", "user");
-        if (callback) callback(u);
+        callback?.(u);
     });
 }
 
 export function logOutUser(callback = null) {
     postRequest("/users/logout").then((data) => {
         if (CONSOLE) console.log("logged out user");
-        if (callback) callback(data);
+        callback?.(data);
     });
 }
 
 export function setRoleCookie(role, callback = null) {
     postRequest("/users/role", { role }).then((data) => {
-        if (callback) callback(data);
+        callback?.(data);
     });
 }
 
 export function isLoggedIn(callback = null) {
     getRequest("/users/loggedin").then((user) => {
-        if (callback) callback(user);
+        callback?.(user);
     });
 }
 
@@ -127,7 +132,7 @@ export function isLoggedIn(callback = null) {
 export function getAllUsers(callback = null) {
     getRequest("/users").then((users) => {
         users = checkError(users, "get", "all users", true);
-        if (callback) callback(users);
+        callback?.(users);
     });
 }
 
@@ -137,30 +142,30 @@ export function getUser(userId, callback = null) {
     if (!checkInt(userId, "get", "user", callback)) return;
     getRequest(`/users/${userId}`).then((u) => {
         u = checkError(u, "get", "user");
-        if (callback) callback(u);
+        callback?.(u);
     });
 }
 
 export function updateUserRoles(user, callback = null) {
     if (checkNull(user, callback)) return;
     postRequest(`/users/${user.id}/roles`, user).then((u) => {
-        u = checkError(u, "update", "user");
-        if (callback) callback(u);
+        checkError(u, "update", "user");
+        callback?.(u);
     });
 }
 
 export function addUser(username, callback = null) {
     if (checkNull(username, callback)) return;
     postRequest("/users", { username }).then((u) => {
-        u = checkError(u, "add", "user");
-        if (callback) callback(u);
+        checkError(u, "add", "user");
+        callback?.(u);
     });
 }
 
 export function getAllQuestions(callback = null) {
     getRequest("/questions").then((questions) => {
         questions = checkError(questions, "get", "all questions", true);
-        if (callback) callback(questions);
+        callback?.(questions);
     });
 }
 
@@ -169,7 +174,7 @@ export function getQuestion(questionId, callback = null) {
     if (!checkInt(questionId, "get", "question", callback)) return;
     getRequest(`/questions/${questionId}`).then((q) => {
         q = checkError(q, "get", "question");
-        if (callback) callback(q);
+        callback?.(q);
     });
 }
 
@@ -180,7 +185,7 @@ export function getQuestionVersion(questionId, version, callback = null) {
     if (!checkInt(version, "get", "question version", callback)) return;
     getRequest(`/questions/${questionId}/${version}`).then((q) => {
         q = checkError(q, "get", "question version");
-        if (callback) callback(q);
+        callback?.(q);
     });
 }
 
@@ -188,7 +193,7 @@ export function addQuestion(question, callback = null) {
     if (checkNull(question, callback)) return;
     postRequest("/questions", question).then((q) => {
         q = checkError(q, "add", "question");
-        if (callback) callback(q);
+        callback?.(q);
     });
 }
 
@@ -197,7 +202,7 @@ export function updateQuestion(question, callback = null) {
     const questionId = question.id;
     postRequest(`/questions/${questionId}`, question).then((q) => {
         q = checkError(q, "update", "question");
-        if (callback) callback(q);
+        callback?.(q);
     });
 }
 
@@ -207,7 +212,7 @@ export function updateQuestionVersion(question, callback = null) {
     const { version } = question;
     postRequest(`/questions/${questionId}/${version}`, question).then((q) => {
         q = checkError(q, "update", "question version");
-        if (callback) callback(q);
+        callback?.(q);
     });
 }
 
@@ -216,14 +221,14 @@ export function deleteQuestion(questionId, callback = null) {
     if (!checkInt(questionId, "delete", "question", callback)) return;
     deleteRequest(`/questions/${questionId}`).then((q) => {
         q = checkError(q, "delete", "question", true);
-        if (callback) callback(q);
+        callback?.(q);
     });
 }
 
 export function getAllDrills(callback = null) {
     getRequest("/drills").then((drills) => {
         drills = checkError(drills, "get", "all drills", true);
-        if (callback) callback(drills);
+        callback?.(drills);
     });
 }
 
@@ -232,7 +237,7 @@ export function getDrill(drillId, callback = null) {
     if (!checkInt(drillId, "get", "drill", callback)) return;
     getRequest(`/drills/${drillId}`).then((d) => {
         d = checkError(d, "get", "drill");
-        if (callback) callback(d);
+        callback?.(d);
     });
 }
 
@@ -240,7 +245,7 @@ export function addDrill(drill, callback = null) {
     if (checkNull(drill, callback)) return;
     postRequest("/drills", drill).then((d) => {
         d = checkError(d, "add", "drill");
-        if (callback) callback(d);
+        callback?.(d);
     });
 }
 
@@ -248,7 +253,7 @@ export function updateDrill(drill, callback = null) {
     if (checkNull(drill, callback)) return;
     postRequest(`/drills/${drill.id}`, drill).then((d) => {
         d = checkError(d, "update", "drill");
-        if (callback) callback(d);
+        callback?.(d);
     });
 }
 
@@ -257,7 +262,7 @@ export function deleteDrill(drillId, callback = null) {
     if (!checkInt(drillId, "delete", "drill", callback)) return;
     deleteRequest(`/drills/${drillId}`).then((d) => {
         d = checkError(d, "delete", "drill");
-        if (callback) callback(d);
+        callback?.(d);
     });
 }
 
@@ -265,7 +270,7 @@ export function deleteDrill(drillId, callback = null) {
 export function getAllTraineeDrills(callback = null) {
     getRequest("/traineeDrills").then((drills) => {
         drills = checkError(drills, "get", "all trainee drills", true);
-        if (callback) callback(drills);
+        callback?.(drills);
     });
 }
 
@@ -275,7 +280,7 @@ export function getTraineeDrill(traineeDrillId, callback = null) {
     if (!checkInt(traineeDrillId, "get", "trainee drill", callback)) return;
     getRequest(`/traineeDrills/${traineeDrillId}`).then((d) => {
         d = checkError(d, "get", "trainee drill");
-        if (callback) callback(d);
+        callback?.(d);
     });
 }
 
@@ -283,7 +288,7 @@ export function getDrillByTrainee(callback = null) {
     // infers trainee id from logged in user
     getRequest("/traineeDrills/trainee").then((d) => {
         d = checkError(d, "get", "drills by trainee", true);
-        if (callback) callback(d);
+        callback?.(d);
     });
 }
 
@@ -292,7 +297,7 @@ export function addTraineeDrill(drillCode, callback = null) {
     if (checkNull(drillCode, callback)) return;
     postRequest("/traineeDrills", { drillCode }).then((d) => {
         checkError(d, "add", "trainee drill");
-        if (callback) callback(d);
+        callback?.(d);
     });
 }
 
@@ -301,7 +306,7 @@ export function traineeDrillProgress(traineeDrillId, callback = null) {
     if (!checkInt(traineeDrillId, "update", "trainee drill", callback)) return;
     postRequest(`/traineeDrills/${traineeDrillId}/increment`).then((d) => {
         d = checkError(d, "update", "trainee drill");
-        if (callback) callback(d);
+        callback?.(d);
     });
 }
 
@@ -310,14 +315,14 @@ export function deleteTraineeDrill(traineeDrillId, callback = null) {
     if (!checkInt(traineeDrillId, "delete", "trainee drill", callback)) return;
     deleteRequest(`/traineeDrills/${traineeDrillId}`).then((d) => {
         d = checkError(d, "delete", "trainee drill");
-        if (callback) callback(d);
+        callback?.(d);
     });
 }
 
 export function getAllAnswered(callback = null) {
     getRequest("/answered").then((answered) => {
         answered = checkError(answered, "get", "all answered", true);
-        if (callback) callback(answered);
+        callback?.(answered);
     });
 }
 
@@ -326,7 +331,7 @@ export function getAnswered(answeredId, callback = null) {
     if (!checkInt(answeredId, "get", "answered", callback)) return;
     getRequest(`/answered/${answeredId}`).then((q) => {
         q = checkError(q, "get", "answered");
-        if (callback) callback(q);
+        callback?.(q);
     });
 }
 
@@ -334,7 +339,7 @@ export function getTraineeAnswered(callback = null) {
     // infers trainee id from logged in user
     getRequest("/answered/trainee").then((answered) => {
         answered = checkError(answered, "get", "answered for trainee", true);
-        if (callback) callback(answered);
+        callback?.(answered);
     });
 }
 
@@ -342,7 +347,7 @@ export function getAssessorGraded(callback = null) {
     // infers assessor id from logged in user
     getRequest("/answered/assessor").then((graded) => {
         graded = checkError(graded, "get", "graded for assessor", true);
-        if (callback) callback(graded);
+        callback?.(graded);
     });
 }
 
@@ -350,7 +355,7 @@ export function getAssessorUngraded(callback = null) {
     // infers assessor id from logged in user
     getRequest("/answered/ungraded").then((ungraded) => {
         ungraded = checkError(ungraded, "get", "ungraded answered", true);
-        if (callback) callback(ungraded);
+        callback?.(ungraded);
     });
 }
 
@@ -358,7 +363,7 @@ export function addAnswered(question, callback = null) {
     if (checkNull(question, callback)) return;
     postRequest("/answered", question).then((q) => {
         q = checkError(q, "add", "answered");
-        if (callback) callback(q);
+        callback?.(q);
     });
 }
 
@@ -367,7 +372,7 @@ export function updateAnswered(question, callback = null) {
     if (checkNull(question, callback)) return;
     const answeredId = question.id;
     postRequest(`/answered/${answeredId}`, question).then((q) => {
-        q = checkError(q, "update", "answered");
-        if (callback) callback(q);
+        checkError(q, "update", "answered");
+        callback?.(q);
     });
 }
