@@ -297,6 +297,24 @@ if (process.env.NODE_ENV !== "production") {
         return response;
     }
 
+    app.get("/dev/login", (req, res) => {
+        const username = "jdlou";
+        console.log("logged in:", username);
+        models.User.findOne({ where: { username } })
+            .then((user) => {
+                return (
+                    user || models.User.add({ username, roles: ["Trainee"] })
+                );
+            })
+            .then((user) => {
+                user = user.toJSON();
+                if (user.roles.length === 1) {
+                    user.role = user.roles[0];
+                }
+                req.login(user, (err) => res.json(err || user));
+            });
+    });
+
     app.get("/clear", async (req, res) => {
         const response = await clearTables();
         res.json(response);
@@ -337,7 +355,7 @@ if (process.env.NODE_ENV !== "production") {
 // log in
 app.get("/login", passport.authenticate("cas"), (req, res) => {
     const { redirect } = req.query;
-    res.redirect(redirect ?? "/");
+    res.redirect(redirect ?? "/role");
 });
 
 // log out

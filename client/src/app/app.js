@@ -35,30 +35,22 @@ import {
 } from "./components/trainee";
 
 // protected route
-function Protected({
-    user: propsUser,
-    setUser: setAppUser,
-    role,
-    children,
-    ...rest
-}) {
-    const [state, setState] = useState({ loading: true });
+let count = 0;
+function Protected({ user, setUser, role, children, ...rest }) {
+    const [loading, setLoading] = useState(true);
 
-    function setUser(u) {
-        const user = setAppUser(u, role);
-        if (state.loading || user !== state.user) {
-            setState({ user });
-        }
-    }
+    console.log(rest.path, loading, count++);
 
     useEffect(() => {
-        isLoggedIn((user) => setUser(user));
+        isLoggedIn((user) => {
+            setUser(user, role);
+            if (loading) setLoading(false);
+        });
     });
 
-    if (state.loading) {
+    if (loading) {
         return null;
     }
-    const { user } = state;
     if (user) {
         if (role) {
             if (!user.roles.includes(role)) {
@@ -98,10 +90,10 @@ export default function App() {
         } else {
             // updating same user
             // role should already be set, so do nothing
-            if (u.roles.length === 1) return null;
+            if (u.roles.length === 1) return u;
             if (requiredRole) {
                 // if user already has role, do nothing
-                if (user.role === requiredRole) return null;
+                if (user.role === requiredRole) return u;
                 if (u.roles.includes(requiredRole)) {
                     // force user to take required role
                     if (u.role !== requiredRole) {
@@ -111,7 +103,7 @@ export default function App() {
                 }
             }
             // if user already has role, do nothing
-            if (user.role === u.role) return null;
+            if (user.role === u.role) return u;
         }
         setUserState(u);
         return u;
@@ -136,10 +128,7 @@ export default function App() {
     if (loading) return "Loading...";
 
     function handleLogOut() {
-        logOutUser(() => {
-            setUser(null);
-            window.location.assign("/");
-        });
+        logOutUser(() => setUser(null));
     }
 
     function handleChooseRole(role) {
@@ -165,11 +154,9 @@ export default function App() {
             <Switch>
                 {/* PUBLIC */}
 
-                {!user && (
-                    <Route exact path="/">
-                        <HomeView />
-                    </Route>
-                )}
+                <Route exact path="/">
+                    <HomeView />
+                </Route>
                 <Route exact path="/about">
                     <AboutView />
                 </Route>
@@ -178,12 +165,12 @@ export default function App() {
                 </Route>
 
                 <Route exact path="/login">
-                    Redirecting to login...
+                    <LogInView />
                 </Route>
 
                 {/* PROTECTED */}
 
-                <Protected path="/" {...props()}>
+                <Protected path="/role" {...props()}>
                     <ChooseRoleView
                         user={user}
                         onChooseRole={handleChooseRole}
@@ -267,7 +254,6 @@ export default function App() {
 
 function Navbar({ user, onLogOut }) {
     const { search: query } = useLocation();
-    let homeLink = "/";
     let buttons;
     const navbarLinks = [];
     if (!user) {
@@ -280,13 +266,14 @@ function Navbar({ user, onLogOut }) {
         navbarLinks.push(["/help", "Help"]);
     } else {
         let roleLabel = null;
-        if (user.role) {
+        if (!user.role) {
+            navbarLinks.push(["/role", "Choose Role"]);
+        } else {
             if (user.roles.length === 1) {
-                homeLink = "/dashboard";
                 roleLabel = <div className="navbar-text me-3">{user.role}</div>;
             } else {
                 roleLabel = (
-                    <Link to="/" className="nav-link text-secondary">
+                    <Link to="/role" className="nav-link text-secondary">
                         {user.role}
                     </Link>
                 );
@@ -308,20 +295,22 @@ function Navbar({ user, onLogOut }) {
                 <Link to="/profile" className="navbar-brand">
                     {user.username}
                 </Link>
-                <button
-                    type="button"
-                    className="btn btn-outline-danger"
-                    onClick={onLogOut}
-                >
-                    Log Out
-                </button>
+                <Link to="/">
+                    <button
+                        type="button"
+                        className="btn btn-outline-danger"
+                        onClick={onLogOut}
+                    >
+                        Log Out
+                    </button>
+                </Link>
             </React.Fragment>
         );
     }
     return (
         <nav className="navbar navbar-expand-lg navbar-light bg-light">
             <div className="container-fluid">
-                <Link to={homeLink} className="navbar-brand">
+                <Link to="/" className="navbar-brand">
                     Grader Drill
                 </Link>
                 <div className="collapse navbar-collapse">
@@ -339,9 +328,31 @@ function Navbar({ user, onLogOut }) {
     );
 }
 
+function LogInView() {
+    const [loading, setLoading] = useState(true);
+
+    const { search } = useLocation();
+
+    useEffect(() => {
+        if (process.env.NODE_ENV === "production") return;
+        // in development, mock log in
+        if (!loading) return;
+        fetch("/dev/login").then(() => setLoading(false));
+    });
+
+    if (loading) {
+        return "Logging in...";
+    }
+
+    // find redirect path
+    const redirect = search ? search.substring("?redirect=".length) : "/role";
+    window.location.assign(redirect);
+    return "Logged in";
+}
+
 function Dashboard({ user }) {
     if (!user.role) {
-        return <Redirect to="/" />;
+        return <Redirect to="/role" />;
     }
     switch (user.role) {
         case "Admin":
