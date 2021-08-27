@@ -72,7 +72,6 @@ export default function EditDrillView({ newDrill, drillId }) {
     }
 
     function handleDueDateChange(dueDate) {
-        console.log(dueDate, typeof dueDate);
         setDrill({ dueDate });
     }
 

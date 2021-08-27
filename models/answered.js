@@ -148,7 +148,6 @@ module.exports = (sequelize, DataTypes) => {
                 checkGraded() {
                     if (!this.graded) return;
                     if (!this.autograded && this.assessorId == null) {
-                        console.log(this);
                         throw new Error(
                             "A graded question must have an assessor."
                         );

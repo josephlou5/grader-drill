@@ -35,11 +35,8 @@ import {
 } from "./components/trainee";
 
 // protected route
-let count = 0;
 function Protected({ user, setUser, role, children, ...rest }) {
     const [loading, setLoading] = useState(true);
-
-    console.log(rest.path, loading, count++);
 
     useEffect(() => {
         isLoggedIn((user) => {

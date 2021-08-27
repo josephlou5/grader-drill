@@ -31,7 +31,7 @@ passport.use(
     new CASStrategy(
         { casURL: "https://fed.princeton.edu/cas" },
         (username, profile, done) => {
-            console.log("logged in:", username);
+            console.log("Logged in user:", username);
             models.User.findOne({ where: { username } })
                 .then((user) => {
                     return (
@@ -299,7 +299,7 @@ if (process.env.NODE_ENV !== "production") {
 
     app.get("/dev/login", (req, res) => {
         const username = "jdlou";
-        console.log("logged in:", username);
+        console.log("Logged in user:", username);
         models.User.findOne({ where: { username } })
             .then((user) => {
                 return (
@@ -390,7 +390,7 @@ function checkAuth(req, res) {
 function checkRole(req, res, role) {
     if (!checkAuth(req, res)) return false;
     if (req.user.roles.includes(role)) return true;
-    console.log("doesn't have proper role");
+    console.log("User doesn't have proper role");
     res.json({
         error: true,
         msg: `needs role "${role}" for permission`,
@@ -465,7 +465,7 @@ app.post("/api/users", (req, res) => {
     const user = { username, roles: ["Trainee"] };
     models.User.add(user)
         .then((user) => {
-            console.log("added user:", user);
+            console.log("Added user:", user);
             res.json(user);
         })
         .catch((err) => {
@@ -580,7 +580,7 @@ app.get("/api/questions/:questionId/:version", (req, res) => {
 function addQuestion(question, res) {
     return models.Question.add(question).catch((err) => {
         // TODO: test and fix
-        console.log(err);
+        // console.log(err);
         const response = { error: true, msg: [], message: [] };
         for (const error of err.errors) {
             response.message.push(error.message);
@@ -863,7 +863,6 @@ app.post("/api/traineeDrills", (req, res) => {
                 );
             })
             .catch((err) => {
-                console.log("error:", err);
                 const response = { error: true, msg: [], message: [] };
                 for (const error of err.errors) {
                     response.message.push(error.message);
@@ -1015,7 +1014,7 @@ app.post("/api/answered", (req, res) => {
         .then((q) => res.json(q))
         .catch((err) => {
             // TODO: test and fix
-            console.log(err);
+            // console.log(err);
             const response = { error: true, msg: [], message: [] };
             for (const error of err.errors) {
                 response.message.push(error.message);
