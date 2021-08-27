@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ResizeTextareas, ButtonHelp, setElementValid } from "../shared";
+import { ResizeTextareas, ButtonHelp, setElementValid } from "app/shared";
 import QuestionTextField from "./questionTextField";
 import CodeField from "./codeField";
 import AnswerField from "./answerField";

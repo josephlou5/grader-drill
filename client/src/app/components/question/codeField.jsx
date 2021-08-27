@@ -1,5 +1,5 @@
 import React from "react";
-import { resetValid, resetValidId } from "../shared";
+import { resetValid, resetValidId } from "app/shared";
 
 // editable textarea: https://css-tricks.com/creating-an-editable-textarea-that-supports-syntax-highlighted-code/
 // tab indent textarea: https://stackoverflow.com/questions/6637341/use-tab-to-indent-in-textarea

@@ -1,5 +1,5 @@
 import React from "react";
-import { Title } from "../shared";
+import { Title } from "app/shared";
 
 export default function PageNotFound() {
     return (

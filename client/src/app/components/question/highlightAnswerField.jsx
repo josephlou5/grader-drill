@@ -1,5 +1,5 @@
 import React from "react";
-import { TextareaLine, resetValidId } from "../shared";
+import { TextareaLine, resetValidId } from "app/shared";
 
 export default function HighlightAnswerField(props) {
     const { question, previewMode, editMode, noChange } = props;
@@ -37,7 +37,7 @@ export default function HighlightAnswerField(props) {
         const textProps = {
             className: textClasses,
             placeholder: "Comment",
-            value: highlight.answer || "",
+            value: highlight.answer ?? "",
         };
         let invalid = null;
         if (previewMode || noChange) {
@@ -67,7 +67,7 @@ export default function HighlightAnswerField(props) {
                         props.onChangeHighlightText(index, event.target.value)
                     }
                     placeholder="Existing comment"
-                    value={highlight.text || ""}
+                    value={highlight.text ?? ""}
                 />
             );
         } else if (highlight.text) {

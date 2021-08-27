@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useHistory, Link, Redirect } from "react-router-dom";
-import { useMountEffect, Title, ButtonHelp } from "../shared";
+import { useMountEffect, Title, ButtonHelp } from "app/shared";
 import {
     getAnswered,
     getAssessorUngraded,
     getQuestionVersion,
     updateAnswered,
-} from "../api";
-import QuestionView from "./questionView";
-import RubricField from "./rubricField";
+} from "app/api";
+import { QuestionView, RubricField } from "../question";
 
 export default function GradingView(props) {
     return (
@@ -182,18 +181,6 @@ function GradeQuestion({
     // event handlers
 
     function handleCheckChange(index) {
-        // const checked = !rubric[index].checked;
-        // const multiplier = checked ? 1 : -1;
-        // setRubric(
-        //     rubric.map((item, i) => {
-        //         if (i === index) {
-        //             return { ...item, checked };
-        //         } else {
-        //             return item;
-        //         }
-        //     })
-        // );
-        // setScore(score + multiplier * rubric[index].points);
         const updated = [...checked];
         updated[index] = !updated[index];
         setChecked(updated);

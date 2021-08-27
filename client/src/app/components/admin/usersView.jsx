@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Title, setElementValid, resetValid } from "../shared";
-import { getAllUsers, addUser, updateUserRoles } from "../api";
+import { Title, setElementValid, resetValid } from "app/shared";
+import { getAllUsers, addUser, updateUserRoles } from "app/api";
 
 export default function UsersView(props) {
     return (
@@ -65,7 +65,7 @@ function AddUserInput({ onAddUser }) {
         setElementValid("username", true);
 
         addUser(username, (user) => {
-            if (!user) {
+            if (user.error) {
                 feedback.innerHTML = "User already exists.";
                 setElementValid("username", false);
                 return;
@@ -172,7 +172,11 @@ function Roles({ myself, user, onUpdateRoles }) {
             setElementValid("roles", false);
             return;
         }
-        updateUserRoles({ ...user, roles }, () => {
+        updateUserRoles({ ...user, roles }, (res) => {
+            if (res.error) {
+                window.location.reload();
+                return;
+            }
             onUpdateRoles();
             setEditing(false);
         });

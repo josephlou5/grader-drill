@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { useMountEffect, Title, QuestionType } from "../shared";
-import { getAllAnswered, getAssessorGraded } from "../api";
+import { useMountEffect, Title, QuestionType } from "app/shared";
+import { getAllAnswered, getAssessorGraded } from "app/api";
 
 export default function AssessorDashboard(props) {
     return (

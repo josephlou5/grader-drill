@@ -1,6 +1,6 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
-import { resetValid } from "../shared";
+import { resetValid } from "app/shared";
 
 export default function QuestionTextField({
     question,

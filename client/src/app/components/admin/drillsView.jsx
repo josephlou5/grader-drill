@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Title, DueDate } from "../shared";
-import { deleteDrill, getAllDrills } from "../api";
+import { Title, DueDate } from "app/shared";
+import { deleteDrill, getAllDrills } from "app/api";
 
 export default function DrillsView() {
     return (

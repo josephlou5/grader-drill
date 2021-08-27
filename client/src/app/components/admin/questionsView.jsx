@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Title, ResizeTextareas, TextareaLine } from "../shared";
-import { getAllQuestions, deleteQuestion } from "../api";
+import { Title, ResizeTextareas, TextareaLine } from "app/shared";
+import { getAllQuestions, deleteQuestion } from "app/api";
 
 export default function QuestionsView() {
     return (

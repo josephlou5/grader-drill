@@ -11,31 +11,28 @@ import "./app.css";
 import { useMountEffect } from "./shared";
 import { isLoggedIn, setRoleCookie, logOutUser } from "./api";
 
-import PageNotFound from "./components/pageNotFound";
-import WrongRoleView from "./components/wrongRoleView";
-
-import HomeView from "./components/homeView";
-import AboutView from "./components/aboutView";
-import HelpView from "./components/helpView";
-
-import ProfileView from "./components/profileView";
-import ChooseRoleView from "./components/chooseRoleView";
-import AnsweredView from "./components/answeredView";
-
-import AdminDashboard from "./components/adminDashboard";
-import UsersView from "./components/usersView";
-import QuestionsView from "./components/questionsView";
-import EditQuestionView from "./components/editQuestionView";
-import DrillsView from "./components/drillsView";
-import EditDrillView from "./components/editDrillView";
-import DrillView from "./components/drillView";
-
-import AssessorDashboard from "./components/assessorDashboard";
-import GradingView from "./components/gradingView";
-
-import TraineeDashboard from "./components/traineeDashboard";
-import JoinDrillView from "./components/joinDrillView";
-import TrainingView from "./components/trainingView";
+import { PageNotFound, WrongRoleView } from "./components";
+import { HomeView, AboutView, HelpView } from "./components/public";
+import {
+    ProfileView,
+    ChooseRoleView,
+    AnsweredView,
+} from "./components/protected";
+import {
+    AdminDashboard,
+    UsersView,
+    QuestionsView,
+    EditQuestionView,
+    DrillsView,
+    EditDrillView,
+    DrillView,
+} from "./components/admin";
+import { AssessorDashboard, GradingView } from "./components/assessor";
+import {
+    TraineeDashboard,
+    JoinDrillView,
+    TrainingView,
+} from "./components/trainee";
 
 // protected route
 function Protected({ user, setUser, role, children, ...rest }) {

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, Redirect } from "react-router-dom";
-import { Title } from "../shared";
+import { Title } from "app/shared";
 
 export default function ChooseRoleView({ user, onChooseRole }) {
     if (user.roles.length === 1) {

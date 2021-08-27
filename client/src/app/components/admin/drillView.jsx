@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Title, DueDate } from "../shared";
-import { getDrill } from "../api";
+import { Title, DueDate } from "app/shared";
+import { getDrill } from "app/api";
 
 export default function DrillView() {
     const [invalid, setInvalid] = useState(false);

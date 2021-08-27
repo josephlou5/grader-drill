@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Title } from "../shared";
-import { getAnswered, getQuestionVersion } from "../api";
-import QuestionView from "./questionView";
-import RubricField from "./rubricField";
+import { Title } from "app/shared";
+import { getAnswered, getQuestionVersion } from "app/api";
+import { QuestionView, RubricField } from "../question";
 
 export default function AnsweredView({ user }) {
     // const admin = user?.role === "Admin" ? user : null;
@@ -17,14 +16,16 @@ export default function AnsweredView({ user }) {
     const { answeredId } = useParams();
 
     useEffect(() => {
-        getAnswered(answeredId, (q) => {
-            if (!q) {
+        getAnswered(answeredId, (answered) => {
+            if (!answered) {
                 setInvalid(true);
                 return;
             }
-            setAnswered(q);
-            getQuestionVersion(q.questionId, q.version, (question) =>
-                setQuestion(question)
+            setAnswered(answered);
+            getQuestionVersion(
+                answered.questionId,
+                answered.version,
+                (question) => setQuestion(question)
             );
         });
     }, [answeredId]);

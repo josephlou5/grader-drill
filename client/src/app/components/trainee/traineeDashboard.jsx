@@ -7,13 +7,13 @@ import {
     QuestionType,
     setElementValid,
     resetValid,
-} from "../shared";
+} from "app/shared";
 import {
     getTraineeAnswered,
     addTraineeDrill,
     getDrillByTrainee,
     deleteTraineeDrill,
-} from "../api";
+} from "app/api";
 
 export default function TraineeDashboard(props) {
     return (
@@ -338,15 +338,14 @@ function AnsweredTable({ drills, answered }) {
                 onChange={(event) => handleFilterDrill(event.target.value)}
             >
                 <option value="None">None</option>
-                {drills &&
-                    drills.map((traineeDrill) => {
-                        const drill = traineeDrill.Drill;
-                        return (
-                            <option key={drill.id} value={drill.id}>
-                                {drill.name}
-                            </option>
-                        );
-                    })}
+                {drills?.map((traineeDrill) => {
+                    const drill = traineeDrill.Drill;
+                    return (
+                        <option key={drill.id} value={drill.id}>
+                            {drill.name}
+                        </option>
+                    );
+                })}
             </select>
         </div>
     );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Title } from "../shared";
-import { addTraineeDrill } from "../api";
+import { Title } from "app/shared";
+import { addTraineeDrill } from "app/api";
 
 export default function JoinDrillView() {
     const [status, setStatus] = useState("Getting drill...");

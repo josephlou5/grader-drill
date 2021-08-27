@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Title, DueDate } from "../shared";
+import { Title, DueDate } from "app/shared";
 import {
     getTraineeAnswered,
     getAllQuestions,
     addAnswered,
     getDrillByTrainee,
     traineeDrillProgress,
-} from "../api";
-import QuestionView from "./questionView";
+} from "app/api";
+import { QuestionView } from "../question";
 
 export default function TrainingView(props) {
     return (

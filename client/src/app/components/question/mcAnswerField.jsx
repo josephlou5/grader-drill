@@ -1,6 +1,6 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
-import { TextareaLine, resetValid, resetValidId } from "../shared";
+import { TextareaLine, resetValid, resetValidId } from "app/shared";
 
 export default function MCAnswerField(props) {
     const { question, previewMode, editMode, noChange } = props;

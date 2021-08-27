@@ -8,8 +8,8 @@ import {
     ButtonHelp,
     setElementValid,
     resetValid,
-} from "../shared";
-import { getDrill, addDrill, updateDrill } from "../api";
+} from "app/shared";
+import { getDrill, addDrill, updateDrill } from "app/api";
 
 export default function EditDrillView({ newDrill, drillId }) {
     const today = new Date().toISOString().slice(0, 10);

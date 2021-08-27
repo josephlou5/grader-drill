@@ -7,17 +7,19 @@ import {
     TextareaLine,
     ButtonHelp,
     setElementValid,
-} from "../shared";
+} from "app/shared";
 import {
     getQuestion,
     addQuestion,
     updateQuestion,
     updateQuestionVersion,
-} from "../api";
-import QuestionTextField from "./questionTextField";
-import CodeField from "./codeField";
-import AnswerField from "./answerField";
-import RubricField from "./rubricField";
+} from "app/api";
+import {
+    QuestionTextField,
+    CodeField,
+    AnswerField,
+    RubricField,
+} from "../question";
 
 export default function EditQuestionView({ newQuestion, questionId }) {
     const initial = {
@@ -297,7 +299,7 @@ export default function EditQuestionView({ newQuestion, questionId }) {
                 q.rubric.forEach((item, index) => {
                     setValid(
                         "question-edit-rubric-points-" + index,
-                        item.points && item.points !== 0
+                        item.points !== 0
                     );
                     setValid(
                         "question-edit-rubric-" + index,
