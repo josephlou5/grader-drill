@@ -267,7 +267,11 @@ function Navbar({ user, onLogOut }) {
     } else {
         let roleLabel = null;
         if (!user.role) {
-            navbarLinks.push(["/role", "Choose Role"]);
+            roleLabel = (
+                <Link to="/role" className="nav-link text-secondary">
+                    Choose Role
+                </Link>
+            );
         } else {
             if (user.roles.length === 1) {
                 roleLabel = <div className="navbar-text me-3">{user.role}</div>;
