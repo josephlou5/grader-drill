@@ -1,5 +1,5 @@
 import React from "react";
-import { TextareaLine, resetValidId } from "app/shared";
+import { resetValidId } from "app/shared";
 
 export default function HighlightAnswerField(props) {
     const { question, previewMode, editMode, noChange } = props;
@@ -61,7 +61,7 @@ export default function HighlightAnswerField(props) {
         if (editMode && !previewMode) {
             // editing the existing comment
             input = (
-                <TextareaLine
+                <textarea
                     className={classes}
                     onChange={(event) =>
                         props.onChangeHighlightText(index, event.target.value)
@@ -86,7 +86,7 @@ export default function HighlightAnswerField(props) {
                         />
                     </div>
                     <div className="row">
-                        <TextareaLine
+                        <textarea
                             {...textProps}
                             style={{ borderRadius: "0 0 0.25rem 0" }}
                         />
@@ -95,7 +95,7 @@ export default function HighlightAnswerField(props) {
             );
         } else {
             // no existing comment
-            input = <TextareaLine {...textProps} />;
+            input = <textarea {...textProps} />;
         }
 
         let deleteButton = null;
