@@ -120,7 +120,7 @@ export default function MCAnswerField(props) {
                         tabIndex={-1}
                         onClick={(event) => event.preventDefault()}
                     />
-                    =<ReactMarkdown>{text}</ReactMarkdown>
+                    <ReactMarkdown>{text}</ReactMarkdown>
                 </div>
             );
         });
