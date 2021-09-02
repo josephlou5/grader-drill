@@ -96,11 +96,12 @@ db.Answered.belongsTo(db.Assessor, {
     foreignKey: "assessorId",
 });
 
-// ordered scopes
-Object.values(db).forEach((model) =>
-    model.addScope("ordered", { order: [["id", "ASC"]] })
-);
+// (default) ordered scopes
+Object.values(db).forEach((model) => {
+    model.addScope("ordered", { order: [["id", "ASC"]] });
+});
 
+db.Drill = db.Drill.scope("ordered");
 db.Answered = db.Answered.scope("ordered");
 
 // eager loading scopes
@@ -162,7 +163,7 @@ db.Drill.addScope("includeDrill", {
         include: db.Answered,
     },
 });
-db.Drill.IncludeDrill = db.Drill.scope("includeDrill");
+db.Drill.IncludeDrill = db.Drill.scope("ordered", "includeDrill");
 db.Answered.addScope("includeTrainee", {
     include: db.Trainee.Include,
 });
