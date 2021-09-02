@@ -210,7 +210,7 @@ if (process.env.NODE_ENV !== "production") {
                     },
                 ],
                 rubric: [false],
-                // graded: true,
+                graded: true,
             },
             {
                 questionId: 2,
@@ -990,7 +990,7 @@ app.get("/api/answered/ungraded", (req, res) => {
             // ungraded
             graded: false,
             // don't grade your own questions
-            // traineeId: { [Sequelize.Op.ne]: assessorId },
+            traineeId: { [Sequelize.Op.ne]: assessorId },
         },
         order: [
             ["questionId", "ASC"],
