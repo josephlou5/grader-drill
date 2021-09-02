@@ -14,12 +14,12 @@ export default function TrainingView(props) {
         <React.Fragment>
             <Title title="Training" />
             <h1>Training</h1>
-            <Training {...props} />
+            <ChooseDrill {...props} />
         </React.Fragment>
     );
 }
 
-function Training() {
+function ChooseDrill() {
     const [drills, setDrills] = useState(null);
     const [drill, setDrill] = useState(null);
 
@@ -59,7 +59,7 @@ function Training() {
             );
         }
         return (
-            <TrainingDrill
+            <TrainDrill
                 traineeDrill={drill}
                 backButton={backButton}
                 onDrillDone={handleDrillDone}
@@ -129,7 +129,7 @@ function Training() {
     );
 }
 
-function TrainingDrill({ traineeDrill, backButton, onDrillDone }) {
+function TrainDrill({ traineeDrill, backButton, onDrillDone }) {
     const [localProgress, setProgress] = useState(traineeDrill.progress);
 
     function handleProgress() {
@@ -146,7 +146,7 @@ function TrainingDrill({ traineeDrill, backButton, onDrillDone }) {
                     Progress: {localProgress} / {drill.numQuestions}
                 </p>
             </div>
-            <TrainingQuestion
+            <TrainQuestion
                 traineeDrill={traineeDrill}
                 backButton={backButton}
                 onDrillDone={onDrillDone}
@@ -156,12 +156,7 @@ function TrainingDrill({ traineeDrill, backButton, onDrillDone }) {
     );
 }
 
-function TrainingQuestion({
-    traineeDrill,
-    backButton,
-    onDrillDone,
-    onProgress,
-}) {
+function TrainQuestion({ traineeDrill, backButton, onDrillDone, onProgress }) {
     const [needsQuestion, setNeedsQuestion] = useState(true);
     const [question, setQuestion] = useState(null);
     const [noMoreQuestions, setNoMoreQuestions] = useState(false);

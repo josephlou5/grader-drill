@@ -182,9 +182,10 @@ export function getQuestionVersion(questionId, version, callback = null) {
     if (checkNull(version, callback)) return;
     if (!checkInt(questionId, "get", "question version", callback)) return;
     if (!checkInt(version, "get", "question version", callback)) return;
-    getRequest(`/questions/${questionId}/${version}`).then((q) => {
+    return getRequest(`/questions/${questionId}/${version}`).then((q) => {
         q = checkError(q, "get", "question version");
         callback?.(q);
+        return q;
     });
 }
 
@@ -227,6 +228,13 @@ export function deleteQuestion(questionId, callback = null) {
 export function getAllDrills(callback = null) {
     getRequest("/drills").then((drills) => {
         drills = checkError(drills, "get", "all drills", true);
+        callback?.(drills);
+    });
+}
+
+export function getAllDrillsAndAnswered(callback = null) {
+    getRequest("/drills/answered").then((drills) => {
+        drills = checkError(drills, "get", "all drills and answered", true);
         callback?.(drills);
     });
 }

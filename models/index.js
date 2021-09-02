@@ -176,16 +176,19 @@ db.Answered.addScope("includeDrill", {
     },
 });
 db.Answered.IncludeAll = db.Answered.scope(
+    "ordered",
     "includeTrainee",
     "includeAssessor",
     "includeDrill"
 );
 db.Answered.IncludeUsers = db.Answered.scope(
+    "ordered",
     "includeTrainee",
     "includeAssessor"
 );
-db.Answered.IncludeDrill = db.Answered.scope("includeDrill");
+db.Answered.IncludeDrill = db.Answered.scope("ordered", "includeDrill");
 db.Answered.IncludeTraineeDrill = db.Answered.scope(
+    "ordered",
     "includeTrainee",
     "includeDrill"
 );

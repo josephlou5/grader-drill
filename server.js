@@ -124,6 +124,7 @@ if (process.env.NODE_ENV !== "production") {
                         text: "Says that nothing is wrong with the code",
                     },
                 ],
+                tags: "course:126",
             },
             {
                 id: 1,
@@ -140,6 +141,7 @@ if (process.env.NODE_ENV !== "production") {
                         text: "Says everything is wrong with the code",
                     },
                 ],
+                tags: "course:126",
             },
             {
                 id: 2,
@@ -156,6 +158,7 @@ if (process.env.NODE_ENV !== "production") {
                     "Always use `Integer` because it's an object.",
                 ],
                 correct: 1,
+                tags: "course:126",
             },
             {
                 id: 3,
@@ -175,6 +178,7 @@ if (process.env.NODE_ENV !== "production") {
                         text: "Highlights `end`",
                     },
                 ],
+                tags: "course:126",
             },
         ],
         answered: [
@@ -205,14 +209,8 @@ if (process.env.NODE_ENV !== "production") {
                         answer: "this is another highlight",
                     },
                 ],
-                rubric: [
-                    {
-                        points: 1,
-                        text: "Says that nothing is wrong with the code",
-                        checked: false,
-                    },
-                ],
-                graded: true,
+                rubric: [false],
+                // graded: true,
             },
             {
                 questionId: 2,
@@ -248,16 +246,7 @@ if (process.env.NODE_ENV !== "production") {
                         byUser: true,
                     },
                 ],
-                rubric: [
-                    {
-                        points: 1,
-                        text: "Highlights `x`",
-                    },
-                    {
-                        points: 1,
-                        text: "Highlights `end`",
-                    },
-                ],
+                rubric: [false, false],
                 graded: false,
             },
         ],
@@ -297,6 +286,32 @@ if (process.env.NODE_ENV !== "production") {
         return response;
     }
 
+    async function addData() {
+        await models.User.add({
+            username: "jdlou",
+            roles: ["Admin", "Assessor", "Trainee"],
+        });
+        for (let num = 1; num <= 3; num++) {
+            await models.User.add({
+                username: `trainee${num}`,
+                roles: ["Trainee"],
+            });
+        }
+        for (const d of data.drills) {
+            await models.Drill.add(d);
+        }
+        for (const d of data.traineeDrills) {
+            await models.TraineeDrill.add(d);
+        }
+        for (const q of data.questions) {
+            await models.Question.add(q);
+        }
+        for (const q of data.answered) {
+            await models.Answered.addRaw(q);
+        }
+        return { addedData: true };
+    }
+
     app.get("/dev/login", (req, res) => {
         const username = "jdlou";
         console.log("Logged in user:", username);
@@ -320,32 +335,16 @@ if (process.env.NODE_ENV !== "production") {
         res.json(response);
     });
 
+    app.get("/add", async (req, res) => {
+        const response = await addData();
+        res.json(response);
+    });
+
     app.get("/reset", async (req, res) => {
         // clear all the tables
         const response = await clearTables();
         // add new data
-        await models.User.add({
-            username: "assessor",
-            roles: ["Admin", "Assessor", "Trainee"],
-        });
-        for (let num = 1; num <= 3; num++) {
-            await models.User.add({
-                username: `trainee${num}`,
-                roles: ["Trainee"],
-            });
-        }
-        for (const d of data.drills) {
-            await models.Drill.add(d);
-        }
-        for (const d of data.traineeDrills) {
-            await models.TraineeDrill.add(d);
-        }
-        for (const q of data.questions) {
-            await models.Question.add(q);
-        }
-        for (const q of data.answered) {
-            await models.Answered.addRaw(q);
-        }
+        Object.assign(response, await addData());
         res.json(response);
     });
 }
@@ -673,6 +672,13 @@ app.delete("/api/questions/:questionId", (req, res) => {
     });
 });
 
+// get all drills and answered
+app.get("/api/drills/answered", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Assessor")) return;
+    models.Drill.IncludeDrill.findAll().then((drills) => res.json(drills));
+});
+
 // get all drills
 app.get("/api/drills", (req, res) => {
     if (!checkAuth(req, res)) return;
@@ -863,6 +869,15 @@ app.post("/api/traineeDrills", (req, res) => {
                 );
             })
             .catch((err) => {
+                if (err.name === "SequelizeForeignKeyConstraintError") {
+                    const response = {
+                        error: true,
+                        msg: `trainee ${traineeId} does not exist`,
+                        message: err.original.detail,
+                    };
+                    res.json(response);
+                    return;
+                }
                 const response = { error: true, msg: [], message: [] };
                 for (const error of err.errors) {
                     response.message.push(error.message);
@@ -975,7 +990,7 @@ app.get("/api/answered/ungraded", (req, res) => {
             // ungraded
             graded: false,
             // don't grade your own questions
-            traineeId: { [Sequelize.Op.ne]: assessorId },
+            // traineeId: { [Sequelize.Op.ne]: assessorId },
         },
         order: [
             ["questionId", "ASC"],
