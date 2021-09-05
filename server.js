@@ -386,13 +386,18 @@ function checkAuth(req, res) {
     return false;
 }
 
-function checkRole(req, res, role) {
+function checkRole(req, res, ...roles) {
     if (!checkAuth(req, res)) return false;
-    if (req.user.roles.includes(role)) return true;
+    const userRoles = req.user.roles;
+    for (const role of roles) {
+        if (userRoles.includes(role)) {
+            return true;
+        }
+    }
     console.log("User doesn't have proper role");
     res.json({
         error: true,
-        msg: `needs role "${role}" for permission`,
+        msg: `needs role "${roles}" for permission`,
         insufficientRole: true,
     });
     return false;
@@ -953,10 +958,8 @@ app.delete("/api/traineeDrills/:traineeDrillId", (req, res) => {
 // get all answered
 app.get("/api/answered", (req, res) => {
     if (!checkAuth(req, res)) return;
-    if (!checkRole(req, res, "Assessor")) return;
-    models.Answered.IncludeUsers.findAll().then((answered) =>
-        res.json(answered)
-    );
+    if (!checkRole(req, res, "Admin", "Assessor")) return;
+    models.Answered.IncludeAll.findAll().then((answered) => res.json(answered));
 });
 
 // get all answered by logged in trainee
@@ -1059,6 +1062,24 @@ app.post("/api/answered/:answeredId", (req, res) => {
     // set graded
     answered.graded = true;
     models.Answered.updateById(answeredId, answered).then((question) => {
+        if (!question) {
+            res.json({
+                error: true,
+                msg: `answered ${answeredId} does not exist`,
+                dneError: true,
+            });
+        } else {
+            res.json(question);
+        }
+    });
+});
+
+// delete answered
+app.delete("/api/answered/:answeredId", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
+    const { answeredId } = req.params;
+    models.Answered.delete(answeredId).then((question) => {
         if (!question) {
             res.json({
                 error: true,

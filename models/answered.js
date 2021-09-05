@@ -88,6 +88,13 @@ module.exports = (sequelize, DataTypes) => {
             if (num === 0) return null;
             return await Answered.findByPk(answeredId);
         }
+
+        static async delete(answeredId) {
+            const answered = await Answered.findByPk(answeredId);
+            if (!answered) return null;
+            await answered.destroy();
+            return answered;
+        }
     }
     Answered.init(
         {

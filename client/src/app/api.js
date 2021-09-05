@@ -383,3 +383,12 @@ export function updateAnswered(question, callback = null) {
         callback?.(q);
     });
 }
+
+export function deleteAnswered(answeredId, callback = null) {
+    if (checkNull(answeredId, callback)) return;
+    if (!checkInt(answeredId, "delete", "answered", callback)) return;
+    deleteRequest(`/answered/${answeredId}`).then((q) => {
+        q = checkError(q, "delete", "answered");
+        callback?.(q);
+    });
+}

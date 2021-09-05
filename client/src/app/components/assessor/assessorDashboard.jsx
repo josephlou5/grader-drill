@@ -158,20 +158,20 @@ function AnsweredTable({ answered, anonymous }) {
             traineeStr = question.Trainee.User.username;
         }
 
-        let assessorStr;
-        if (!question.graded) {
-            assessorStr = "-";
-        } else if (question.autograded) {
-            assessorStr = "Auto-graded";
-        } else if (anonymous) {
-            assessorStr = "Graded";
+        let assessorStr, score;
+        if (question.graded) {
+            if (question.autograded) {
+                assessorStr = "Auto-graded";
+            } else if (anonymous) {
+                assessorStr = "Graded";
+            } else {
+                assessorStr = question.Assessor.User.username;
+            }
+            // shouldn't be null because it's graded, but just in case
+            score = question.score ?? "N/A";
         } else {
-            assessorStr = question.Assessor.User.username;
-        }
-
-        let score = "-";
-        if (question.score != null) {
-            score = question.score;
+            assessorStr = "-";
+            score = "-";
         }
 
         const link = "/answered/" + answeredId;
@@ -179,7 +179,7 @@ function AnsweredTable({ answered, anonymous }) {
             <tr key={answeredId} className={classes}>
                 <th>{index + 1}</th>
                 <td>{traineeStr}</td>
-                <td>{assessorStr}</td>
+                <td>{question.TraineeDrill.Drill.name}</td>
                 <td>{question.questionId}</td>
                 <td>
                     <QuestionType
@@ -187,6 +187,7 @@ function AnsweredTable({ answered, anonymous }) {
                         version={question.version}
                     />
                 </td>
+                <td>{assessorStr}</td>
                 <td>{score}</td>
                 <td>
                     <Link to={link}>
@@ -208,9 +209,10 @@ function AnsweredTable({ answered, anonymous }) {
                 <tr>
                     <th></th>
                     <th>Trainee</th>
-                    <th>Assessor</th>
+                    <th>Drill</th>
                     <th>Question Id</th>
                     <th>Question Type</th>
+                    <th>Assessor</th>
                     <th>Score</th>
                     <th></th>
                 </tr>
