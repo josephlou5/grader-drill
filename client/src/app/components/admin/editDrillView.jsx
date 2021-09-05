@@ -4,11 +4,11 @@ import {
     useMountEffect,
     Title,
     ResizeTextareas,
-    TextareaLine,
     ButtonHelp,
     setElementValid,
     resetValid,
 } from "app/shared";
+import { EditTags } from "./shared";
 import { getDrill, addDrill, updateDrill } from "app/api";
 
 export default function EditDrillView({ newDrill, drillId }) {
@@ -17,7 +17,7 @@ export default function EditDrillView({ newDrill, drillId }) {
         name: "",
         numQuestions: 1,
         dueDate: today,
-        tags: "",
+        tags: [],
     };
     const [drill, setDrillState] = useState(initial);
 
@@ -75,7 +75,19 @@ export default function EditDrillView({ newDrill, drillId }) {
         setDrill({ dueDate });
     }
 
-    function handleTagsChange(tags) {
+    function handleAddTag() {
+        setDrill({ tags: [...drill.tags, ""] });
+    }
+
+    function handleChangeTag(index, tag) {
+        const tags = [...drill.tags];
+        tags[index] = tag;
+        setDrill({ tags });
+    }
+
+    function handleDeleteTag(index) {
+        const tags = [...drill.tags];
+        tags.splice(index, 1);
         setDrill({ tags });
     }
 
@@ -181,16 +193,14 @@ export default function EditDrillView({ newDrill, drillId }) {
                     </div>
                 </div>
 
-                <div className="row align-items-center">
+                <div className="row">
                     <div className="col-2">Tags</div>
                     <div className="col">
-                        <TextareaLine
-                            className="form-control textarea"
-                            placeholder='E.g., "difficulty:hard"'
-                            value={drill.tags}
-                            onChange={(event) =>
-                                handleTagsChange(event.target.value)
-                            }
+                        <EditTags
+                            tags={drill.tags}
+                            onAddTag={handleAddTag}
+                            onChangeTag={handleChangeTag}
+                            onDeleteTag={handleDeleteTag}
                         />
                     </div>
                 </div>

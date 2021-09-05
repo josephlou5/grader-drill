@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Title, DueDate } from "app/shared";
+import { Title, DueDate, hasTags } from "app/shared";
 import {
     getTraineeAnswered,
     getAllQuestions,
@@ -177,7 +177,7 @@ function TrainQuestion({ traineeDrill, backButton, onDrillDone, onProgress }) {
                 for (const q of questions) {
                     if (answeredIds.has(q.id)) continue;
                     // fits the drill requirements
-                    if (!q.tags.includes(drill.tags)) continue;
+                    if (!hasTags(drill.tags, q.tags)) continue;
                     // if questions were skipped, don't answer them again
                     if (question && q.id <= question.id) continue;
                     setNeedsQuestion(false);

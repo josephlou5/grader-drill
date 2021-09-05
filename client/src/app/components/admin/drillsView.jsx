@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Title, DueDate } from "app/shared";
+import { TagsView } from "./shared";
 import { deleteDrill, getAllDrills } from "app/api";
 
 export default function DrillsView() {
@@ -57,7 +58,9 @@ function DrillsTable() {
                 <td>
                     <DueDate drill={drill} />
                 </td>
-                <td>{tags || "None"}</td>
+                <td>
+                    <TagsView tags={tags} />
+                </td>
                 <td>
                     <Link to={link}>
                         <button

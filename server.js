@@ -74,13 +74,13 @@ if (process.env.NODE_ENV !== "production") {
                 name: "COS126",
                 numQuestions: 3,
                 dueDate: "2021-09-01",
-                tags: "course:126",
+                tags: ["course:126"],
             },
             {
                 name: "COS226",
                 numQuestions: 3,
                 dueDate: "2021-09-01",
-                tags: "course:226",
+                tags: ["course:226"],
             },
         ],
         traineeDrills: [
@@ -124,7 +124,7 @@ if (process.env.NODE_ENV !== "production") {
                         text: "Says that nothing is wrong with the code",
                     },
                 ],
-                tags: "course:126",
+                tags: ["course:126"],
             },
             {
                 id: 1,
@@ -141,7 +141,7 @@ if (process.env.NODE_ENV !== "production") {
                         text: "Says everything is wrong with the code",
                     },
                 ],
-                tags: "course:126",
+                tags: ["course:126"],
             },
             {
                 id: 2,
@@ -158,7 +158,7 @@ if (process.env.NODE_ENV !== "production") {
                     "Always use `Integer` because it's an object.",
                 ],
                 correct: 1,
-                tags: "course:126",
+                tags: ["course:126"],
             },
             {
                 id: 3,
@@ -178,7 +178,7 @@ if (process.env.NODE_ENV !== "production") {
                         text: "Highlights `end`",
                     },
                 ],
-                tags: "course:126",
+                tags: ["course:126"],
             },
         ],
         answered: [

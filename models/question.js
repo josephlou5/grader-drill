@@ -126,10 +126,23 @@ module.exports = (sequelize, DataTypes) => {
             correct: {
                 type: DataTypes.INTEGER,
             },
+            // the tags array as a JSON string
             tags: {
                 type: DataTypes.TEXT,
                 allowNull: false,
-                defaultValue: "",
+                defaultValue: "[]",
+                get() {
+                    return JSON.parse(this.getDataValue("tags"));
+                },
+                set(value) {
+                    // remove empty tags
+                    const tags = value.flatMap((val) => {
+                        const tag = val.trim();
+                        if (tag === "") return [];
+                        return [tag];
+                    });
+                    this.setDataValue("tags", JSON.stringify(tags));
+                },
             },
         },
         {

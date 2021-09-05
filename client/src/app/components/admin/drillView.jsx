@@ -38,7 +38,7 @@ export default function DrillView() {
         );
     }
 
-    const { name, code, numQuestions } = drill;
+    const { name, code, numQuestions, tags } = drill;
     const link = "/drills/edit/" + drillId;
     return (
         <React.Fragment>
@@ -47,9 +47,10 @@ export default function DrillView() {
             <div>Name: {name}</div>
             <div>Code: {code}</div>
             <div>Number Questions: {numQuestions}</div>
-            <div className="mb-2">
+            <div>
                 Due Date: <DueDate drill={drill} />
             </div>
+            <div>Tags: {tags.join(", ") || "None"}</div>
             <Link to={link}>
                 <button type="button" className="btn btn-success">
                     Edit Drill

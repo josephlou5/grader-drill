@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Title, ResizeTextareas, TextareaLine } from "app/shared";
+import { Title, hasTagsSubstring } from "app/shared";
+import { TagsView } from "./shared";
 import { getAllQuestions, deleteQuestion } from "app/api";
 
 export default function QuestionsView() {
@@ -18,16 +19,16 @@ export default function QuestionsView() {
     );
 }
 
-const QuestionsTable = () => {
-    const [needsQuestions, setNeedsQuestions] = useState(true);
-    const [questions, setQuestions] = useState(null);
-    const [filter, setFilter] = useState("");
+function QuestionsTable() {
+    const [{ needsQuestions, questions }, setState] = useState({
+        needsQuestions: true,
+    });
+    const [filters, setFilters] = useState([]);
 
     useEffect(() => {
         if (!needsQuestions) return;
-        getAllQuestions((data) => {
-            setNeedsQuestions(false);
-            setQuestions(data);
+        getAllQuestions((questions) => {
+            setState({ questions });
         });
     });
 
@@ -39,36 +40,58 @@ const QuestionsTable = () => {
         return <p>No questions!</p>;
     }
 
+    function handleAddFilter() {
+        setFilters([...filters, ""]);
+    }
+
+    function handleChangeFilter(index, tag) {
+        const updated = [...filters];
+        updated[index] = tag;
+        setFilters(updated);
+    }
+
+    function handleDeleteFilter(index) {
+        const updated = [...filters];
+        updated.splice(index, 1);
+        setFilters(updated);
+    }
+
     function handleDeleteQuestion(questionId) {
         deleteQuestion(questionId, () => {
-            setNeedsQuestions(true);
+            setState({ needsQuestions: true, questions });
         });
     }
 
     const rows = questions.map((question) => {
-        const questionId = question.id;
+        const {
+            id: questionId,
+            version,
+            questionType,
+            questionText,
+            tags,
+        } = question;
 
         let classes = undefined;
-        if (!question.tags.includes(filter)) {
+        if (!hasTagsSubstring(tags, filters)) {
             classes = "d-none";
         }
 
-        let preview = question.questionText;
+        let preview = questionText;
         const PREVIEW_LENGTH = 50;
         if (preview.length > PREVIEW_LENGTH) {
             preview = preview.substring(0, PREVIEW_LENGTH - 3) + "...";
         }
 
-        const tags = question.tags;
-
         const link = "/questions/edit/" + questionId;
         return (
-            <tr key={`${questionId}v${question.version}`} className={classes}>
-                <th>{question.id}</th>
-                <td>{question.version}</td>
-                <td>{question.questionType || "N/A"}</td>
+            <tr key={`${questionId}v${version}`} className={classes}>
+                <th>{questionId}</th>
+                <td>{version}</td>
+                <td>{questionType}</td>
                 <td>{preview}</td>
-                <td>{tags || "None"}</td>
+                <td>
+                    <TagsView tags={tags} />
+                </td>
                 <td>
                     <Link to={link}>
                         <button
@@ -92,19 +115,12 @@ const QuestionsTable = () => {
 
     return (
         <React.Fragment>
-            <ResizeTextareas />
-            <div className="container-fluid mb-2">
-                <div className="input-group">
-                    <span className="input-group-text">Filter Tags</span>
-                    <TextareaLine
-                        className="form-control textarea"
-                        id="filter-tags"
-                        placeholder='E.g., "difficulty:hard"'
-                        value={filter}
-                        onChange={(event) => setFilter(event.target.value)}
-                    />
-                </div>
-            </div>
+            <FilterTags
+                filters={filters}
+                onAddFilter={handleAddFilter}
+                onChangeFilter={handleChangeFilter}
+                onDeleteFilter={handleDeleteFilter}
+            />
             <table className="table table-hover align-middle">
                 <thead className="table-light">
                     <tr>
@@ -120,4 +136,37 @@ const QuestionsTable = () => {
             </table>
         </React.Fragment>
     );
-};
+}
+
+function FilterTags({ filters, onAddFilter, onChangeFilter, onDeleteFilter }) {
+    const tags = filters.map((tag, index) => (
+        <div key={index}>
+            <input
+                type="text"
+                className="mb-1"
+                placeholder="Tag"
+                value={tag}
+                onChange={(event) => onChangeFilter(index, event.target.value)}
+            />
+            <button
+                type="button"
+                className="btn btn-close"
+                onClick={() => onDeleteFilter(index)}
+            />
+        </div>
+    ));
+
+    return (
+        <React.Fragment>
+            <h3>Filter Tags</h3>
+            {tags}
+            <button
+                type="button"
+                className="btn btn-success btn-sm"
+                onClick={onAddFilter}
+            >
+                Add tag
+            </button>
+        </React.Fragment>
+    );
+}

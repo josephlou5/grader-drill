@@ -4,10 +4,10 @@ import {
     useMountEffect,
     Title,
     ResizeTextareas,
-    TextareaLine,
     ButtonHelp,
     setElementValid,
 } from "app/shared";
+import { EditTags } from "./shared";
 import {
     getQuestion,
     addQuestion,
@@ -34,7 +34,7 @@ export default function EditQuestionView({ newQuestion, questionId }) {
         answerChoices: [],
         correct: null,
         rubric: [],
-        tags: "",
+        tags: [],
     };
 
     const [question, setQuestionState] = useState(initial);
@@ -261,8 +261,20 @@ export default function EditQuestionView({ newQuestion, questionId }) {
         setQuestion({ rubric });
     }
 
-    function handleChangeTags(text) {
-        setQuestion({ tags: text });
+    function handleAddTag() {
+        setQuestion({ tags: [...question.tags, ""] });
+    }
+
+    function handleChangeTag(index, tag) {
+        const tags = [...question.tags];
+        tags[index] = tag;
+        setQuestion({ tags });
+    }
+
+    function handleDeleteTag(index) {
+        const tags = [...question.tags];
+        tags.splice(index, 1);
+        setQuestion({ tags });
     }
 
     function handleCancel() {
@@ -395,20 +407,6 @@ export default function EditQuestionView({ newQuestion, questionId }) {
         );
     }
 
-    const tags = (
-        <div className="row">
-            <div className="col-6">
-                <h1>Tags</h1>
-                <TextareaLine
-                    className="form-control textarea"
-                    placeholder='E.g., "difficulty:hard"'
-                    value={question.tags}
-                    onChange={(event) => handleChangeTags(event.target.value)}
-                />
-            </div>
-        </div>
-    );
-
     return (
         <React.Fragment>
             <Title title={title} />
@@ -460,7 +458,17 @@ export default function EditQuestionView({ newQuestion, questionId }) {
             {question.hasCodeField && <CodeField {...codeFieldProps} />}
             {question.hasAnswerField && <AnswerField {...answerFieldProps} />}
             {rubricField}
-            {tags}
+            <div className="row">
+                <div className="col-6">
+                    <h1>Tags</h1>
+                    <EditTags
+                        tags={question.tags}
+                        onAddTag={handleAddTag}
+                        onChangeTag={handleChangeTag}
+                        onDeleteTag={handleDeleteTag}
+                    />
+                </div>
+            </div>
 
             <div>
                 <button

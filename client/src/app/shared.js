@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { getQuestionVersion } from "./api.js";
 
 export function useMountEffect(callback) {
@@ -123,4 +123,26 @@ export function resetValid(element) {
 
 export function resetValidId(elementId) {
     resetValid(document.getElementById(elementId));
+}
+
+export function hasTags(drillTags, questionTags) {
+    // tags work on an "or" system,
+    // so as long as the question has one tag,
+    // it counts as part of the drill
+    for (const tag of questionTags) {
+        if (drillTags.includes(tag)) return true;
+    }
+    return false;
+}
+
+export function hasTagsSubstring(tags, searching) {
+    let numSearched = 0;
+    for (const tag1 of searching) {
+        if (tag1 === "") continue;
+        for (const tag2 of tags) {
+            if (tag2.includes(tag1)) return true;
+        }
+        numSearched++;
+    }
+    return numSearched === 0;
 }
