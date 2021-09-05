@@ -177,6 +177,15 @@ export function getQuestion(questionId, callback = null) {
     });
 }
 
+export function getQuestionVersions(questionId, callback = null) {
+    if (checkNull(questionId, callback)) return;
+    if (!checkInt(questionId, "get", "question versions", callback)) return;
+    getRequest(`/questions/${questionId}/versions`).then((q) => {
+        q = checkError(q, "get", "question versions");
+        callback?.(q);
+    });
+}
+
 export function getQuestionVersion(questionId, version, callback = null) {
     if (checkNull(questionId, callback)) return;
     if (checkNull(version, callback)) return;
@@ -339,6 +348,15 @@ export function getAnswered(answeredId, callback = null) {
     getRequest(`/answered/${answeredId}`).then((q) => {
         q = checkError(q, "get", "answered");
         callback?.(q);
+    });
+}
+
+export function getQuestionAnswered(questionId, callback = null) {
+    if (checkNull(questionId, callback)) return;
+    if (!checkInt(questionId, "get", "question answered", callback)) return;
+    getRequest(`/answered/question/${questionId}`).then((answered) => {
+        answered = checkError(answered, "get", "question answered", true);
+        callback?.(answered);
     });
 }
 

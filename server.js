@@ -559,6 +559,20 @@ app.get("/api/questions/:questionId", (req, res) => {
     });
 });
 
+// get all question versions
+app.get("/api/questions/:questionId/versions", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
+    const { questionId } = req.params;
+    models.Question.findAll({
+        where: { id: questionId },
+        order: [["version", "ASC"]],
+        paranoid: false,
+    }).then((questions) => {
+        res.json(questions);
+    });
+});
+
 // get question by id and version
 app.get("/api/questions/:questionId/:version", (req, res) => {
     if (!checkAuth(req, res)) return;
@@ -960,6 +974,16 @@ app.get("/api/answered", (req, res) => {
     if (!checkAuth(req, res)) return;
     if (!checkRole(req, res, "Admin", "Assessor")) return;
     models.Answered.IncludeAll.findAll().then((answered) => res.json(answered));
+});
+
+// get all answered by question
+app.get("/api/answered/question/:questionId", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
+    const { questionId } = req.params;
+    models.Answered.IncludeAll.findAll({ where: { questionId } }).then(
+        (answered) => res.json(answered)
+    );
 });
 
 // get all answered by logged in trainee

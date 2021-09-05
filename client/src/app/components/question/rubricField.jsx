@@ -29,7 +29,7 @@ function formatPoints(points) {
 
 function Rubric({ rubric, checked, previewMode, noChange, onCheckChange }) {
     if (previewMode || noChange) {
-        // answered view or preview on edit question
+        // answered view or preview on edit/view question
         return rubric.map((item, index) => {
             let text = item.text;
             if (previewMode) {

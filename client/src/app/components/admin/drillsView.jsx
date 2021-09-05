@@ -47,7 +47,7 @@ function DrillsTable() {
 
     const rows = drills.map((drill, index) => {
         const { id: drillId, name, code, numQuestions, tags } = drill;
-        const link = "/drills/" + drillId;
+        const viewLink = "/drills/" + drillId;
         const editLink = "/drills/edit/" + drillId;
         return (
             <tr key={drillId}>
@@ -62,7 +62,7 @@ function DrillsTable() {
                     <TagsView tags={tags} />
                 </td>
                 <td>
-                    <Link to={link}>
+                    <Link to={viewLink}>
                         <button
                             type="button"
                             className="btn btn-success btn-sm"

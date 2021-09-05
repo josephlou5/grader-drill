@@ -82,7 +82,8 @@ function QuestionsTable() {
             preview = preview.substring(0, PREVIEW_LENGTH - 3) + "...";
         }
 
-        const link = "/questions/edit/" + questionId;
+        const viewLink = "/questions/" + questionId;
+        const editLink = "/questions/edit/" + questionId;
         return (
             <tr key={`${questionId}v${version}`} className={classes}>
                 <th>{questionId}</th>
@@ -93,7 +94,17 @@ function QuestionsTable() {
                     <TagsView tags={tags} />
                 </td>
                 <td>
-                    <Link to={link}>
+                    <Link to={viewLink}>
+                        <button
+                            type="button"
+                            className="btn btn-success btn-sm"
+                        >
+                            View
+                        </button>
+                    </Link>
+                </td>
+                <td>
+                    <Link to={editLink}>
                         <button
                             type="button"
                             className="btn btn-primary btn-sm mx-2"
@@ -129,6 +140,7 @@ function QuestionsTable() {
                         <th>Type</th>
                         <th>Text</th>
                         <th>Tags</th>
+                        <th></th>
                         <th></th>
                     </tr>
                 </thead>

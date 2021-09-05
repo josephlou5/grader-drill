@@ -23,6 +23,7 @@ import {
     UsersView,
     QuestionsView,
     EditQuestionView,
+    QuestionView,
     DrillsView,
     EditDrillView,
     DrillView,
@@ -203,6 +204,9 @@ export default function App() {
                     {...props("Admin")}
                 >
                     <EditQuestion />
+                </Protected>
+                <Protected path="/questions/:questionId" {...props("Admin")}>
+                    <QuestionView />
                 </Protected>
 
                 {/* drills */}
