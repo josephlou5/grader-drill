@@ -126,20 +126,24 @@ export function resetValidId(elementId) {
 }
 
 export function hasTags(drillTags, questionTags) {
-    // tags work on an "or" system,
-    // so as long as the question has one tag,
-    // it counts as part of the drill
+    // returns true if any tag in `questionTags` is in `drillTags`
+    if (drillTags.length === 0 || questionTags.length === 0) return true;
     for (const tag of questionTags) {
         if (drillTags.includes(tag)) return true;
     }
     return false;
 }
 
-export function hasTagsSubstring(tags, searching) {
+export function hasTagsSubstring(questionTags, filterTags) {
+    // returns true if any tag in `filterTags`
+    // are substrings of any tag in `questionTags`
+    if (filterTags.length === 0) return true;
+    // there are filters but this question has no tags, so automatically false
+    if (questionTags.length === 0) return false;
     let numSearched = 0;
-    for (const tag1 of searching) {
+    for (const tag1 of filterTags) {
         if (tag1 === "") continue;
-        for (const tag2 of tags) {
+        for (const tag2 of questionTags) {
             if (tag2.includes(tag1)) return true;
         }
         numSearched++;
