@@ -158,6 +158,8 @@ function AnsweredTable({ answered, anonymous }) {
             traineeStr = question.Trainee.User.username;
         }
 
+        const drillName = question.TraineeDrill.Drill.name;
+
         let assessorStr, score;
         if (question.graded) {
             if (question.autograded) {
@@ -179,7 +181,7 @@ function AnsweredTable({ answered, anonymous }) {
             <tr key={answeredId} className={classes}>
                 <th>{index + 1}</th>
                 <td>{traineeStr}</td>
-                <td>{question.TraineeDrill.Drill.name}</td>
+                <td>{drillName}</td>
                 <td>{question.questionId}</td>
                 <td>
                     <QuestionType
