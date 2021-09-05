@@ -194,7 +194,13 @@ export default function EditDrillView({ newDrill, drillId }) {
                 </div>
 
                 <div className="row">
-                    <div className="col-2">Tags</div>
+                    <div className="col-2">
+                        <div>Tags</div>
+                        <div className="small">
+                            Questions with any one of these tags will be matched
+                            with this drill.
+                        </div>
+                    </div>
                     <div className="col">
                         <EditTags
                             tags={drill.tags}

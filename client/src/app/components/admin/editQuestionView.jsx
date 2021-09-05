@@ -461,6 +461,10 @@ export default function EditQuestionView({ newQuestion, questionId }) {
             <div className="row">
                 <div className="col-6">
                     <h1>Tags</h1>
+                    <div>
+                        This question will be matched with drills with any one
+                        of these tags.
+                    </div>
                     <EditTags
                         tags={question.tags}
                         onAddTag={handleAddTag}
