@@ -163,30 +163,30 @@ function AnsweredInfo({ answered }) {
         </div>
     );
 
-    let traineeStr = "Trainee: ";
+    let traineeStr;
     if (anonymous) {
-        traineeStr += "Anonymous";
+        traineeStr = "Anonymous";
     } else {
-        traineeStr += answered.Trainee.User.username;
+        traineeStr = answered.Trainee.User.username;
     }
-    let assessorStr = "Assessor: ";
+    let assessorStr;
     if (answered.graded) {
         if (answered.autograded) {
-            assessorStr += "Auto-graded";
+            assessorStr = "Auto-graded";
         } else if (anonymous) {
-            assessorStr += "Graded";
+            assessorStr = "Graded";
         } else {
-            assessorStr += answered.Assessor.User.username;
+            assessorStr = answered.Assessor.User.username;
         }
     } else {
-        assessorStr += "Ungraded";
+        assessorStr = "Ungraded";
     }
 
     return (
         <React.Fragment>
             {anonymousToggle}
-            <div>{traineeStr}</div>
-            <div>{assessorStr}</div>
+            <div>Trainee: {traineeStr}</div>
+            <div>Assessor: {assessorStr}</div>
         </React.Fragment>
     );
 }
