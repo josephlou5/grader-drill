@@ -18,7 +18,7 @@ function Question({
     answered,
     question: propsQuestion,
     noChange,
-    backButton = null,
+    onBack,
     onSubmit,
     onSkip,
 }) {
@@ -154,7 +154,15 @@ function Question({
             {question.hasCodeField && <CodeField {...codeFieldProps} />}
             {question.hasAnswerField && <AnswerField {...answerFieldProps} />}
 
-            {backButton}
+            {onBack && (
+                <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={onBack}
+                >
+                    Back
+                </button>
+            )}
             <button
                 type="button"
                 className="btn btn-success m-1"
@@ -176,8 +184,7 @@ function Question({
             </Link>
             <ButtonHelp
                 help={[
-                    backButton &&
-                        '"Back" goes back to the drills without saving.',
+                    onBack && '"Back" goes back to the drills without saving.',
                     '"Submit" submits the question and goes to the next one.',
                     '"Skip" goes to the next question without saving.',
                     '"Done" redirects back to the Dashboard without saving.',

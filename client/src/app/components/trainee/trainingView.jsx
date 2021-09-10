@@ -46,22 +46,10 @@ function ChooseDrill() {
     }
 
     if (drill) {
-        let backButton = null;
-        if (drills.length > 1) {
-            backButton = (
-                <button
-                    type="button"
-                    className="btn btn-danger"
-                    onClick={handleBackToChoose}
-                >
-                    Back
-                </button>
-            );
-        }
         return (
             <TrainDrill
                 traineeDrill={drill}
-                backButton={backButton}
+                onBack={handleBackToChoose}
                 onDrillDone={handleDrillDone}
             />
         );
@@ -69,14 +57,6 @@ function ChooseDrill() {
 
     function handleChooseDrill(traineeDrill) {
         setDrill(traineeDrill);
-    }
-
-    if (drills.length === 1) {
-        const traineeDrill = drills[0];
-        if (!traineeDrill.completedAt && !traineeDrill.Drill.expired) {
-            handleChooseDrill(traineeDrill);
-            return <p>Redirecting to drill...</p>;
-        }
     }
 
     const choices = drills.map((traineeDrill) => {
@@ -87,10 +67,6 @@ function ChooseDrill() {
         if (completedAt) {
             statusOrAction = (
                 <div className="card-text">Completed: {completedDate}</div>
-            );
-        } else if (drill.expired) {
-            statusOrAction = (
-                <div className="card-text text-danger">Expired</div>
             );
         } else {
             statusOrAction = (
@@ -129,7 +105,7 @@ function ChooseDrill() {
     );
 }
 
-function TrainDrill({ traineeDrill, backButton, onDrillDone }) {
+function TrainDrill({ traineeDrill, onBack, onDrillDone }) {
     const [localProgress, setProgress] = useState(traineeDrill.progress);
 
     function handleProgress() {
@@ -148,7 +124,7 @@ function TrainDrill({ traineeDrill, backButton, onDrillDone }) {
             </div>
             <TrainQuestion
                 traineeDrill={traineeDrill}
-                backButton={backButton}
+                onBack={onBack}
                 onDrillDone={onDrillDone}
                 onProgress={handleProgress}
             />
@@ -156,7 +132,7 @@ function TrainDrill({ traineeDrill, backButton, onDrillDone }) {
     );
 }
 
-function TrainQuestion({ traineeDrill, backButton, onDrillDone, onProgress }) {
+function TrainQuestion({ traineeDrill, onBack, onDrillDone, onProgress }) {
     const [needsQuestion, setNeedsQuestion] = useState(true);
     const [question, setQuestion] = useState(null);
     const [noMoreQuestions, setNoMoreQuestions] = useState(false);
@@ -228,7 +204,7 @@ function TrainQuestion({ traineeDrill, backButton, onDrillDone, onProgress }) {
     return (
         <QuestionView
             question={question}
-            backButton={backButton}
+            onBack={onBack}
             onSubmit={handleSubmit}
             onSkip={handleNext}
         />

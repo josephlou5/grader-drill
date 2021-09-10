@@ -17,8 +17,6 @@ export default function JoinDrillView() {
             } else if (drill.uniqueViolation) {
                 setStatus("Already in drill!");
                 setSuccess(true);
-            } else if (drill.expiredError) {
-                setStatus("Drill has expired.");
             } else {
                 setStatus("Invalid drill code.");
             }

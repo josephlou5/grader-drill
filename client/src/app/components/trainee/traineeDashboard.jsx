@@ -88,8 +88,6 @@ function AddDrillInput({ onAddDrill }) {
             if (drill.error) {
                 if (drill.uniqueViolation) {
                     feedback.innerHTML = "Already in drill.";
-                } else if (drill.expiredError) {
-                    feedback.innerHTML = "Drill has expired.";
                 } else {
                     feedback.innerHTML = "Invalid drill code.";
                 }
@@ -165,18 +163,15 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
             rowsShowing++;
         }
 
-        let removeDrillButton = null;
-        if (!completedAt) {
-            removeDrillButton = (
-                <button
-                    type="button"
-                    className="btn btn-danger btn-sm"
-                    onClick={() => onRemoveDrill(traineeDrillId)}
-                >
-                    Remove Drill
-                </button>
-            );
-        }
+        const removeDrillButton = (
+            <button
+                type="button"
+                className="btn btn-danger btn-sm"
+                onClick={() => onRemoveDrill(traineeDrillId)}
+            >
+                Remove Drill
+            </button>
+        );
 
         return (
             <tr key={traineeDrillId} className={classes}>

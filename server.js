@@ -855,14 +855,6 @@ app.post("/api/traineeDrills", (req, res) => {
             });
             return;
         }
-        if (drill.expired) {
-            res.json({
-                error: true,
-                msg: `drill with code "${code}" is expired`,
-                expiredError: true,
-            });
-            return;
-        }
         const drillId = drill.id;
         models.TraineeDrill.All.findOrCreate({
             where: { drillId, traineeId },
