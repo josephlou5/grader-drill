@@ -42,26 +42,22 @@ export function DueDate({ drill, completedAt = null }) {
 
 // component to load a question's type
 export function QuestionType({ questionId, version }) {
-    const [state, setState] = useState({
+    const [{ loading, question }, setState] = useState({
         loading: true,
-        question: null,
     });
 
     useEffect(() => {
         getQuestionVersion(questionId, version, (question) => {
-            setState({
-                loading: false,
-                question,
-            });
+            setState({ question });
         });
     }, [questionId, version]);
 
-    if (state.loading) {
+    if (loading) {
         return "Loading...";
-    } else if (!state.question) {
+    } else if (!question) {
         return "Invalid question";
     } else {
-        return state.question.questionType;
+        return question.questionType;
     }
 }
 
@@ -125,8 +121,8 @@ export function resetValidId(elementId) {
     resetValid(document.getElementById(elementId));
 }
 
+// returns true if any tag in `questionTags` is in `drillTags`
 export function hasTags(drillTags, questionTags) {
-    // returns true if any tag in `questionTags` is in `drillTags`
     if (drillTags.length === 0 || questionTags.length === 0) return true;
     for (const tag of questionTags) {
         if (drillTags.includes(tag)) return true;
@@ -134,9 +130,9 @@ export function hasTags(drillTags, questionTags) {
     return false;
 }
 
+// returns true if any tag in `filterTags`
+// are substrings of any tag in `questionTags`
 export function hasTagsSubstring(questionTags, filterTags) {
-    // returns true if any tag in `filterTags`
-    // are substrings of any tag in `questionTags`
     if (filterTags.length === 0) return true;
     // there are filters but this question has no tags, so automatically false
     if (questionTags.length === 0) return false;
