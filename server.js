@@ -729,7 +729,16 @@ app.post("/api/drills", (req, res) => {
     if (!checkRole(req, res, "Admin")) return;
     const drill = req.body;
     models.Drill.add(drill)
-        .then((d) => res.json(d))
+        .then((d) => {
+            if (!d) {
+                res.json({
+                    error: true,
+                    msg: "could not generate random id for drill",
+                });
+            } else {
+                res.json(d);
+            }
+        })
         .catch((err) => {
             const response = { error: true, msg: [], message: [] };
             for (const error of err.errors) {
@@ -747,12 +756,6 @@ app.post("/api/drills", (req, res) => {
                             response.dueDateViolation = true;
                         }
                         response.nullViolation = true;
-                        break;
-                    case "unique violation":
-                        response.msg.push(
-                            "generated code was not unique; please try again"
-                        );
-                        response.uniqueViolation = true;
                         break;
                     default:
                         console.log("unknown error:", error);

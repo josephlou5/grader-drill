@@ -12,8 +12,26 @@ module.exports = (sequelize, DataTypes) => {
             // define association here
         }
 
-        static add(drill) {
-            return Drill.create({ ...drill, code: nanoid(10) });
+        static async add(drill) {
+            // only try 10 times to create drill
+            for (let i = 0; i < 10; i++) {
+                const code = nanoid(10);
+                try {
+                    return await Drill.create({ ...drill, code });
+                } catch (err) {
+                    console.log(`Adding drill with code "${code}" failed`);
+                    let retry = false;
+                    for (const error of err.errors) {
+                        if (error.type === "unique violation") {
+                            // generated code was not unique; try again
+                            retry = true;
+                            break;
+                        }
+                    }
+                    if (!retry) throw err;
+                }
+            }
+            return null;
         }
 
         static async updateById(drillId, drill) {
@@ -53,12 +71,15 @@ module.exports = (sequelize, DataTypes) => {
             expired: {
                 type: DataTypes.VIRTUAL,
                 get() {
-                    const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
-                    const today = Date.now();
-                    // on the day of the due date, still valid
-                    const dueDate =
-                        Date.parse(this.getDataValue("dueDate")) +
-                        MILLISECONDS_PER_DAY * 1;
+                    const now = new Date();
+                    // today's date in current time zone
+                    const today = new Date(
+                        // timezone offset is in minutes; convert to ms
+                        now.getTime() - now.getTimezoneOffset() * 60 * 1000
+                    )
+                        .toISOString()
+                        .slice(0, 10);
+                    const dueDate = this.getDataValue("dueDate");
                     return today > dueDate;
                 },
             },
