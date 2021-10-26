@@ -12,26 +12,48 @@ module.exports = (sequelize, DataTypes) => {
             // define association here
         }
 
-        static async add(drill) {
-            // only try 10 times to create drill
-            for (let i = 0; i < 10; i++) {
-                const code = nanoid(10);
-                try {
-                    return await Drill.create({ ...drill, code });
-                } catch (err) {
-                    console.log(`Adding drill with code "${code}" failed`);
-                    let retry = false;
-                    for (const error of err.errors) {
-                        if (error.type === "unique violation") {
-                            // generated code was not unique; try again
-                            retry = true;
-                            break;
-                        }
+        static async generateCode({ num = 1, attempts = 10 }) {
+            if (num < 1) return [];
+            const codes = new Set(
+                (
+                    await Drill.findAll({
+                        raw: true,
+                        attributes: ["code"],
+                    })
+                ).map((obj) => obj.code)
+            );
+            let inc = 1;
+            if (attempts === -1) {
+                // infinite attempts
+                attempts = 1;
+                inc = 0;
+            }
+            const created = [];
+            for (let i = 0; i < num; i++) {
+                let success = false;
+                for (let j = 0; j < attempts; j += inc) {
+                    const code = nanoid(10);
+                    if (!codes.has(code)) {
+                        success = true;
+                        created.push(code);
+                        codes.add(code);
+                        break;
                     }
-                    if (!retry) throw err;
+                }
+                if (!success) {
+                    created.push(null);
                 }
             }
-            return null;
+            return created;
+        }
+
+        static async add(drill) {
+            const [code] = this.generateCode();
+            if (!code) {
+                console.log("could not generate unique code for drill");
+                return null;
+            }
+            return Drill.create({ ...drill, code });
         }
 
         static async updateById(drillId, drill) {

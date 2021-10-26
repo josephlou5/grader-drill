@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Title, DueDate } from "app/shared";
 import { getDrill } from "app/api";
+import { ExportYAML } from "./shared";
 
 // milliseconds in one day
 const MS_ONE_DAY = 24 * 60 * 60 * 1000;
@@ -59,9 +60,16 @@ export default function DrillView() {
                     Edit Drill
                 </button>
             </Link>
+            <ExportDrill drill={drill} />
             <TraineeDrillsTable drill={drill} />
         </React.Fragment>
     );
+}
+
+function ExportDrill({ drill }) {
+    const fields = ["id", "name", "code", "numQuestions", "dueDate", "tags"];
+    const filename = `drill${drill.id}.yaml`;
+    return <ExportYAML obj={drill} fields={fields} filename={filename} />;
 }
 
 function TraineeDrillsTable({ drill }) {

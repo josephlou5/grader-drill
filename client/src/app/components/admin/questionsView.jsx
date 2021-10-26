@@ -1,10 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Title, hasTagsSubstring } from "app/shared";
-import { TagsView } from "./shared";
-import { getAllQuestions, deleteQuestion } from "app/api";
+import { getAllQuestions, importQuestions, deleteQuestion } from "app/api";
+import { TagsView, ImportYAML } from "./shared";
 
 export default function QuestionsView() {
+    const [{ needsQuestions, questions }, setState] = useState({
+        needsQuestions: true,
+    });
+
+    useEffect(() => {
+        if (!needsQuestions) return;
+        getAllQuestions((questions) => {
+            setState({ questions });
+        });
+    });
+
+    function handleNeedQuestions() {
+        setState({ needsQuestions: true, questions });
+    }
+
     return (
         <React.Fragment>
             <Title title="Questions" />
@@ -14,23 +29,229 @@ export default function QuestionsView() {
                     New Question
                 </button>
             </Link>
-            <QuestionsTable />
+            <ImportQuestions
+                questions={questions}
+                onNeedsQuestions={handleNeedQuestions}
+            />
+            <QuestionsTable
+                questions={questions}
+                onNeedsQuestions={handleNeedQuestions}
+            />
         </React.Fragment>
     );
 }
 
-function QuestionsTable() {
-    const [{ needsQuestions, questions }, setState] = useState({
-        needsQuestions: true,
-    });
-    const [filters, setFilters] = useState([]);
+function ImportQuestions({ questions, onNeedsQuestions }) {
+    // `id` and `version` are optional (replace existing or new question)
+    const fields = [
+        ["questionType", "string"],
+        ["hasCodeField", "boolean"],
+        ["hasAnswerField", "boolean"],
+        ["questionText", "string"],
+    ];
+    function extractFields(imported) {
+        const question = {};
 
-    useEffect(() => {
-        if (!needsQuestions) return;
-        getAllQuestions((questions) => {
-            setState({ questions });
-        });
-    });
+        const missing = [];
+        const wrongType = [];
+        const invalid = [];
+
+        const allFields = [...fields];
+        const arrays = [["tags", "string"]];
+        if (imported.hasCodeField) {
+            allFields.push(["code", "string"]);
+        }
+        switch (imported.questionType) {
+            case "Comment":
+            // fall through
+            case "Highlight":
+                allFields.push(["rubric", "object"]);
+                arrays.push(["rubric", "object"]);
+                break;
+            case "Multiple Choice":
+                allFields.push(
+                    ["answerChoices", "object"],
+                    ["correct", "number"]
+                );
+                arrays.push(["answerChoices", "string"]);
+                break;
+            default:
+                invalid.push("questionType");
+                break;
+        }
+
+        for (const [field, fieldType] of allFields) {
+            // if missing vital field, invalid
+            if (imported[field] == null) {
+                missing.push(field);
+            } else if (typeof imported[field] !== fieldType) {
+                wrongType.push(field);
+            } else {
+                question[field] = imported[field];
+            }
+        }
+        if (missing.length > 0) {
+            const reason =
+                "Missing fields " + missing.map((s) => `'${s}'`).join(", ");
+            return [true, reason, null];
+        }
+
+        if (question.hasCodeField) {
+            arrays.push(["highlights", "object"]);
+            // check if `highlights` exists
+            if (
+                imported.highlights != null &&
+                typeof imported.highlights === "object"
+            ) {
+                question.highlights = imported.highlights;
+            } else {
+                question.highlights = [];
+            }
+        }
+        // check if `tags` exists
+        if (imported.tags != null && typeof imported.tags === "object") {
+            question.tags = imported.tags;
+        } else {
+            question.tags = [];
+        }
+
+        // check for arrays
+        for (const [field, arrayType] of arrays) {
+            if (typeof imported[field] !== "object") {
+                continue;
+            }
+            // if `imported[field]` is an object, then it's in `question`
+            if (!Array.isArray(question[field])) {
+                wrongType.push(field);
+            } else if (!question[field].every((e) => typeof e === arrayType)) {
+                wrongType.push(field);
+            }
+        }
+
+        // check if `highlights` is an array of objects with proper attributes
+        if (question.highlights && !wrongType.includes("highlights")) {
+            const numFields = ["startLine", "startChar", "endLine", "endChar"];
+            const highlights = [];
+            for (const h of question.highlights) {
+                const { startLine, startChar, endLine, endChar, byUser } = h;
+                // check for missing values
+                if (numFields.some((f) => h[f] == null) || byUser == null) {
+                    missing.push("highlights");
+                    break;
+                }
+                // check for correct types
+                if (
+                    !numFields.every((f) => typeof h[f] === "number") ||
+                    typeof byUser !== "boolean"
+                ) {
+                    wrongType.push("highlights");
+                    break;
+                }
+                // check for validity
+                if (startLine > endLine) {
+                    invalid.push("highlights");
+                    break;
+                } else if (startLine === endLine && startChar >= endChar) {
+                    invalid.push("highlights");
+                    break;
+                }
+                const h2 = { startLine, startChar, endLine, endChar, byUser };
+                // optional field `text`
+                if (h.text != null) {
+                    // type
+                    if (typeof h.text !== "string") {
+                        wrongType.push("highlights");
+                        break;
+                    }
+                    // validity
+                    if (h.text !== "") {
+                        h2.text = h.text;
+                    }
+                }
+                highlights.push(h2);
+            }
+            question.highlights = highlights;
+        }
+        // check if `rubric` is an array of objects with `points` and `text`
+        if (question.rubric && !wrongType.includes("rubric")) {
+            const rubric = [];
+            for (const { points, text } of question.rubric) {
+                // check for missing values
+                if (points == null || text == null) {
+                    missing.push("rubric");
+                    break;
+                }
+                // check for correct types
+                if (typeof points !== "number" || typeof text !== "string") {
+                    wrongType.push("rubric");
+                    break;
+                }
+                // check for validity
+                if (points === 0 || text === "") {
+                    invalid.push("rubric");
+                    break;
+                }
+                rubric.push({ points, text });
+            }
+            question.rubric = rubric;
+        }
+
+        if (wrongType.length > 0) {
+            const reason =
+                "Fields " +
+                wrongType.map((s) => `'${s}'`).join(", ") +
+                " have wrong type";
+            return [true, reason, null];
+        }
+        if (missing.length > 0) {
+            const reason =
+                "Fields " +
+                missing.map((s) => `'${s}'`).join(", ") +
+                " have missing values";
+            return [true, reason, null];
+        }
+
+        // check if `questionText` is valid
+        if (question.questionText === "") {
+            invalid.push("questionText");
+        }
+        if (question.questionType === "Multiple Choice") {
+            // check if `answerChoices` is valid
+            if (question.answerChoices.some((s) => s === "")) {
+                invalid.push("answerChoices");
+            }
+            // check if `correct` is valid
+            if (
+                question.correct < 0 ||
+                question.correct >= question.answerChoices.length
+            ) {
+                invalid.push("correct");
+            }
+        }
+
+        if (invalid.length > 0) {
+            const reason =
+                "Invalid values for fields " +
+                invalid.map((s) => `'${s}'`).join(", ");
+            return [true, reason, null];
+        }
+
+        return [false, null, question];
+    }
+
+    return (
+        <ImportYAML
+            name="Question"
+            extractFields={extractFields}
+            existing={questions}
+            apiImport={importQuestions}
+            onRefresh={onNeedsQuestions}
+        />
+    );
+}
+
+function QuestionsTable({ questions, onNeedsQuestions }) {
+    const [filters, setFilters] = useState([]);
 
     if (!questions) {
         return <p>Getting questions...</p>;
@@ -58,7 +279,7 @@ function QuestionsTable() {
 
     function handleDeleteQuestion(questionId) {
         deleteQuestion(questionId, () => {
-            setState({ needsQuestions: true, questions });
+            onNeedsQuestions();
         });
     }
 

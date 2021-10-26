@@ -630,6 +630,44 @@ app.post("/api/questions", (req, res) => {
         });
 });
 
+// import questions
+app.post("/api/questions/import", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
+    const { creating, updating } = req.body;
+    const prepare = [];
+    if (creating.length > 0) {
+        prepare.push(
+            models.Question.max("id", { paranoid: false })
+                .then((id) => (id ? id + 1 : 1))
+                .then((id) => {
+                    for (let i = 0; i < creating.length; i++) {
+                        Object.assign(creating[i], { id: id + i, version: 1 });
+                    }
+                })
+        );
+    }
+    if (updating.length > 0) {
+        // create new version for each question
+        updating.forEach((q) =>
+            prepare.push(
+                models.Question.max("version", {
+                    where: { id: q.id },
+                    paranoid: false,
+                }).then((version) => {
+                    // version definitely exists
+                    q.version = version + 1;
+                })
+            )
+        );
+    }
+    Promise.all(prepare).then(() =>
+        models.Question.bulkCreate(creating.concat(updating)).then(() => {
+            res.json({ success: true });
+        })
+    );
+});
+
 // update question (add new version)
 app.post("/api/questions/:questionId", (req, res) => {
     if (!checkAuth(req, res)) return;
@@ -733,7 +771,7 @@ app.post("/api/drills", (req, res) => {
             if (!d) {
                 res.json({
                     error: true,
-                    msg: "could not generate random id for drill",
+                    msg: "could not generate unique code for drill",
                 });
             } else {
                 res.json(d);
@@ -744,6 +782,11 @@ app.post("/api/drills", (req, res) => {
             for (const error of err.errors) {
                 response.message.push(error.message);
                 switch (error.type) {
+                    case "unique violation":
+                        response.msg.push(
+                            "could not generate unique code for drill"
+                        );
+                        response.uniqueViolation = true;
                     case "notNull Violation":
                         if (error.path === "name") {
                             response.msg.push("name is null");
@@ -764,6 +807,39 @@ app.post("/api/drills", (req, res) => {
             }
             res.json(response);
         });
+});
+
+// import drills
+app.post("/api/drills/import", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
+    const { creating, updating } = req.body;
+    const importing = [];
+    if (creating.length > 0) {
+        importing.push(
+            models.Drill.generateCode({
+                num: creating.length,
+                attempts: -1,
+            }).then((codes) => {
+                codes.forEach((code, i) => {
+                    creating[i].code = code;
+                });
+                return models.Drill.bulkCreate(creating);
+            })
+        );
+    }
+    if (updating.length > 0) {
+        // sequelize v6.6.5: doesn't currently work with unique columns:
+        //   const fields = ["name", "numQuestions", "dueDate", "tags"];
+        //   models.Drill.bulkCreate(updating, { updateOnDuplicate: fields });
+        // so have to update individually
+        updating.forEach((drill) =>
+            importing.push(models.Drill.updateById(drill.id, drill))
+        );
+    }
+    Promise.all(importing).then(() => {
+        res.json({ success: true });
+    });
 });
 
 // update drill

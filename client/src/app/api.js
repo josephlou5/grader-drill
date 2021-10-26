@@ -39,6 +39,7 @@ function getMsg(requestType, resource) {
         get: "got",
         add: "added",
         update: "updated",
+        import: "imported",
         reset: "reset",
         delete: "deleted",
     };
@@ -56,6 +57,7 @@ function getErrMsg(requestType, resource) {
         get: "getting",
         add: "adding",
         update: "updating",
+        import: "importing",
         reset: "resetting",
         delete: "deleting",
     };
@@ -225,6 +227,14 @@ export function updateQuestionVersion(question, callback = null) {
     });
 }
 
+export function importQuestions(questions, callback = null) {
+    if (checkNull(questions, callback)) return;
+    postRequest("/questions/import", questions).then((q) => {
+        q = checkError(q, "import", "questions");
+        callback?.(q);
+    });
+}
+
 export function deleteQuestion(questionId, callback = null) {
     if (checkNull(questionId, callback)) return;
     if (!checkInt(questionId, "delete", "question", callback)) return;
@@ -269,6 +279,14 @@ export function updateDrill(drill, callback = null) {
     if (checkNull(drill, callback)) return;
     postRequest(`/drills/${drill.id}`, drill).then((d) => {
         d = checkError(d, "update", "drill");
+        callback?.(d);
+    });
+}
+
+export function importDrills(drills, callback = null) {
+    if (checkNull(drills, callback)) return;
+    postRequest("/drills/import", drills).then((d) => {
+        d = checkError(d, "import", "drills");
         callback?.(d);
     });
 }

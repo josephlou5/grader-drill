@@ -109,8 +109,12 @@ export function ButtonHelp({ help }) {
     );
 }
 
+export function setValid(element, isValid) {
+    element.classList.toggle("is-invalid", !isValid);
+}
+
 export function setElementValid(elementId, isValid) {
-    document.getElementById(elementId).classList.toggle("is-invalid", !isValid);
+    setValid(document.getElementById(elementId), isValid);
 }
 
 export function resetValid(element) {

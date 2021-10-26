@@ -12,6 +12,7 @@ import {
     AnswerField,
     RubricField,
 } from "../question";
+import { ExportYAML } from "./shared";
 
 export default function QuestionView() {
     const [invalid, setInvalid] = useState(false);
@@ -68,7 +69,7 @@ function ShowQuestionVersion({ questionId, versions }) {
 
     let versionChoice = null;
     if (versions.length > 1) {
-        versionChoice = versions.map((questions, index) => {
+        versionChoice = versions.map((question, index) => {
             const versionNum = index + 1;
             const idFor = "version" + versionNum;
             return (
@@ -129,17 +130,42 @@ function ShowQuestionVersion({ questionId, versions }) {
             <ResizeTextareas />
 
             <h1>Question {questionId}</h1>
-            <div>
+            <div className="mb-2">
                 <Link to={link}>
-                    <button type="button" className="btn btn-success mb-2">
+                    <button type="button" className="btn btn-success">
                         Edit question
                     </button>
                 </Link>
+                <ExportQuestion question={question} />
             </div>
             {versionChoice}
             {questionView}
         </React.Fragment>
     );
+}
+
+function ExportQuestion({ question }) {
+    const fields = [
+        "id",
+        "version",
+        "questionType",
+        "hasCodeField",
+        "hasAnswerField",
+        "questionText",
+    ];
+    if (question.hasCodeField) {
+        fields.push("code", "highlights");
+    }
+    if (question.questionType === "Multiple Choice") {
+        fields.push("answerChoices", "correct");
+    } else {
+        fields.push("rubric");
+    }
+    fields.push("tags");
+
+    const filename = `question${question.id}-version${question.version}.yaml`;
+
+    return <ExportYAML obj={question} fields={fields} filename={filename} />;
 }
 
 function AnsweredTable({ questionId, numVersions }) {
