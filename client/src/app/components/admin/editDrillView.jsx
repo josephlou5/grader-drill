@@ -41,7 +41,7 @@ export default function EditDrillView({ newDrill, drillId }) {
 
     useMountEffect(() => {
         if (newDrill) return;
-        getDrill(drillId, (d) => {
+        getDrill(drillId).then((d) => {
             if (!d) {
                 setDrillState(null);
             } else {
@@ -128,7 +128,7 @@ export default function EditDrillView({ newDrill, drillId }) {
         if (!validate(drill)) return;
         if (drill.id == null) {
             // add the new drill
-            addDrill(drill, (d) => {
+            addDrill(drill).then((d) => {
                 if (!d) {
                     setElementValid("save-feedback", false);
                 } else {

@@ -4,7 +4,7 @@ import {
     getTraineeAnswered,
     getAllQuestions,
     addAnswered,
-    getDrillByTrainee,
+    getDrillsByTrainee,
     traineeDrillProgress,
 } from "app/api";
 import { QuestionView } from "../question";
@@ -25,7 +25,9 @@ function ChooseDrill() {
 
     useEffect(() => {
         if (drills || drill) return;
-        getDrillByTrainee((d) => setDrills(d));
+        getDrillsByTrainee().then((d) => {
+            setDrills(d);
+        });
     });
 
     if (!drills) {
@@ -145,10 +147,10 @@ function TrainQuestion({ traineeDrill, onBack, onDrillDone, onProgress }) {
         if (noMoreQuestions) return;
         if (!needsQuestion) return;
 
-        getTraineeAnswered((answered) => {
+        getTraineeAnswered().then((answered) => {
             // the ids of the questions already answered by this trainee
             const answeredIds = new Set(answered.map((q) => q.questionId));
-            getAllQuestions((questions) => {
+            getAllQuestions().then((questions) => {
                 // find the next question not answered by this trainee
                 for (const q of questions) {
                     if (answeredIds.has(q.id)) continue;
@@ -180,7 +182,7 @@ function TrainQuestion({ traineeDrill, onBack, onDrillDone, onProgress }) {
 
     function handleSubmit(q) {
         // update drill progress
-        traineeDrillProgress(traineeDrillId, (d) => {
+        traineeDrillProgress(traineeDrillId).then((d) => {
             if (!d) return;
             let callback;
             if (d.completedAt) {
@@ -197,7 +199,7 @@ function TrainQuestion({ traineeDrill, onBack, onDrillDone, onProgress }) {
                 traineeDrillId,
                 drillId,
             };
-            addAnswered(answered, callback);
+            addAnswered(answered).then(callback);
         });
     }
 

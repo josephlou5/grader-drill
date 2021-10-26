@@ -20,7 +20,7 @@ function AnsweredTable() {
 
     useEffect(() => {
         if (!needsAnswered) return;
-        getAllAnswered((answered) => {
+        getAllAnswered().then((answered) => {
             setState({ answered });
         });
     });
@@ -39,7 +39,7 @@ function AnsweredTable() {
     }
 
     function handleDeleteAnswered(answeredId) {
-        deleteAnswered(answeredId, () => {
+        deleteAnswered(answeredId).then(() => {
             setState({ needsAnswered: true, answered });
         });
     }

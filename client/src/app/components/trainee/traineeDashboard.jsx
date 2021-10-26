@@ -11,7 +11,7 @@ import {
 import {
     getTraineeAnswered,
     addTraineeDrill,
-    getDrillByTrainee,
+    getDrillsByTrainee,
     deleteTraineeDrill,
 } from "app/api";
 
@@ -36,12 +36,14 @@ function Dashboard() {
     const [drills, setDrills] = useState(null);
 
     useMountEffect(() => {
-        getTraineeAnswered((answered) => setAnswered(answered));
+        getTraineeAnswered().then((answered) => {
+            setAnswered(answered);
+        });
     });
 
     useEffect(() => {
         if (!needsDrills) return;
-        getDrillByTrainee((d) => {
+        getDrillsByTrainee().then((d) => {
             setNeedsDrills(false);
             setDrills(d);
         });
@@ -52,7 +54,9 @@ function Dashboard() {
     }
 
     function handleRemoveDrill(traineeDrillId) {
-        deleteTraineeDrill(traineeDrillId, () => setNeedsDrills(true));
+        deleteTraineeDrill(traineeDrillId).then(() => {
+            setNeedsDrills(true);
+        });
     }
 
     return (
@@ -84,7 +88,7 @@ function AddDrillInput({ onAddDrill }) {
             return;
         }
 
-        addTraineeDrill(drillCode, (drill) => {
+        addTraineeDrill(drillCode).then((drill) => {
             if (drill.error) {
                 if (drill.uniqueViolation) {
                     feedback.innerHTML = "Already in drill.";

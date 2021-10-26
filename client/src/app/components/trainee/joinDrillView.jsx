@@ -10,7 +10,7 @@ export default function JoinDrillView() {
     const { drillCode } = useParams();
 
     useEffect(() => {
-        addTraineeDrill(drillCode, (drill) => {
+        addTraineeDrill(drillCode).then((drill) => {
             if (!drill.error) {
                 setStatus("Successfully joined drill!");
                 setSuccess(true);

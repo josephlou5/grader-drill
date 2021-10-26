@@ -47,7 +47,7 @@ export function QuestionType({ questionId, version }) {
     });
 
     useEffect(() => {
-        getQuestionVersion(questionId, version, (question) => {
+        getQuestionVersion(questionId, version).then((question) => {
             setState({ question });
         });
     }, [questionId, version]);

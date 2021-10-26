@@ -11,7 +11,7 @@ export default function QuestionsView() {
 
     useEffect(() => {
         if (!needsQuestions) return;
-        getAllQuestions((questions) => {
+        getAllQuestions().then((questions) => {
             setState({ questions });
         });
     });
@@ -278,7 +278,7 @@ function QuestionsTable({ questions, onNeedsQuestions }) {
     }
 
     function handleDeleteQuestion(questionId) {
-        deleteQuestion(questionId, () => {
+        deleteQuestion(questionId).then(() => {
             onNeedsQuestions();
         });
     }

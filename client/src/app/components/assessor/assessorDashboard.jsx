@@ -22,7 +22,9 @@ function Dashboard() {
     }
 
     useMountEffect(() => {
-        getAllAnswered((answered) => setAnswered(answered));
+        getAllAnswered().then((answered) => {
+            setAnswered(answered);
+        });
     });
 
     if (!answered) {
@@ -64,7 +66,9 @@ function GradedTable({ anonymous }) {
     const [graded, setGraded] = useState(null);
 
     useMountEffect(() => {
-        getAssessorGraded((graded) => setGraded(graded));
+        getAssessorGraded().then((graded) => {
+            setGraded(graded);
+        });
     });
 
     if (!graded) {

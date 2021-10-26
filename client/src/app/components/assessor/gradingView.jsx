@@ -34,7 +34,7 @@ function GradeSpecific({ assessor, specificQuestion, answeredId }) {
 
     useMountEffect(() => {
         // get the specified answered
-        getAnswered(answeredId, (answered) => {
+        getAnswered(answeredId).then((answered) => {
             if (!answered) {
                 setInvalid(true);
                 return;
@@ -47,9 +47,7 @@ function GradeSpecific({ assessor, specificQuestion, answeredId }) {
                 return;
             }
             // get question
-            getQuestionVersion(
-                answered.questionId,
-                answered.version,
+            getQuestionVersion(answered.questionId, answered.version).then(
                 (question) => {
                     if (!question) {
                         // question id & version should exist,
@@ -93,7 +91,7 @@ function ChooseDrill({ assessor }) {
 
     useEffect(() => {
         if (drills || drill) return;
-        getAllDrillsAndAnswered((drills) => {
+        getAllDrillsAndAnswered().then((drills) => {
             drills.forEach((drill, index) => {
                 // get the ungraded answered
                 const ungraded = [];
@@ -211,7 +209,9 @@ function GradeAll({ assessor, onBack }) {
     const [ungraded, setUngraded] = useState(null);
 
     useMountEffect(() => {
-        getAssessorUngraded((ungraded) => setUngraded(ungraded));
+        getAssessorUngraded().then((ungraded) => {
+            setUngraded(ungraded);
+        });
     });
 
     if (!ungraded) {

@@ -21,7 +21,7 @@ function Users({ admin }) {
 
     useEffect(() => {
         if (!needsUsers) return;
-        getAllUsers((u) => {
+        getAllUsers().then((u) => {
             setNeedsUsers(false);
             setUsers(u);
         });
@@ -64,7 +64,7 @@ function AddUserInput({ onAddUser }) {
         }
         setElementValid("username", true);
 
-        addUser(username, (user) => {
+        addUser(username).then((user) => {
             if (user.error) {
                 feedback.innerHTML = "User already exists.";
                 setElementValid("username", false);
@@ -172,7 +172,7 @@ function Roles({ myself, user, onUpdateRoles }) {
             setElementValid("roles", false);
             return;
         }
-        updateUserRoles({ ...user, roles }, (res) => {
+        updateUserRoles({ ...user, roles }).then((res) => {
             if (res.error) {
                 window.location.reload();
                 return;

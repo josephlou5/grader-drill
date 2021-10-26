@@ -21,7 +21,7 @@ export default function QuestionView() {
     const { questionId } = useParams();
 
     useEffect(() => {
-        getQuestionVersions(questionId, (questions) => {
+        getQuestionVersions(questionId).then((questions) => {
             if (!questions) {
                 setInvalid(true);
                 return;
@@ -175,7 +175,7 @@ function AnsweredTable({ questionId, numVersions }) {
 
     useEffect(() => {
         if (!needsAnswered) return;
-        getQuestionAnswered(questionId, (answered) => {
+        getQuestionAnswered(questionId).then((answered) => {
             setState({ answered });
         });
     });
@@ -199,7 +199,7 @@ function AnsweredTable({ questionId, numVersions }) {
     }
 
     function handleDeleteAnswered(answeredId) {
-        deleteAnswered(answeredId, () => {
+        deleteAnswered(answeredId).then(() => {
             setState({ needsAnswered: true, answered });
         });
     }

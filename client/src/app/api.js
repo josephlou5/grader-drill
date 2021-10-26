@@ -25,12 +25,8 @@ async function deleteRequest(route) {
 
 // arg checking
 
-function checkNull(arg, callback) {
-    if (arg == null) {
-        callback?.(null);
-        return true;
-    }
-    return false;
+function checkNull(arg) {
+    return arg == null;
 }
 
 function getMsg(requestType, resource) {
@@ -69,14 +65,13 @@ function getErrMsg(requestType, resource) {
     }
 }
 
-function checkInt(arg, requestType, resource, callback) {
+function checkInt(arg, requestType, resource, checking = "id") {
     if (arg == null || isNaN(arg)) {
         if (CONSOLE)
             console.log(
                 getErrMsg(requestType, resource),
-                `Invalid id "${arg}"`
+                `Invalid ${checking} "${arg}"`
             );
-        callback?.(null);
         return false;
     }
     return true;
@@ -102,329 +97,242 @@ function checkError(data, requestType, resource, array = false) {
 
 // authentication
 
-export function logInUser(callback = null) {
-    postRequest("/users/login").then((u) => {
-        checkError(u, "login", "user");
-        callback?.(u);
-    });
+export async function logOutUser() {
+    const data = await postRequest("/users/logout");
+    if (CONSOLE) console.log("logged out user");
+    return data;
 }
 
-export function logOutUser(callback = null) {
-    postRequest("/users/logout").then((data) => {
-        if (CONSOLE) console.log("logged out user");
-        callback?.(data);
-    });
+export async function setRoleCookie(role) {
+    return postRequest("/users/role", { role });
 }
 
-export function setRoleCookie(role, callback = null) {
-    postRequest("/users/role", { role }).then((data) => {
-        callback?.(data);
-    });
-}
-
-export function isLoggedIn(callback = null) {
-    getRequest("/users/loggedin").then((user) => {
-        callback?.(user);
-    });
+export async function isLoggedIn() {
+    return getRequest("/users/loggedin");
 }
 
 // API
 
-export function getAllUsers(callback = null) {
-    getRequest("/users").then((users) => {
-        users = checkError(users, "get", "all users", true);
-        callback?.(users);
-    });
+export async function getAllUsers() {
+    const users = await getRequest("/users");
+    return checkError(users, "get", "all users", true);
 }
 
 // not used
-export function getUser(userId, callback = null) {
-    if (checkNull(userId, callback)) return;
-    if (!checkInt(userId, "get", "user", callback)) return;
-    getRequest(`/users/${userId}`).then((u) => {
-        u = checkError(u, "get", "user");
-        callback?.(u);
-    });
+export async function getUser(userId) {
+    if (!checkInt(userId, "get", "user")) return null;
+    const user = await getRequest(`/users/${userId}`);
+    return checkError(user, "get", "user");
 }
 
-export function updateUserRoles(user, callback = null) {
-    if (checkNull(user, callback)) return;
-    postRequest(`/users/${user.id}/roles`, user).then((u) => {
-        checkError(u, "update", "user");
-        callback?.(u);
-    });
+export async function updateUserRoles(user) {
+    if (checkNull(user)) return null;
+    const userId = user.id;
+    const updated = await postRequest(`/users/${userId}/roles`, user);
+    checkError(updated, "update", "user");
+    return updated;
 }
 
-export function addUser(username, callback = null) {
-    if (checkNull(username, callback)) return;
-    postRequest("/users", { username }).then((u) => {
-        checkError(u, "add", "user");
-        callback?.(u);
-    });
+export async function addUser(username) {
+    if (checkNull(username)) return null;
+    const added = await postRequest("/users", { username });
+    checkError(added, "add", "user");
+    return added;
 }
 
-export function getAllQuestions(callback = null) {
-    getRequest("/questions").then((questions) => {
-        questions = checkError(questions, "get", "all questions", true);
-        callback?.(questions);
-    });
+export async function getAllQuestions() {
+    const questions = await getRequest("/questions");
+    return checkError(questions, "get", "all questions", true);
 }
 
-export function getQuestion(questionId, callback = null) {
-    if (checkNull(questionId, callback)) return;
-    if (!checkInt(questionId, "get", "question", callback)) return;
-    getRequest(`/questions/${questionId}`).then((q) => {
-        q = checkError(q, "get", "question");
-        callback?.(q);
-    });
+export async function getQuestion(questionId) {
+    if (!checkInt(questionId, "get", "question")) return null;
+    const question = await getRequest(`/questions/${questionId}`);
+    return checkError(question, "get", "question");
 }
 
-export function getQuestionVersions(questionId, callback = null) {
-    if (checkNull(questionId, callback)) return;
-    if (!checkInt(questionId, "get", "question versions", callback)) return;
-    getRequest(`/questions/${questionId}/versions`).then((q) => {
-        q = checkError(q, "get", "question versions");
-        callback?.(q);
-    });
+export async function getQuestionVersions(questionId) {
+    if (!checkInt(questionId, "get", "question versions")) return null;
+    const versions = await getRequest(`/questions/${questionId}/versions`);
+    // purposely return null instead of [] in case of error
+    return checkError(versions, "get", "question versions");
 }
 
-export function getQuestionVersion(questionId, version, callback = null) {
-    if (checkNull(questionId, callback)) return;
-    if (checkNull(version, callback)) return;
-    if (!checkInt(questionId, "get", "question version", callback)) return;
-    if (!checkInt(version, "get", "question version", callback)) return;
-    return getRequest(`/questions/${questionId}/${version}`).then((q) => {
-        q = checkError(q, "get", "question version");
-        callback?.(q);
-        return q;
-    });
+export async function getQuestionVersion(questionId, version) {
+    if (!checkInt(questionId, "get", "question version")) return null;
+    if (!checkInt(version, "get", "question version", "version")) return null;
+    const question = await getRequest(`/questions/${questionId}/${version}`);
+    return checkError(question, "get", "question version");
 }
 
-export function addQuestion(question, callback = null) {
-    if (checkNull(question, callback)) return;
-    postRequest("/questions", question).then((q) => {
-        q = checkError(q, "add", "question");
-        callback?.(q);
-    });
+export async function addQuestion(question) {
+    if (checkNull(question)) return null;
+    const added = await postRequest("/questions", question);
+    return checkError(added, "add", "question");
 }
 
-export function updateQuestion(question, callback = null) {
-    if (checkNull(question, callback)) return;
+export async function updateQuestion(question) {
+    if (checkNull(question)) return null;
     const questionId = question.id;
-    postRequest(`/questions/${questionId}`, question).then((q) => {
-        q = checkError(q, "update", "question");
-        callback?.(q);
-    });
+    const updated = await postRequest(`/questions/${questionId}`, question);
+    return checkError(updated, "update", "question");
 }
 
-export function updateQuestionVersion(question, callback = null) {
-    if (checkNull(question, callback)) return;
-    const questionId = question.id;
-    const { version } = question;
-    postRequest(`/questions/${questionId}/${version}`, question).then((q) => {
-        q = checkError(q, "update", "question version");
-        callback?.(q);
-    });
+export async function updateQuestionVersion(question) {
+    if (checkNull(question)) return null;
+    const { id: questionId, version } = question;
+    const updated = await postRequest(
+        `/questions/${questionId}/${version}`,
+        question
+    );
+    return checkError(updated, "update", "question version");
 }
 
-export function importQuestions(questions, callback = null) {
+export async function importQuestions(questions, callback = null) {
     if (checkNull(questions, callback)) return;
-    postRequest("/questions/import", questions).then((q) => {
-        q = checkError(q, "import", "questions");
-        callback?.(q);
-    });
+    const data = postRequest("/questions/import", questions);
+    return checkError(data, "import", "questions");
 }
 
-export function deleteQuestion(questionId, callback = null) {
-    if (checkNull(questionId, callback)) return;
-    if (!checkInt(questionId, "delete", "question", callback)) return;
-    deleteRequest(`/questions/${questionId}`).then((q) => {
-        q = checkError(q, "delete", "question", true);
-        callback?.(q);
-    });
+export async function deleteQuestion(questionId) {
+    if (!checkInt(questionId, "delete", "question")) return null;
+    const deleted = await deleteRequest(`/questions/${questionId}`);
+    return checkError(deleted, "delete", "question", true);
 }
 
-export function getAllDrills(callback = null) {
-    getRequest("/drills").then((drills) => {
-        drills = checkError(drills, "get", "all drills", true);
-        callback?.(drills);
-    });
+export async function getAllDrills() {
+    const drills = await getRequest("/drills");
+    return checkError(drills, "get", "all drills", true);
 }
 
-export function getAllDrillsAndAnswered(callback = null) {
-    getRequest("/drills/answered").then((drills) => {
-        drills = checkError(drills, "get", "all drills and answered", true);
-        callback?.(drills);
-    });
+export async function getAllDrillsAndAnswered() {
+    const drills = await getRequest("/drills/answered");
+    return checkError(drills, "get", "all drills and answered", true);
 }
 
-export function getDrill(drillId, callback = null) {
-    if (checkNull(drillId, callback)) return;
-    if (!checkInt(drillId, "get", "drill", callback)) return;
-    getRequest(`/drills/${drillId}`).then((d) => {
-        d = checkError(d, "get", "drill");
-        callback?.(d);
-    });
+export async function getDrill(drillId) {
+    if (!checkInt(drillId, "get", "drill")) return null;
+    const drill = await getRequest(`/drills/${drillId}`);
+    return checkError(drill, "get", "drill");
 }
 
-export function addDrill(drill, callback = null) {
-    if (checkNull(drill, callback)) return;
-    postRequest("/drills", drill).then((d) => {
-        d = checkError(d, "add", "drill");
-        callback?.(d);
-    });
+export async function addDrill(drill) {
+    if (checkNull(drill)) return null;
+    const added = await postRequest("/drills", drill);
+    return checkError(added, "add", "drill");
 }
 
-export function updateDrill(drill, callback = null) {
-    if (checkNull(drill, callback)) return;
-    postRequest(`/drills/${drill.id}`, drill).then((d) => {
-        d = checkError(d, "update", "drill");
-        callback?.(d);
-    });
+export async function updateDrill(drill) {
+    if (checkNull(drill)) return null;
+    const updated = await postRequest(`/drills/${drill.id}`, drill);
+    return checkError(updated, "update", "drill");
 }
 
-export function importDrills(drills, callback = null) {
-    if (checkNull(drills, callback)) return;
-    postRequest("/drills/import", drills).then((d) => {
-        d = checkError(d, "import", "drills");
-        callback?.(d);
-    });
+export async function importDrills(drills) {
+    if (checkNull(drills)) return null;
+    const data = await postRequest("/drills/import", drills);
+    return checkError(data, "import", "drills");
 }
 
-export function deleteDrill(drillId, callback = null) {
-    if (checkNull(drillId, callback)) return;
-    if (!checkInt(drillId, "delete", "drill", callback)) return;
-    deleteRequest(`/drills/${drillId}`).then((d) => {
-        d = checkError(d, "delete", "drill");
-        callback?.(d);
-    });
+export async function deleteDrill(drillId) {
+    if (!checkInt(drillId, "delete", "drill")) return null;
+    const deleted = await deleteRequest(`/drills/${drillId}`);
+    return checkError(deleted, "delete", "drill");
 }
 
 // not used
-export function getAllTraineeDrills(callback = null) {
-    getRequest("/traineeDrills").then((drills) => {
-        drills = checkError(drills, "get", "all trainee drills", true);
-        callback?.(drills);
-    });
+export async function getAllTraineeDrills() {
+    const drills = await getRequest("/traineeDrills");
+    return checkError(drills, "get", "all trainee drills", true);
 }
 
 // not used
-export function getTraineeDrill(traineeDrillId, callback = null) {
-    if (checkNull(traineeDrillId, callback)) return;
-    if (!checkInt(traineeDrillId, "get", "trainee drill", callback)) return;
-    getRequest(`/traineeDrills/${traineeDrillId}`).then((d) => {
-        d = checkError(d, "get", "trainee drill");
-        callback?.(d);
-    });
+export async function getTraineeDrill(traineeDrillId) {
+    if (!checkInt(traineeDrillId, "get", "trainee drill")) return null;
+    const drill = await getRequest(`/traineeDrills/${traineeDrillId}`);
+    return checkError(drill, "get", "trainee drill");
 }
 
-export function getDrillByTrainee(callback = null) {
+export async function getDrillsByTrainee() {
     // infers trainee id from logged in user
-    getRequest("/traineeDrills/trainee").then((d) => {
-        d = checkError(d, "get", "drills by trainee", true);
-        callback?.(d);
-    });
+    const drills = await getRequest("/traineeDrills/trainee");
+    return checkError(drills, "get", "drills by trainee", true);
 }
 
-export function addTraineeDrill(drillCode, callback = null) {
+export async function addTraineeDrill(drillCode) {
     // infers trainee id from logged in user
-    if (checkNull(drillCode, callback)) return;
-    postRequest("/traineeDrills", { drillCode }).then((d) => {
-        checkError(d, "add", "trainee drill");
-        callback?.(d);
-    });
+    if (checkNull(drillCode)) return null;
+    const added = await postRequest("/traineeDrills", { drillCode });
+    checkError(added, "add", "trainee drill");
+    return added;
 }
 
-export function traineeDrillProgress(traineeDrillId, callback = null) {
-    if (checkNull(traineeDrillId, callback)) return;
-    if (!checkInt(traineeDrillId, "update", "trainee drill", callback)) return;
-    postRequest(`/traineeDrills/${traineeDrillId}/increment`).then((d) => {
-        d = checkError(d, "update", "trainee drill");
-        callback?.(d);
-    });
+export async function traineeDrillProgress(traineeDrillId) {
+    if (!checkInt(traineeDrillId, "update", "trainee drill")) return null;
+    const updated = await postRequest(
+        `/traineeDrills/${traineeDrillId}/increment`
+    );
+    return checkError(updated, "update", "trainee drill");
 }
 
-export function deleteTraineeDrill(traineeDrillId, callback = null) {
-    if (checkNull(traineeDrillId, callback)) return;
-    if (!checkInt(traineeDrillId, "delete", "trainee drill", callback)) return;
-    deleteRequest(`/traineeDrills/${traineeDrillId}`).then((d) => {
-        d = checkError(d, "delete", "trainee drill");
-        callback?.(d);
-    });
+export async function deleteTraineeDrill(traineeDrillId) {
+    if (!checkInt(traineeDrillId, "delete", "trainee drill")) return null;
+    const deleted = await deleteRequest(`/traineeDrills/${traineeDrillId}`);
+    return checkError(deleted, "delete", "trainee drill");
 }
 
-export function getAllAnswered(callback = null) {
-    getRequest("/answered").then((answered) => {
-        answered = checkError(answered, "get", "all answered", true);
-        callback?.(answered);
-    });
+export async function getAllAnswered() {
+    const answered = await getRequest("/answered");
+    return checkError(answered, "get", "all answered", true);
 }
 
-export function getAnswered(answeredId, callback = null) {
-    if (checkNull(answeredId, callback)) return;
-    if (!checkInt(answeredId, "get", "answered", callback)) return;
-    getRequest(`/answered/${answeredId}`).then((q) => {
-        q = checkError(q, "get", "answered");
-        callback?.(q);
-    });
+export async function getAnswered(answeredId) {
+    if (!checkInt(answeredId, "get", "answered")) return null;
+    const answered = await getRequest(`/answered/${answeredId}`);
+    return checkError(answered, "get", "answered");
 }
 
-export function getQuestionAnswered(questionId, callback = null) {
-    if (checkNull(questionId, callback)) return;
-    if (!checkInt(questionId, "get", "question answered", callback)) return;
-    getRequest(`/answered/question/${questionId}`).then((answered) => {
-        answered = checkError(answered, "get", "question answered", true);
-        callback?.(answered);
-    });
+export async function getQuestionAnswered(questionId) {
+    if (!checkInt(questionId, "get", "question answered")) return null;
+    const answered = await getRequest(`/answered/question/${questionId}`);
+    return checkError(answered, "get", "question answered", true);
 }
 
-export function getTraineeAnswered(callback = null) {
+export async function getTraineeAnswered() {
     // infers trainee id from logged in user
-    getRequest("/answered/trainee").then((answered) => {
-        answered = checkError(answered, "get", "answered for trainee", true);
-        callback?.(answered);
-    });
+    const answered = await getRequest("/answered/trainee");
+    return checkError(answered, "get", "answered for trainee", true);
 }
 
-export function getAssessorGraded(callback = null) {
+export async function getAssessorGraded() {
     // infers assessor id from logged in user
-    getRequest("/answered/assessor").then((graded) => {
-        graded = checkError(graded, "get", "graded for assessor", true);
-        callback?.(graded);
-    });
+    const graded = await getRequest("/answered/assessor");
+    return checkError(graded, "get", "graded for assessor", true);
 }
 
-export function getAssessorUngraded(callback = null) {
+export async function getAssessorUngraded() {
     // infers assessor id from logged in user
-    getRequest("/answered/ungraded").then((ungraded) => {
-        ungraded = checkError(ungraded, "get", "ungraded answered", true);
-        callback?.(ungraded);
-    });
+    const ungraded = await getRequest("/answered/ungraded");
+    return checkError(ungraded, "get", "ungraded answered", true);
 }
 
-export function addAnswered(question, callback = null) {
-    if (checkNull(question, callback)) return;
-    postRequest("/answered", question).then((q) => {
-        q = checkError(q, "add", "answered");
-        callback?.(q);
-    });
+export async function addAnswered(question) {
+    if (checkNull(question)) return null;
+    const added = await postRequest("/answered", question);
+    return checkError(added, "add", "answered");
 }
 
-export function updateAnswered(question, callback = null) {
+export async function updateAnswered(question) {
     // infers assessor id from logged in user
-    if (checkNull(question, callback)) return;
+    if (checkNull(question)) return null;
     const answeredId = question.id;
-    postRequest(`/answered/${answeredId}`, question).then((q) => {
-        checkError(q, "update", "answered");
-        callback?.(q);
-    });
+    const updated = await postRequest(`/answered/${answeredId}`, question);
+    checkError(updated, "update", "answered");
+    return updated;
 }
 
-export function deleteAnswered(answeredId, callback = null) {
-    if (checkNull(answeredId, callback)) return;
-    if (!checkInt(answeredId, "delete", "answered", callback)) return;
-    deleteRequest(`/answered/${answeredId}`).then((q) => {
-        q = checkError(q, "delete", "answered");
-        callback?.(q);
-    });
+export async function deleteAnswered(answeredId) {
+    if (!checkInt(answeredId, "delete", "answered")) return null;
+    const deleted = await deleteRequest(`/answered/${answeredId}`);
+    return checkError(deleted, "delete", "answered");
 }

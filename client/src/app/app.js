@@ -40,7 +40,7 @@ function Protected({ user, setUser, role, children, ...rest }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        isLoggedIn((user) => {
+        isLoggedIn().then((user) => {
             setUser(user, role);
             if (loading) setLoading(false);
         });
@@ -117,8 +117,8 @@ export default function App() {
     }
 
     useMountEffect(() => {
-        isLoggedIn((u) => {
-            setUser(u);
+        isLoggedIn().then((user) => {
+            setUser(user);
             setLoading(false);
         });
     });
@@ -126,7 +126,9 @@ export default function App() {
     if (loading) return "Loading...";
 
     function handleLogOut() {
-        logOutUser(() => setUser(null));
+        logOutUser().then(() => {
+            setUser(null);
+        });
     }
 
     function handleChooseRole(role) {

@@ -114,7 +114,7 @@ export function ImportYAML({
             return;
         }
 
-        apiImport({ creating, updating }, () => {
+        apiImport({ creating, updating }).then(() => {
             onRefresh();
             setFiles([]);
         });

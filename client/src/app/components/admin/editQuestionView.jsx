@@ -48,7 +48,7 @@ export default function EditQuestionView({ newQuestion, questionId }) {
 
     useMountEffect(() => {
         if (newQuestion) return;
-        getQuestion(questionId, (q) => {
+        getQuestion(questionId).then((q) => {
             if (!q) {
                 setQuestionState(null);
                 return;
@@ -328,13 +328,13 @@ export default function EditQuestionView({ newQuestion, questionId }) {
         if (!validate(question)) return;
         if (question.id == null) {
             // add the new question
-            addQuestion(question, (q) => {
+            addQuestion(question).then((q) => {
                 if (!q) return;
                 setQuestion({ id: q.id, version: q.version });
             });
         } else if (question.version == null) {
             // make a new version of the current question
-            updateQuestion(question, (q) => {
+            updateQuestion(question).then((q) => {
                 if (!q) return;
                 setQuestion({ version: q.version });
             });

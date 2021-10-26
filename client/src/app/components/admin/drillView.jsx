@@ -14,7 +14,7 @@ export default function DrillView() {
     const { drillId } = useParams();
 
     useEffect(() => {
-        getDrill(drillId, (d) => {
+        getDrill(drillId).then((d) => {
             if (!d) {
                 setInvalid(true);
                 return;

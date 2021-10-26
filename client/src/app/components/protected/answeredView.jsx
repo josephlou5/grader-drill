@@ -16,16 +16,16 @@ export default function AnsweredView({ user }) {
     const { answeredId } = useParams();
 
     useEffect(() => {
-        getAnswered(answeredId, (answered) => {
+        getAnswered(answeredId).then((answered) => {
             if (!answered) {
                 setInvalid(true);
                 return;
             }
             setAnswered(answered);
-            getQuestionVersion(
-                answered.questionId,
-                answered.version,
-                (question) => setQuestion(question)
+            getQuestionVersion(answered.questionId, answered.version).then(
+                (question) => {
+                    setQuestion(question);
+                }
             );
         });
     }, [answeredId]);

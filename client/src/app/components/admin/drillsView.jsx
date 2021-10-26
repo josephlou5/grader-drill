@@ -11,7 +11,7 @@ export default function DrillsView() {
 
     useEffect(() => {
         if (!needsDrills) return;
-        getAllDrills((drills) => {
+        getAllDrills().then((drills) => {
             setState({ drills });
         });
     });
@@ -125,7 +125,7 @@ function DrillsTable({ drills, onNeedDrills }) {
     }
 
     function handleDeleteDrill(drillId) {
-        deleteDrill(drillId, () => {
+        deleteDrill(drillId).then(() => {
             onNeedDrills();
         });
     }
