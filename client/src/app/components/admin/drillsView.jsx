@@ -104,11 +104,39 @@ function ImportDrills({ drills, onNeedDrills }) {
         return [false, null, drill];
     }
 
+    function sameDrill(drill1, drill2) {
+        if (drill1.name !== drill2.name) return false;
+        if (drill1.numQuestions !== drill2.numQuestions) return false;
+        if (drill1.dueDate !== drill2.dueDate) return false;
+        // tags
+        const tags1 = drill1.tags || [];
+        const tags2 = drill2.tags || [];
+        if (new Set(tags1).size !== new Set(tags1.concat(tags2)).size)
+            return false;
+        return true;
+    }
+
+    function checkExists(imported, drill) {
+        const nullId = imported.id == null;
+        for (const d of drills) {
+            // if imported matches existing
+            if (sameDrill(d, drill)) {
+                return [true, d.id];
+            }
+            if (nullId) continue;
+            // if imported id exists, update
+            if (d.id === imported.id) {
+                return [true, null];
+            }
+        }
+        return [false, null];
+    }
+
     return (
         <ImportYAML
             name="Drill"
             extractFields={extractFields}
-            existing={drills}
+            checkExists={checkExists}
             apiImport={importDrills}
             onRefresh={onNeedDrills}
         />

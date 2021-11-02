@@ -239,11 +239,102 @@ function ImportQuestions({ questions, onNeedsQuestions }) {
         return [false, null, question];
     }
 
+    function sameQuestion(q1, q2) {
+        if (q1.questionType !== q2.questionType) return false;
+        if (q1.hasCodeField !== q2.hasCodeField) return false;
+        if (q1.hasCodeField) {
+            if (q1.code !== q2.code) return false;
+            // highlights
+            const fields = [
+                "startLine",
+                "startChar",
+                "endLine",
+                "endChar",
+                "byUser",
+            ];
+            const highlights1 = q1.highlights || [];
+            const highlights2 = q2.highlights || [];
+            for (const h1 of highlights1) {
+                let found = false;
+                for (let i = 0; i < highlights2.length; i++) {
+                    const h2 = highlights2[i];
+                    if (!fields.every((f) => h1[f] === h2[f])) continue;
+                    if ((h1.text || "") !== (h2.text || "")) continue;
+                    found = true;
+                    highlights2.splice(i, 1);
+                    break;
+                }
+                if (!found) return false;
+            }
+            if (highlights2.length > 0) return false;
+        }
+        if (q1.hasAnswerField !== q2.hasAnswerField) return false;
+        if (q1.questionText !== q2.questionText) return false;
+        switch (q1.questionType) {
+            case "Comment":
+            // fall through
+            case "Highlight":
+                // rubric
+                const fields = ["points", "text"];
+                const rubric1 = q1.rubric;
+                const rubric2 = q2.rubric;
+                for (const item1 of rubric1) {
+                    let found = false;
+                    for (let i = 0; i < rubric2.length; i++) {
+                        const item2 = rubric2[i];
+                        if (!fields.every((f) => item1[f] === item2[f]))
+                            continue;
+                        found = true;
+                        rubric2.splice(i, 1);
+                        break;
+                    }
+                    if (!found) return false;
+                }
+                if (rubric2.length > 0) return false;
+                break;
+            case "Multiple Choice":
+                // answer choices
+                const choices1 = q1.answerChoices;
+                const choices2 = q2.answerChoices;
+                if (
+                    new Set(choices1).size !==
+                    new Set(choices1.concat(choices2)).size
+                )
+                    return false;
+                if (choices1[q1.correct] !== choices2[q2.correct]) return false;
+                break;
+            default:
+                break;
+        }
+        // tags
+        const tags1 = q1.tags || [];
+        const tags2 = q2.tags || [];
+        if (new Set(tags1).size !== new Set(tags1.concat(tags2)).size)
+            return false;
+        return true;
+    }
+
+    function checkExists(imported, question) {
+        const nullId = imported.id == null;
+        for (const q of questions) {
+            // if imported matches existing
+            if (sameQuestion(q, question)) {
+                return [true, q.id];
+            }
+            if (nullId) continue;
+            // if imported id exists, update
+            if (q.id === imported.id) {
+                return [true, null];
+            }
+        }
+        return [false, null];
+    }
+
     return (
         <ImportYAML
             name="Question"
             extractFields={extractFields}
-            existing={questions}
+            checkExists={checkExists}
             apiImport={importQuestions}
             onRefresh={onNeedsQuestions}
         />

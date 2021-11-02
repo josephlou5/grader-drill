@@ -16,15 +16,17 @@ export function readYAML(file) {
 }
 
 class ImportFile {
-    constructor(name, file, existing, extractFields) {
+    constructor(name, file, extractFields, checkExists) {
         this.name = name;
         this.file = file;
         this.filename = file.name;
-        this.existing = existing;
         this.extractFields = extractFields;
+        this.checkExists = checkExists;
+
         this.obj = null;
         this.status = "Importing...";
         this.invalid = false;
+        this.duplicate = false;
     }
 
     async readFile() {
@@ -36,12 +38,16 @@ class ImportFile {
             this.invalid = true;
             return;
         }
-        // check if imported should replace existing
-        if (imported.id == null) {
-            this.status = `New ${this.name}`;
-        } else if (this.existing.some((e) => e.id === imported.id)) {
+        // check if imported should update existing
+        const [exists, sameId] = this.checkExists(imported, obj);
+        if (sameId != null) {
+            this.duplicate = true;
+            this.status = `Exact same as ${this.name} ${sameId}`;
+        } else if (exists) {
             obj.id = imported.id;
             this.status = `Updating ${this.name} ${imported.id}`;
+        } else {
+            this.status = `New ${this.name}`;
         }
         this.obj = obj;
     }
@@ -51,22 +57,22 @@ class ImportFile {
 export function ImportYAML({
     name,
     extractFields,
-    existing,
+    checkExists,
     apiImport,
     onRefresh,
 }) {
     const [files, setFiles] = useState([]);
 
     async function handleChooseFiles(event) {
-        if (!existing) return;
-
         const element = event.target;
 
         // find all YAML files
         const yamlFiles = [];
         for (const file of element.files) {
             if (file.type !== "application/x-yaml") continue;
-            yamlFiles.push(new ImportFile(name, file, existing, extractFields));
+            yamlFiles.push(
+                new ImportFile(name, file, extractFields, checkExists)
+            );
         }
 
         // reset input element
@@ -93,8 +99,9 @@ export function ImportYAML({
     function handleImport() {
         const creating = [];
         const imports = {};
-        for (const { invalid, obj } of files) {
+        for (const { invalid, duplicate, obj } of files) {
             if (invalid) continue;
+            if (duplicate) continue;
             if (obj.id == null) {
                 // new
                 creating.push(obj);
@@ -104,10 +111,7 @@ export function ImportYAML({
             }
         }
 
-        const updating = [];
-        for (const id in imports) {
-            updating.push(imports[id]);
-        }
+        const updating = Object.values(imports);
 
         if (creating.length === 0 && updating.length === 0) {
             setFiles([]);
