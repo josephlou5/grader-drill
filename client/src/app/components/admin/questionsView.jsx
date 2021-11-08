@@ -24,6 +24,13 @@ export default function QuestionsView() {
         <React.Fragment>
             <Title title="Questions" />
             <h1>Questions</h1>
+            <div>
+                This is the questions view. You can create, view, import,
+                export, and edit questions. Questions use a version system, so
+                every time you edit and make some changes, a new version is
+                automatically created. Each question displays its id, number of
+                versions, and some info about the question.
+            </div>
             <Link to="/questions/new">
                 <button type="button" className="btn btn-success m-2">
                     New Question
@@ -33,6 +40,16 @@ export default function QuestionsView() {
                 questions={questions}
                 onNeedsQuestions={handleNeedQuestions}
             />
+            <div>
+                You can import questions with the above button. Only YAML files
+                are accepted, and only files with valid fields will be imported.
+                (Export a question to see which fields are required.) If a
+                file's contents are detected to be a duplicate of an existing
+                question, it will not be imported. If a valid question id is
+                given in a file, it will create a new version for that question.
+                If no question id is provided or the question id does not exist,
+                then a new question will be created.
+            </div>
             <QuestionsTable
                 questions={questions}
                 onNeedsQuestions={handleNeedQuestions}
@@ -444,6 +461,10 @@ function QuestionsTable({ questions, onNeedsQuestions }) {
                 onChangeFilter={handleChangeFilter}
                 onDeleteFilter={handleDeleteFilter}
             />
+            <div>
+                Use the above to filter the questions table with specific tags.
+                The table will show the union of the given tags.
+            </div>
             <table className="table table-hover align-middle">
                 <thead className="table-light">
                     <tr>

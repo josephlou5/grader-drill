@@ -20,11 +20,6 @@ export default function TraineeDashboard(props) {
         <React.Fragment>
             <Title title="Trainee Dashboard" />
             <h1>Trainee Dashboard</h1>
-            <Link to="/training">
-                <button type="button" className="btn btn-success m-2">
-                    Training
-                </button>
-            </Link>
             <Dashboard {...props} />
         </React.Fragment>
     );
@@ -209,6 +204,7 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
             </label>
         </div>
     );
+
     const table = (
         <table className="table table-hover align-middle">
             <thead className="table-light">
@@ -225,9 +221,14 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
             <tbody>{rows}</tbody>
         </table>
     );
+
     return (
         <div>
             <h2>My Drills</h2>
+            <div>
+                You can join a new drill and see and remove the drills you are
+                in.
+            </div>
             {hideCompletedToggle}
             <AddDrillInput onAddDrill={onAddDrill} />
             {table}
@@ -369,6 +370,10 @@ function AnsweredTable({ drills, answered }) {
     return (
         <div>
             <h2>My Answered</h2>
+            <div>
+                You can view all your answered questions and filter them by
+                drill.
+            </div>
             {hideUngradedToggle}
             {selectDrill}
             {table}

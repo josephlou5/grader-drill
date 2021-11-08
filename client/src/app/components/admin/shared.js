@@ -217,7 +217,7 @@ function ImportStatusTable({
 }
 
 // component for exporting obj to YAML
-export function ExportYAML({ obj, fields, filename }) {
+export function ExportYAML({ obj, fields, filename, button = "Export" }) {
     const [downloadUrl, setDownloadUrl] = useState(null);
 
     useEffect(() => {
@@ -238,7 +238,7 @@ export function ExportYAML({ obj, fields, filename }) {
             href={downloadUrl}
             download={filename}
         >
-            Export
+            {button}
         </a>
     );
 }

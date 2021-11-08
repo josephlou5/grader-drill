@@ -8,7 +8,10 @@ export default function UsersView(props) {
             <Title title="Users" />
             <h1>Users</h1>
             <div>
-                Note: Role updates require the user to re-login to take effect.
+                This is the users view. You can add a user, who will receive a
+                "Trainee" role as the default. You can view and edit anyone's
+                roles. Note that role updates require the user to re-login to
+                take effect. Currently, there is no way to delete a user.
             </div>
             <Users {...props} />
         </React.Fragment>

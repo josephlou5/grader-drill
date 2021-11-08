@@ -8,6 +8,12 @@ export default function AdminDashboard() {
         <React.Fragment>
             <Title title="Admin Dashboard" />
             <h1>Admin Dashboard</h1>
+            <div>
+                This is the Admin dashboard. You can find all the answered
+                questions, view them, and delete them. Each question displays
+                its corresponding Trainee, drill, question, and Assessor and
+                score if it has been graded.
+            </div>
             <AnsweredTable />
         </React.Fragment>
     );

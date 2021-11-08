@@ -165,10 +165,30 @@ function ExportQuestion({ question }) {
 
     const filename = `question${question.id}-version${question.version}.yaml`;
 
-    return <ExportYAML obj={question} fields={fields} filename={filename} />;
+    return (
+        <ExportYAML
+            obj={question}
+            fields={fields}
+            filename={filename}
+            button={"Export This Version"}
+        />
+    );
 }
 
-function AnsweredTable({ questionId, numVersions }) {
+function AnsweredTable(props) {
+    return (
+        <React.Fragment>
+            <h2>Answered</h2>
+            <div>
+                These tables show all the answered questions for each version of
+                this question.
+            </div>
+            <AnsweredTables {...props} />
+        </React.Fragment>
+    );
+}
+
+function AnsweredTables({ questionId, numVersions }) {
     const [{ needsAnswered, answered }, setState] = useState({
         needsAnswered: true,
     });
@@ -181,21 +201,11 @@ function AnsweredTable({ questionId, numVersions }) {
     });
 
     if (!answered) {
-        return (
-            <React.Fragment>
-                <h2>Answered</h2>
-                <p>Getting answered...</p>
-            </React.Fragment>
-        );
+        return "Getting answered...";
     }
 
     if (answered.length === 0) {
-        return (
-            <React.Fragment>
-                <h2>Answered</h2>
-                <p>No trainees have answered this question.</p>
-            </React.Fragment>
-        );
+        return "No trainees have answered this question.";
     }
 
     function handleDeleteAnswered(answeredId) {
@@ -258,7 +268,7 @@ function AnsweredTable({ questionId, numVersions }) {
         );
     }
 
-    const tables = versions.map((answered, index) => {
+    return versions.map((answered, index) => {
         let body;
         if (answered.length === 0) {
             body = <p>No answered</p>;
@@ -287,11 +297,4 @@ function AnsweredTable({ questionId, numVersions }) {
             </div>
         );
     });
-
-    return (
-        <React.Fragment>
-            <h2>Answered</h2>
-            {tables}
-        </React.Fragment>
-    );
 }

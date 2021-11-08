@@ -24,12 +24,25 @@ export default function DrillsView() {
         <React.Fragment>
             <Title title="Drills" />
             <h1>Drills</h1>
+            <div>
+                This is the drills view. You can create, view, import, export,
+                and edit drills.
+            </div>
             <Link to="/drills/new">
                 <button type="button" className="btn btn-success m-2">
                     New Drill
                 </button>
             </Link>
             <ImportDrills drills={drills} onNeedDrills={handleNeedDrills} />
+            <div>
+                You can import drills with the above button. Only YAML files are
+                accepted, and only files with valid fields will be imported.
+                (Export a drill to see which fields are required.) If a file's
+                contents are detected to be a duplicate of an existing drill, it
+                will not be imported. If a valid drill id is given in a file, it
+                will update that drill. If no drill id is provided or the drill
+                id does not exist, then a new drill will be created.
+            </div>
             <DrillsTable drills={drills} onNeedDrills={handleNeedDrills} />
         </React.Fragment>
     );

@@ -8,6 +8,10 @@ export default function AssessorDashboard(props) {
         <React.Fragment>
             <Title title="Assessor Dashboard" />
             <h1>Assessor Dashboard</h1>
+            <div>
+                This is the Assessor dashboard. You can view the questions that
+                you have graded, and potentially regrade any if you need to.
+            </div>
             <Dashboard {...props} />
         </React.Fragment>
     );
@@ -49,15 +53,9 @@ function Dashboard() {
 
     return (
         <React.Fragment>
-            <Link to="/grading">
-                <button type="button" className="btn btn-success m-2">
-                    Grading
-                </button>
-            </Link>
             <div>{anonymousToggle}</div>
-
             <GradedTable anonymous={anonymous} />
-            <AnsweredTable answered={answered} anonymous={anonymous} />
+            {/* <AnsweredTable answered={answered} anonymous={anonymous} /> */}
         </React.Fragment>
     );
 }
@@ -85,11 +83,14 @@ function GradedTable({ anonymous }) {
             traineeStr = question.Trainee.User.username;
         }
 
+        const drillName = question.TraineeDrill.Drill.name;
+
         const link = "/answered/" + answeredId;
         return (
             <tr key={answeredId}>
                 <th>{index + 1}</th>
                 <td>{traineeStr}</td>
+                <td>{drillName}</td>
                 <td>{question.questionId}</td>
                 <td>
                     <QuestionType
@@ -118,6 +119,7 @@ function GradedTable({ anonymous }) {
                 <tr>
                     <th></th>
                     <th>Trainee</th>
+                    <th>Drill</th>
                     <th>Question Id</th>
                     <th>Question Type</th>
                     <th>Score</th>
@@ -209,7 +211,7 @@ function AnsweredTable({ answered, anonymous }) {
         );
     });
 
-    let table = (
+    const table = (
         <table className="table table-hover align-middle">
             <thead className="table-light">
                 <tr>
