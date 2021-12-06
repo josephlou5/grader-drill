@@ -95,6 +95,9 @@ export default function EditQuestionView({ newQuestion, questionId }) {
                     questionType,
                     hasCodeField: true,
                     hasAnswerField: true,
+                    code: question.code || "",
+                    highlights: question.highlights || [],
+                    rubric: question.rubric || [],
                 });
                 break;
             case "Highlight":
@@ -103,6 +106,9 @@ export default function EditQuestionView({ newQuestion, questionId }) {
                     questionType,
                     hasCodeField: true,
                     hasAnswerField: false,
+                    code: question.code || "",
+                    highlights: question.highlights || [],
+                    rubric: question.rubric || [],
                 });
                 break;
             case "Multiple Choice":
@@ -110,6 +116,7 @@ export default function EditQuestionView({ newQuestion, questionId }) {
                 setQuestion({
                     questionType,
                     hasAnswerField: true,
+                    answerChoices: question.answerChoices || [],
                 });
                 break;
             default:
@@ -396,7 +403,7 @@ export default function EditQuestionView({ newQuestion, questionId }) {
             onDeleteRubricItem: handleDeleteRubricItem,
         };
         rubricField = (
-            <div className="row">
+            <div className="rubric-field row">
                 <div className="col">
                     <RubricField {...editRubricFieldProps} />
                 </div>
@@ -421,11 +428,7 @@ export default function EditQuestionView({ newQuestion, questionId }) {
                 </div>
             </div>
 
-            <div
-                role="group"
-                className="btn-group"
-                style={{ marginLeft: "10px" }}
-            >
+            <div role="group" className="btn-group">
                 {questionTypeChoice}
             </div>
 
@@ -458,7 +461,7 @@ export default function EditQuestionView({ newQuestion, questionId }) {
             {question.hasCodeField && <CodeField {...codeFieldProps} />}
             {question.hasAnswerField && <AnswerField {...answerFieldProps} />}
             {rubricField}
-            <div className="row">
+            <div className="tags-field row">
                 <div className="col-6">
                     <h1>Tags</h1>
                     <div>
@@ -474,23 +477,23 @@ export default function EditQuestionView({ newQuestion, questionId }) {
                 </div>
             </div>
 
-            <div>
+            <div className="mt-2">
                 <button
                     type="button"
-                    className="btn btn-danger m-1"
+                    className="btn btn-danger me-1"
                     onClick={handleCancel}
                 >
                     Cancel
                 </button>
                 <button
                     type="button"
-                    className="btn btn-success m-1"
+                    className="btn btn-success me-1"
                     onClick={handleSave}
                 >
                     Save
                 </button>
                 <Link to="/questions">
-                    <button type="button" className="btn btn-light m-1">
+                    <button type="button" className="btn btn-light">
                         Done
                     </button>
                 </Link>

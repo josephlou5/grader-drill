@@ -32,7 +32,7 @@ export default function QuestionsView() {
                 versions, and some info about the question.
             </div>
             <Link to="/questions/new">
-                <button type="button" className="btn btn-success m-2">
+                <button type="button" className="btn btn-success my-2">
                     New Question
                 </button>
             </Link>
@@ -62,8 +62,6 @@ function ImportQuestions({ questions, onNeedsQuestions }) {
     // `id` and `version` are optional (replace existing or new question)
     const fields = [
         ["questionType", "string"],
-        ["hasCodeField", "boolean"],
-        ["hasAnswerField", "boolean"],
         ["questionText", "string"],
     ];
     function extractFields(imported) {
@@ -75,17 +73,25 @@ function ImportQuestions({ questions, onNeedsQuestions }) {
 
         const allFields = [...fields];
         const arrays = [["tags", "string"]];
-        if (imported.hasCodeField) {
+        if (
+            imported.questionType !== "Multiple Choice" ||
+            imported.hasCodeField
+        ) {
+            question.hasCodeField = true;
             allFields.push(["code", "string"]);
+        } else {
+            question.hasCodeField = false;
         }
         switch (imported.questionType) {
             case "Comment":
+                question.hasAnswerField = true;
             // fall through
             case "Highlight":
                 allFields.push(["rubric", "object"]);
                 arrays.push(["rubric", "object"]);
                 break;
             case "Multiple Choice":
+                question.hasAnswerField = true;
                 allFields.push(
                     ["answerChoices", "object"],
                     ["correct", "number"]

@@ -58,7 +58,11 @@ function Protected({ user, setUser, role, children, ...rest }) {
                 return "Changing roles...";
             }
         }
-        return <Route {...rest}>{children}</Route>;
+        return (
+            <Route {...rest}>
+                <div className="app-body">{children}</div>
+            </Route>
+        );
     }
     const renderFunc = ({ location }) => {
         const to = "/login?redirect=" + location.pathname;

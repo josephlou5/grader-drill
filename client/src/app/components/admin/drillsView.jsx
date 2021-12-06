@@ -29,7 +29,7 @@ export default function DrillsView() {
                 and edit drills.
             </div>
             <Link to="/drills/new">
-                <button type="button" className="btn btn-success m-2">
+                <button type="button" className="btn btn-success my-2">
                     New Drill
                 </button>
             </Link>

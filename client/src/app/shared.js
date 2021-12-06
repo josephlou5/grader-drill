@@ -29,7 +29,6 @@ export function ResizeTextareas() {
             .querySelectorAll(".textarea")
             .forEach((e) => dynamicResizing(e));
     });
-    // component doesn't render anything
     return null;
 }
 
@@ -102,11 +101,17 @@ export function ButtonHelp({ help }) {
     }
 
     return (
-        <div className="m-1">
+        <div className="mt-1">
             {button}
             {helpMsg}
         </div>
     );
+}
+
+export function collapseToggle(elementId) {
+    return () => {
+        document.getElementById(elementId).classList.toggle("d-none");
+    };
 }
 
 export function setValid(element, isValid) {
