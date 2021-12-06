@@ -239,6 +239,12 @@ export default function App() {
                 <Protected path="/grading/:answeredId" {...props("Assessor")}>
                     <GradeQuestion assessor={user} />
                 </Protected>
+                <Protected
+                    path="/grading/drill/:drillId"
+                    {...props("Assessor")}
+                >
+                    <GradeDrill assessor={user} />
+                </Protected>
 
                 {/* TRAINEE ROLE */}
 
@@ -250,6 +256,12 @@ export default function App() {
                 {/* training */}
                 <Protected path="/training" {...props("Trainee")}>
                     <TrainingView />
+                </Protected>
+                <Protected
+                    path="/training/drill/:drillId"
+                    {...props("Trainee")}
+                >
+                    <TrainDrill />
                 </Protected>
 
                 <Route path="*">
@@ -406,4 +418,22 @@ function GradeQuestion({ assessor }) {
             answeredId={answeredId}
         />
     );
+}
+
+function GradeDrill({ assessor }) {
+    let { drillId } = useParams();
+    drillId = parseInt(drillId);
+    if (isNaN(drillId)) {
+        return <Redirect to="/grading" />;
+    }
+    return <GradingView assessor={assessor} drillId={drillId} />;
+}
+
+function TrainDrill() {
+    let { drillId } = useParams();
+    drillId = parseInt(drillId);
+    if (isNaN(drillId)) {
+        return <Redirect to="/training" />;
+    }
+    return <TrainingView drillId={drillId} />;
 }

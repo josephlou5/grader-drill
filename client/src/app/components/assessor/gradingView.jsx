@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, Redirect } from "react-router-dom";
+import { useHistory, Link, Redirect } from "react-router-dom";
 import { useMountEffect, Title, DueDate, ButtonHelp } from "app/shared";
 import {
     getAnswered,
@@ -84,10 +84,12 @@ function GradeSpecific({ assessor, specificQuestion, answeredId }) {
     );
 }
 
-function ChooseDrill({ assessor }) {
+function ChooseDrill({ assessor, drillId }) {
     const [gradeAll, setGradeAll] = useState(false);
     const [drills, setDrills] = useState(null);
     const [drill, setDrill] = useState(null);
+
+    const history = useHistory();
 
     useEffect(() => {
         if (drills || drill) return;
@@ -118,12 +120,30 @@ function ChooseDrill({ assessor }) {
                     numUngraded: ungraded.length,
                 });
             });
+            console.log("drills:", drills);
             setDrills(drills);
         });
     });
 
     if (!drills) {
         return <p>Getting drills...</p>;
+    }
+
+    if (drillId != null) {
+        for (const drill of drills) {
+            if (drill.id !== drillId) continue;
+            function onBack() {
+                history.push("/grading");
+            }
+            return (
+                <Grading
+                    assessor={assessor}
+                    ungraded={drill.ungraded}
+                    onBack={onBack}
+                />
+            );
+        }
+        return <Redirect to="/grading" />;
     }
 
     function handleGlobalTraining() {

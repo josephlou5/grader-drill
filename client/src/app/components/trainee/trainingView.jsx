@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useHistory, Redirect } from "react-router-dom";
 import { Title, DueDate, hasTags } from "app/shared";
 import {
     getTraineeAnswered,
@@ -19,9 +20,11 @@ export default function TrainingView(props) {
     );
 }
 
-function ChooseDrill() {
+function ChooseDrill({ drillId }) {
     const [drills, setDrills] = useState(null);
     const [drill, setDrill] = useState(null);
+
+    const history = useHistory();
 
     useEffect(() => {
         if (drills || drill) return;
@@ -36,6 +39,24 @@ function ChooseDrill() {
 
     if (drills.length === 0) {
         return <p>No drills!</p>;
+    }
+
+    if (drillId != null) {
+        // TODO: if not joined drill yet, automatically join
+        for (const traineeDrill of drills) {
+            if (traineeDrill.drillId !== drillId) continue;
+            function onBack() {
+                history.push("/training");
+            }
+            return (
+                <TrainDrill
+                    traineeDrill={traineeDrill}
+                    onBack={onBack}
+                    onDrillDone={onBack}
+                />
+            );
+        }
+        return <Redirect to="/training" />;
     }
 
     function handleBackToChoose() {
