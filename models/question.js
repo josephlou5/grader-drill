@@ -86,10 +86,14 @@ module.exports = (sequelize, DataTypes) => {
             },
             code: {
                 type: DataTypes.TEXT,
+                allowNull: false,
+                defaultValue: "",
             },
             // the highlights array as a JSON string
             highlights: {
                 type: DataTypes.TEXT,
+                allowNull: false,
+                defaultValue: "[]",
                 get() {
                     const val = this.getDataValue("highlights");
                     if (val == null) return null;
@@ -102,6 +106,8 @@ module.exports = (sequelize, DataTypes) => {
             // the rubric array as a JSON string
             rubric: {
                 type: DataTypes.TEXT,
+                allowNull: false,
+                defaultValue: "[]",
                 get() {
                     const val = this.getDataValue("rubric");
                     if (val == null) return null;
@@ -114,6 +120,8 @@ module.exports = (sequelize, DataTypes) => {
             // the answer choices array as a JSON string
             answerChoices: {
                 type: DataTypes.TEXT,
+                allowNull: false,
+                defaultValue: "[]",
                 get() {
                     const val = this.getDataValue("answerChoices");
                     if (val == null) return null;
