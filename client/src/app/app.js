@@ -5,6 +5,7 @@ import {
     Switch,
     Route,
     Link,
+    NavLink,
     Redirect,
 } from "react-router-dom";
 import "./app.css";
@@ -277,11 +278,15 @@ function Navbar({ user, onLogOut }) {
             );
         } else {
             if (user.roles.length === 1) {
-                roleLabel = <div className="navbar-text me-3">{user.role}</div>;
+                roleLabel = (
+                    <div className="navbar-text me-3">
+                        {user.role} {" >"}
+                    </div>
+                );
             } else {
                 roleLabel = (
                     <Link to="/role" className="nav-link text-secondary">
-                        {user.role}
+                        {user.role} {" >"}
                     </Link>
                 );
             }
@@ -305,7 +310,7 @@ function Navbar({ user, onLogOut }) {
                 <Link to="/">
                     <button
                         type="button"
-                        className="btn btn-outline-danger"
+                        className="btn btn-danger"
                         onClick={onLogOut}
                     >
                         Log Out
@@ -318,14 +323,19 @@ function Navbar({ user, onLogOut }) {
         <nav className="navbar navbar-expand-lg navbar-light bg-light">
             <div className="container-fluid">
                 <Link to="/" className="navbar-brand">
-                    Grader Drill
+                    Grader Drills
                 </Link>
                 <div className="collapse navbar-collapse">
                     <div className="navbar-nav">
                         {navbarLinks.map(([link, title]) => (
-                            <Link key={link} to={link} className="nav-link">
+                            <NavLink
+                                key={link}
+                                to={link}
+                                className="nav-link"
+                                activeClassName="active"
+                            >
                                 {title}
-                            </Link>
+                            </NavLink>
                         ))}
                     </div>
                 </div>
