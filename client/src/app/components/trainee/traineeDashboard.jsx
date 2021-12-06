@@ -136,9 +136,14 @@ function DrillNameCode({ drill: { name, code } }) {
 
 function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
     const [hideCompleted, setHideCompleted] = useState(false);
+    const [hideOverdue, setHideOverdue] = useState(false);
 
     function handleToggleHideCompleted() {
         setHideCompleted(!hideCompleted);
+    }
+
+    function handleToggleHideOverdue() {
+        setHideOverdue(!hideOverdue);
     }
 
     if (!drills) {
@@ -154,23 +159,40 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
             progress,
         } = traineeDrill;
         const drill = traineeDrill.Drill;
+        const { expired } = drill;
 
         let classes = undefined;
-        if (hideCompleted && completedAt) {
+        if ((hideCompleted && completedAt) || (hideOverdue && expired)) {
             classes = "d-none";
         } else {
             rowsShowing++;
         }
 
-        const removeDrillButton = (
-            <button
-                type="button"
-                className="btn btn-danger btn-sm"
-                onClick={() => onRemoveDrill(traineeDrillId)}
-            >
-                Remove Drill
-            </button>
-        );
+        let trainButton;
+        if (completedAt) {
+            // train button should be disabled
+            trainButton = (
+                <button
+                    type="button"
+                    className="btn btn-success btn-sm me-2"
+                    disabled={true}
+                >
+                    Train
+                </button>
+            );
+        } else {
+            // train button links to drill
+            trainButton = (
+                <Link to={"/training/drill/" + drill.id}>
+                    <button
+                        type="button"
+                        className="btn btn-success btn-sm me-2"
+                    >
+                        Train
+                    </button>
+                </Link>
+            );
+        }
 
         return (
             <tr key={traineeDrillId} className={classes}>
@@ -184,7 +206,16 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
                 <td>{drill.numQuestions}</td>
                 <td>{progress}</td>
                 <td>{completedDate}</td>
-                <td>{removeDrillButton}</td>
+                <td>
+                    {trainButton}
+                    <button
+                        type="button"
+                        className="btn btn-danger btn-sm"
+                        onClick={() => onRemoveDrill(traineeDrillId)}
+                    >
+                        Remove Drill
+                    </button>
+                </td>
             </tr>
         );
     });
@@ -201,6 +232,22 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
             />
             <label className="form-check-label" htmlFor="hideCompletedDrills">
                 Hide Completed
+            </label>
+        </div>
+    );
+
+    // could turn this into a toggle button instead of a checkbox
+    const hideOverdueToggle = (
+        <div className="form-check form-check-inline">
+            <input
+                type="checkbox"
+                className="form-check-input"
+                id="hideOverdueDrills"
+                checked={hideOverdue}
+                onChange={handleToggleHideOverdue}
+            />
+            <label className="form-check-label" htmlFor="hideOverdueDrills">
+                Hide Overdue
             </label>
         </div>
     );
@@ -230,6 +277,7 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
                 in.
             </div>
             {hideCompletedToggle}
+            {hideOverdueToggle}
             <AddDrillInput onAddDrill={onAddDrill} />
             {table}
             {rowsShowing === 0 && <p>No drills</p>}
@@ -303,7 +351,7 @@ function AnsweredTable({ drills, answered }) {
                             type="button"
                             className="btn btn-primary btn-sm"
                         >
-                            Question
+                            View
                         </button>
                     </Link>
                 </td>

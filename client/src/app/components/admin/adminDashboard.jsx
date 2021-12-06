@@ -91,7 +91,7 @@ function AnsweredTable() {
                             type="button"
                             className="btn btn-primary btn-sm"
                         >
-                            Question
+                            View
                         </button>
                     </Link>
                     <button

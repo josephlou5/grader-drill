@@ -85,6 +85,7 @@ function GradedTable({ anonymous }) {
 
         const drillName = question.TraineeDrill.Drill.name;
 
+        const regradeLink = "/grading/" + answeredId;
         const link = "/answered/" + answeredId;
         return (
             <tr key={answeredId}>
@@ -100,12 +101,20 @@ function GradedTable({ anonymous }) {
                 </td>
                 <td>{question.score}</td>
                 <td>
+                    <Link to={regradeLink}>
+                        <button
+                            type="button"
+                            className="btn btn-success btn-sm me-2"
+                        >
+                            Regrade
+                        </button>
+                    </Link>
                     <Link to={link}>
                         <button
                             type="button"
                             className="btn btn-primary btn-sm"
                         >
-                            Question
+                            View
                         </button>
                     </Link>
                 </td>
