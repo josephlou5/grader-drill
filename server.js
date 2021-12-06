@@ -950,6 +950,7 @@ app.post("/api/traineeDrills", (req, res) => {
                         error: true,
                         msg: `trainee ${traineeId} already in drill ${drillId}`,
                         uniqueViolation: true,
+                        drillId,
                     });
                     return;
                 }

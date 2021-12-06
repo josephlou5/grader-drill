@@ -4,27 +4,42 @@ import { Title } from "app/shared";
 import { addTraineeDrill } from "app/api";
 
 export default function JoinDrillView() {
-    const [status, setStatus] = useState("Getting drill...");
-    const [success, setSuccess] = useState(false);
+    const [{ status, success, drillId }, setState] = useState({
+        status: "Getting drill...",
+        success: false,
+    });
 
     const { drillCode } = useParams();
 
     useEffect(() => {
         addTraineeDrill(drillCode).then((drill) => {
             if (!drill.error) {
-                setStatus("Successfully joined drill!");
-                setSuccess(true);
+                setState({
+                    status: "Successfully joined drill!",
+                    success: true,
+                    drillId: drill.drillId,
+                });
             } else if (drill.uniqueViolation) {
-                setStatus("Already in drill!");
-                setSuccess(true);
+                setState({
+                    status: "Already in drill!",
+                    success: true,
+                    drillId: drill.drillId,
+                });
             } else {
-                setStatus("Invalid drill code.");
+                setState({
+                    status: "Invalid drill code.",
+                    success: false,
+                });
             }
         });
     }, [drillCode]);
 
+    let link = "/training";
+    if (success && drillId != null) {
+        link += "/drill/" + drillId;
+    }
     const trainButton = (
-        <Link to="/training">
+        <Link to={link}>
             <button type="button" className="btn btn-success">
                 Training
             </button>
