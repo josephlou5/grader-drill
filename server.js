@@ -783,9 +783,7 @@ app.post("/api/drills", (req, res) => {
                 response.message.push(error.message);
                 switch (error.type) {
                     case "unique violation":
-                        response.msg.push(
-                            "could not generate unique code for drill"
-                        );
+                        response.msg.push(error.message);
                         response.uniqueViolation = true;
                     case "notNull Violation":
                         if (error.path === "name") {

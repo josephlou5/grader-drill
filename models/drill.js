@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
             // define association here
         }
 
-        static async generateCode({ num = 1, attempts = 10 }) {
+        static async generateCode({ num = 1, attempts = 10 } = {}) {
             if (num < 1) return [];
             const codes = new Set(
                 (
@@ -48,7 +48,7 @@ module.exports = (sequelize, DataTypes) => {
         }
 
         static async add(drill) {
-            const [code] = this.generateCode();
+            const [code] = await this.generateCode();
             if (!code) {
                 console.log("could not generate unique code for drill");
                 return null;
