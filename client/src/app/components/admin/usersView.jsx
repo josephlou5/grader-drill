@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Title, setElementValid, resetValid } from "app/shared";
-import { getAllUsers, addUser, updateUserRoles } from "app/api";
+import { getAllUsers, logInAs, addUser, updateUserRoles } from "app/api";
 
 export default function UsersView(props) {
     return (
@@ -11,7 +11,8 @@ export default function UsersView(props) {
                 This is the users view. You can add a user, who will receive a
                 "Trainee" role as the default. You can view and edit anyone's
                 roles. Note that role updates require the user to re-login to
-                take effect. Currently, there is no way to delete a user.
+                take effect. Currently, there is no way to delete a user. You
+                can also log in as any user for administrative purposes.
             </div>
             <Users {...props} />
         </React.Fragment>
@@ -122,6 +123,22 @@ function UsersTable({ admin, users, onUpdateRoles }) {
                     onUpdateRoles={onUpdateRoles}
                 />
             </td>
+            <td>
+                {admin.id !== user.id && (
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-primary"
+                        onClick={() => {
+                            logInAs(user.username).then(() =>
+                                // after new login, send to role page
+                                window.location.assign("/role")
+                            );
+                        }}
+                    >
+                        Log In as {user.username}
+                    </button>
+                )}
+            </td>
         </tr>
     ));
 
@@ -132,6 +149,7 @@ function UsersTable({ admin, users, onUpdateRoles }) {
                     <th></th>
                     <th>Username</th>
                     <th>Roles</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>{rows}</tbody>

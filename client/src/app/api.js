@@ -113,6 +113,12 @@ export async function isLoggedIn() {
 
 // API
 
+export async function logInAs(username) {
+    if (checkNull(username)) return null;
+    console.log("Logging in as", username);
+    return getRequest("/login/" + username);
+}
+
 export async function getAllUsers() {
     const users = await getRequest("/users");
     return checkError(users, "get", "all users", true);

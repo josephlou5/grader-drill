@@ -27,25 +27,45 @@ app.use(require("express-session")(sess));
 app.use(passport.initialize());
 app.use(passport.session());
 
+function findOrCreateUser(username, roles = ["Trainee"]) {
+    // ensure there is always at least one role (default is Trainee)
+    if (roles.length === 0) {
+        roles = ["Trainee"];
+    }
+    return models.User.findOrCreate({
+        where: { username },
+        defaults: { roles },
+    }).then(([user, created]) => {
+        user = user.toJSON();
+        if (user.roles.length === 1) {
+            user.role = user.roles[0];
+        }
+        return user;
+    });
+}
+
 passport.use(
     new CASStrategy(
         { casURL: "https://fed.princeton.edu/cas" },
         (username, profile, done) => {
             console.log("Logged in user:", username);
-            models.User.findOne({ where: { username } })
-                .then((user) => {
-                    return (
-                        user ||
-                        models.User.add({ username, roles: ["Trainee"] })
-                    );
-                })
-                .then((user) => {
-                    user = user.toJSON();
-                    if (user.roles.length === 1) {
-                        user.role = user.roles[0];
-                    }
-                    done(null, user);
-                });
+            // models.User.findOne({ where: { username } })
+            //     .then((user) => {
+            //         return (
+            //             user ||
+            //             models.User.add({ username, roles: ["Trainee"] })
+            //         );
+            //     })
+            //     .then((user) => {
+            //         user = user.toJSON();
+            //         if (user.roles.length === 1) {
+            //             user.role = user.roles[0];
+            //         }
+            //         done(null, user);
+            //     });
+            findOrCreateUser(username, ["Trainee"]).then((user) =>
+                done(null, user)
+            );
         }
     )
 );
@@ -315,19 +335,9 @@ if (process.env.NODE_ENV !== "production") {
     app.get("/dev/login", (req, res) => {
         const username = "jdlou";
         console.log("Logged in user:", username);
-        models.User.findOne({ where: { username } })
-            .then((user) => {
-                return (
-                    user || models.User.add({ username, roles: ["Trainee"] })
-                );
-            })
-            .then((user) => {
-                user = user.toJSON();
-                if (user.roles.length === 1) {
-                    user.role = user.roles[0];
-                }
-                req.login(user, (err) => res.json(err || user));
-            });
+        findOrCreateUser(username, ["Admin", "Assessor", "Trainee"]).then(
+            (user) => req.login(user, (err) => res.json(err || user))
+        );
     });
 
     app.get("/clear", async (req, res) => {
@@ -415,6 +425,16 @@ app.post("/api/users/role", (req, res) => {
         console.log("Removed user role");
     }
     res.json({ success: true });
+});
+
+// log in as anyone
+app.get("/api/login/:username", (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!checkRole(req, res, "Admin")) return;
+    const { username } = req.params;
+    findOrCreateUser(username, ["Trainee"]).then((user) =>
+        req.login(user, (err) => res.json(err || user))
+    );
 });
 
 // get all users
