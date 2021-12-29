@@ -7,6 +7,7 @@ import {
     QuestionType,
     setElementValid,
     resetValid,
+    collapseToggle,
 } from "app/shared";
 import {
     getTraineeAnswered,
@@ -27,42 +28,61 @@ export default function TraineeDashboard(props) {
 
 function Dashboard() {
     const [answered, setAnswered] = useState(null);
-    const [needsDrills, setNeedsDrills] = useState(true);
-    const [drills, setDrills] = useState(null);
+    // const [needsDrills, setNeedsDrills] = useState(true);
+    // const [drills, setDrills] = useState(null);
+    const [{ needsDrills, drills }, setDrillsState] = useState({
+        needsDrills: true,
+    });
 
     useMountEffect(() => {
         getTraineeAnswered().then((answered) => {
-            setAnswered(answered);
+            const byDrill = {};
+            answered.forEach((question) => {
+                const traineeDrillId = question.TraineeDrill.id;
+                if (byDrill[traineeDrillId] == null) {
+                    byDrill[traineeDrillId] = [question];
+                } else {
+                    byDrill[traineeDrillId].push(question);
+                }
+            });
+            setAnswered(byDrill);
         });
     });
 
     useEffect(() => {
         if (!needsDrills) return;
-        getDrillsByTrainee().then((d) => {
-            setNeedsDrills(false);
-            setDrills(d);
+        getDrillsByTrainee().then((drills) => {
+            // setNeedsDrills(false);
+            // setDrills(d);
+            setDrillsState({ drills });
         });
     });
 
     function handleAddDrill() {
-        setNeedsDrills(true);
+        // setNeedsDrills(true);
+        setDrillsState({
+            needsDrills: true,
+            drills,
+        });
     }
 
     function handleRemoveDrill(traineeDrillId) {
         deleteTraineeDrill(traineeDrillId).then(() => {
-            setNeedsDrills(true);
+            // setNeedsDrills(true);
+            setDrillsState({
+                needsDrills: true,
+                drills,
+            });
         });
     }
 
     return (
-        <React.Fragment>
-            <DrillsTable
-                drills={drills}
-                onAddDrill={handleAddDrill}
-                onRemoveDrill={handleRemoveDrill}
-            />
-            <AnsweredTable drills={drills} answered={answered} />
-        </React.Fragment>
+        <DrillsTable
+            drills={drills}
+            answered={answered}
+            onAddDrill={handleAddDrill}
+            onRemoveDrill={handleRemoveDrill}
+        />
     );
 }
 
@@ -134,7 +154,29 @@ function DrillNameCode({ drill: { name, code } }) {
     return <span onClick={handleClick}>{[name, code][showing]}</span>;
 }
 
-function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
+function ToggleAnswered({ rowId }) {
+    const [hideAnswered, setHideAnswered] = useState(true);
+
+    function handleClick() {
+        collapseToggle(rowId);
+        setHideAnswered(!hideAnswered);
+    }
+
+    return (
+        <button
+            type="button"
+            className="btn btn-success btn-sm"
+            onClick={handleClick}
+        >
+            {/* TODO: added "expand/collapse all" buttons, which have no way
+                of telling this text to update. need to fix. */}
+            {/* {hideAnswered ? "View" : "Hide"} Answered */}
+            Toggle Answered
+        </button>
+    );
+}
+
+function DrillsTable({ drills, answered, onAddDrill, onRemoveDrill }) {
     const [hideCompleted, setHideCompleted] = useState(false);
     const [hideOverdue, setHideOverdue] = useState(false);
 
@@ -150,6 +192,7 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
         return <p>Getting drills...</p>;
     }
 
+    const rowIds = [];
     let rowsShowing = 0;
     const rows = drills.map((traineeDrill, index) => {
         const {
@@ -162,8 +205,10 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
         const { expired } = drill;
 
         let classes = undefined;
+        let hiding = false;
         if ((hideCompleted && completedAt) || (hideOverdue && expired)) {
             classes = "d-none";
+            hiding = true;
         } else {
             rowsShowing++;
         }
@@ -194,29 +239,119 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
             );
         }
 
+        let toggleAnsweredButton = null;
+        let answeredTable = null;
+        let drillScore = 0;
+        let maxScore = 0;
+        if (!hiding && progress > 0 && answered && answered[traineeDrillId]) {
+            const rowId = "drill-" + traineeDrillId + "-answered";
+            rowIds.push(rowId);
+            toggleAnsweredButton = <ToggleAnswered rowId={rowId} />;
+
+            // answered for this drill
+            const answeredRows = answered[traineeDrillId].map(
+                (question, index) => {
+                    const answeredId = question.id;
+
+                    let isGraded = "-";
+                    if (question.autograded) {
+                        isGraded = "Auto-graded";
+                    } else if (question.graded) {
+                        isGraded = "Graded";
+                    }
+
+                    // TODO: need to add `maxScore` field to question and answered
+                    const questionScore = question.rubric.length;
+
+                    let score = "-";
+                    if (question.score != null) {
+                        score = question.score;
+                        drillScore += score;
+                        maxScore += questionScore;
+                    }
+
+                    const link = "/answered/" + answeredId;
+                    return (
+                        <tr key={answeredId}>
+                            <th>{index + 1}</th>
+                            <td>{isGraded}</td>
+                            <td>{question.questionId}</td>
+                            <td>
+                                <QuestionType
+                                    questionId={question.questionId}
+                                    version={question.version}
+                                />
+                            </td>
+                            <td>
+                                {score} / {questionScore}
+                            </td>
+                            <td>
+                                <Link to={link}>
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary btn-sm"
+                                    >
+                                        View
+                                    </button>
+                                </Link>
+                            </td>
+                        </tr>
+                    );
+                }
+            );
+            answeredTable = (
+                <tr id={rowId} className="d-none">
+                    <td></td>
+                    <td colSpan={7}>
+                        <table className="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Graded</th>
+                                    <th>Question Id</th>
+                                    <th>Question Type</th>
+                                    <th>Score</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>{answeredRows}</tbody>
+                        </table>
+                    </td>
+                </tr>
+            );
+        }
+
         return (
-            <tr key={traineeDrillId} className={classes}>
-                <th>{index + 1}</th>
-                <td>
-                    <DrillNameCode drill={drill} />
-                </td>
-                <td>
-                    <DueDate drill={drill} completedAt={completedAt} />
-                </td>
-                <td>{drill.numQuestions}</td>
-                <td>{progress}</td>
-                <td>{completedDate}</td>
-                <td>
-                    {trainButton}
-                    <button
-                        type="button"
-                        className="btn btn-danger btn-sm"
-                        onClick={() => onRemoveDrill(traineeDrillId)}
-                    >
-                        Remove Drill
-                    </button>
-                </td>
-            </tr>
+            <React.Fragment key={traineeDrillId}>
+                <tr className={classes}>
+                    <th>{index + 1}</th>
+                    <td>
+                        <DrillNameCode drill={drill} />
+                    </td>
+                    <td>
+                        <DueDate drill={drill} completedAt={completedAt} />
+                    </td>
+                    <td>
+                        {progress} / {drill.numQuestions}
+                    </td>
+                    <td>{completedDate}</td>
+                    <td>
+                        {drillScore} / {maxScore}
+                    </td>
+                    <td>{toggleAnsweredButton}</td>
+                    <td>
+                        {trainButton}
+                        <button
+                            type="button"
+                            className="btn btn-danger btn-sm"
+                            onClick={() => onRemoveDrill(traineeDrillId)}
+                        >
+                            Remove Drill
+                        </button>
+                    </td>
+                </tr>
+                {answeredTable}
+            </React.Fragment>
         );
     });
 
@@ -252,6 +387,29 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
         </div>
     );
 
+    const collapseAnsweredButtons = (
+        <div className="mb-2">
+            <button
+                type="button"
+                className="btn btn-primary me-1"
+                onClick={() =>
+                    rowIds.forEach((rowId) => collapseToggle(rowId, false))
+                }
+            >
+                Expand All Answered
+            </button>
+            <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() =>
+                    rowIds.forEach((rowId) => collapseToggle(rowId, true))
+                }
+            >
+                Collapse All Answered
+            </button>
+        </div>
+    );
+
     const table = (
         <table className="table table-hover align-middle">
             <thead className="table-light">
@@ -259,9 +417,10 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
                     <th></th>
                     <th>Drill</th>
                     <th>Due Date</th>
-                    <th>Num Questions</th>
                     <th>Progress</th>
                     <th>Completed</th>
+                    <th>Score</th>
+                    <th></th>
                     <th></th>
                 </tr>
             </thead>
@@ -279,153 +438,9 @@ function DrillsTable({ drills, onAddDrill, onRemoveDrill }) {
             {hideCompletedToggle}
             {hideOverdueToggle}
             <AddDrillInput onAddDrill={onAddDrill} />
+            {collapseAnsweredButtons}
             {table}
             {rowsShowing === 0 && <p>No drills</p>}
-        </div>
-    );
-}
-
-function AnsweredTable({ drills, answered }) {
-    const [hideUngraded, setHideUngraded] = useState(false);
-    const [filterDrill, setFilterDrill] = useState(null);
-
-    function handleToggleHideUngraded() {
-        setHideUngraded(!hideUngraded);
-    }
-
-    function handleFilterDrill(drill) {
-        if (drill === "None") {
-            setFilterDrill(null);
-        } else {
-            setFilterDrill(parseInt(drill));
-        }
-    }
-
-    if (!answered) {
-        return <p>Loading...</p>;
-    }
-
-    let rowsShowing = 0;
-    const rows = answered.map((question, index) => {
-        const answeredId = question.id;
-        const drill = question.TraineeDrill.Drill;
-
-        let classes = undefined;
-        if (hideUngraded && !question.graded) {
-            classes = "d-none";
-        } else if (filterDrill != null && drill.id !== filterDrill) {
-            classes = "d-none";
-        } else {
-            rowsShowing++;
-        }
-
-        let isGraded = "-";
-        if (question.autograded) {
-            isGraded = "Auto-graded";
-        } else if (question.graded) {
-            isGraded = "Graded";
-        }
-
-        let score = "-";
-        if (question.score != null) {
-            score = question.score;
-        }
-
-        const link = "/answered/" + answeredId;
-        return (
-            <tr key={answeredId} className={classes}>
-                <th>{index + 1}</th>
-                <td>{drill.name}</td>
-                <td>{isGraded}</td>
-                <td>{question.questionId}</td>
-                <td>
-                    <QuestionType
-                        questionId={question.questionId}
-                        version={question.version}
-                    />
-                </td>
-                <td>{score}</td>
-                <td>
-                    <Link to={link}>
-                        <button
-                            type="button"
-                            className="btn btn-primary btn-sm"
-                        >
-                            View
-                        </button>
-                    </Link>
-                </td>
-            </tr>
-        );
-    });
-
-    // could turn this into a toggle button instead of a checkbox
-    const hideUngradedToggle = (
-        <div className="form-check form-check-inline">
-            <input
-                type="checkbox"
-                className="form-check-input"
-                id="hideUngradedCheckbox"
-                checked={hideUngraded}
-                onChange={handleToggleHideUngraded}
-            />
-            <label className="form-check-label" htmlFor="hideUngradedCheckbox">
-                Hide Ungraded
-            </label>
-        </div>
-    );
-    const selectDrill = (
-        <div className="input-group mb-2" style={{ width: "400px" }}>
-            <label className="input-group-text" htmlFor="drill-filter">
-                Filter drill
-            </label>
-            <select
-                className="form-select"
-                id="drill-filter"
-                defaultValue="None"
-                onChange={(event) => handleFilterDrill(event.target.value)}
-            >
-                <option value="None">None</option>
-                {drills?.map((traineeDrill) => {
-                    const drill = traineeDrill.Drill;
-                    return (
-                        <option key={drill.id} value={drill.id}>
-                            {drill.name}
-                        </option>
-                    );
-                })}
-            </select>
-        </div>
-    );
-
-    const table = (
-        <table className="table table-hover align-middle">
-            <thead className="table-light">
-                <tr>
-                    <th></th>
-                    <th>Drill</th>
-                    <th>Graded</th>
-                    <th>Question Id</th>
-                    <th>Question Type</th>
-                    <th>Score</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>{rows}</tbody>
-        </table>
-    );
-
-    return (
-        <div>
-            <h2>My Answered</h2>
-            <div>
-                You can view all your answered questions and filter them by
-                drill.
-            </div>
-            {hideUngradedToggle}
-            {selectDrill}
-            {table}
-            {rowsShowing === 0 && <p>No answered</p>}
         </div>
     );
 }
