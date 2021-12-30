@@ -252,6 +252,14 @@ export default function EditQuestionView({ newQuestion, questionId }) {
         if (isNaN(pointsNum)) {
             pointsNum = 0;
         }
+        // skip zero
+        if (pointsNum === 0) {
+            if (rubric[index].points === 1) {
+                pointsNum = -1;
+            } else if (rubric[index].points === -1) {
+                pointsNum = 1;
+            }
+        }
         rubric[index] = { ...rubric[index], points: pointsNum };
         setQuestion({ rubric });
     }

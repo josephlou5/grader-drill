@@ -19,6 +19,7 @@ export default function RubricField(props) {
 
 function formatPoints(points) {
     if (points === 0) {
+        // should never happen
         return " " + points;
     } else if (points > 0) {
         return "+" + points;
@@ -31,11 +32,7 @@ function Rubric({ rubric, checked, previewMode, noChange, onCheckChange }) {
     if (previewMode || noChange) {
         // answered view or preview on edit/view question
         return rubric.map((item, index) => {
-            let text = item.text;
-            if (previewMode) {
-                // include the point values
-                text = `\`[${formatPoints(item.points)}]\` ${text}`;
-            }
+            const text = `\`[${formatPoints(item.points)}]\` ${item.text}`;
             return (
                 <div key={index} className="form-check">
                     <input
