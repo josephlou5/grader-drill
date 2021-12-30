@@ -205,13 +205,10 @@ function TrainQuestion({ traineeDrill, onBack, onDrillDone, onProgress }) {
         // update drill progress
         traineeDrillProgress(traineeDrillId).then((d) => {
             if (!d) return;
-            let callback;
             if (d.completedAt) {
                 onDrillDone();
-                callback = null;
             } else {
                 onProgress();
-                callback = handleNext;
             }
             // add answered
             const answered = {
@@ -220,7 +217,11 @@ function TrainQuestion({ traineeDrill, onBack, onDrillDone, onProgress }) {
                 traineeDrillId,
                 drillId,
             };
-            addAnswered(answered).then(callback);
+            addAnswered(answered).then(() => {
+                if (!d.completedAt) {
+                    handleNext();
+                }
+            });
         });
     }
 

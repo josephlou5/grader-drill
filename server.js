@@ -32,16 +32,15 @@ function findOrCreateUser(username, roles = ["Trainee"]) {
     if (roles.length === 0) {
         roles = ["Trainee"];
     }
-    return models.User.findOrCreate({
-        where: { username },
-        defaults: { roles },
-    }).then(([user, created]) => {
-        user = user.toJSON();
-        if (user.roles.length === 1) {
-            user.role = user.roles[0];
-        }
-        return user;
-    });
+    return models.User.findOne({ where: { username } })
+        .then((user) => user || models.User.add({ username, roles }))
+        .then((user) => {
+            user = user.toJSON();
+            if (user.roles.length === 1) {
+                user.role = user.roles[0];
+            }
+            return user;
+        });
 }
 
 passport.use(
