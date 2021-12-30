@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
                 "hasCodeField",
                 "hasAnswerField",
                 "questionText",
+                "maxPoints",
                 "tags",
             ];
             if (question.hasCodeField) {
@@ -29,9 +30,17 @@ module.exports = (sequelize, DataTypes) => {
                 // fall through
                 case "Highlight":
                     fields.push("rubric");
+                    // get max points by adding up all the positive point values
+                    question.maxPoints = question.rubric.reduce(
+                        (acc, { points }) => acc + Math.max(0, points),
+                        0
+                    );
+                    console.log("saving max points as:", question.maxPoints);
+                    console.log("rubric:", question.rubric);
                     break;
                 case "Multiple Choice":
                     fields.push("answerChoices", "correct");
+                    question.maxPoints = 1;
                     break;
                 default:
                     break;
@@ -116,6 +125,11 @@ module.exports = (sequelize, DataTypes) => {
                 set(value) {
                     this.setDataValue("rubric", JSON.stringify(value));
                 },
+            },
+            maxPoints: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                defaultValue: 1,
             },
             // the answer choices array as a JSON string
             answerChoices: {

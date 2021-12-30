@@ -136,7 +136,10 @@ function ShowQuestionVersion({ questionId, versions }) {
                         Edit question
                     </button>
                 </Link>
-                <ExportQuestion question={question} />
+                <ExportQuestion
+                    question={question}
+                    numVersions={versions.length}
+                />
             </div>
             {versionChoice}
             {questionView}
@@ -144,7 +147,7 @@ function ShowQuestionVersion({ questionId, versions }) {
     );
 }
 
-function ExportQuestion({ question }) {
+function ExportQuestion({ question, numVersions }) {
     const fields = [
         "id",
         "version",
@@ -165,12 +168,17 @@ function ExportQuestion({ question }) {
 
     const filename = `question${question.id}-version${question.version}.yaml`;
 
+    let buttonText = "Export";
+    if (numVersions > 1) {
+        buttonText += " This Version";
+    }
+
     return (
         <ExportYAML
             obj={question}
             fields={fields}
             filename={filename}
-            button={"Export This Version"}
+            button={buttonText}
         />
     );
 }
@@ -232,8 +240,7 @@ function AnsweredTables({ questionId, numVersions }) {
             } else {
                 assessorStr = question.Assessor.User.username;
             }
-            // shouldn't be null because it's graded, but just in case
-            score = question.score ?? "N/A";
+            score = question.score;
         } else {
             assessorStr = "-";
             score = "-";
@@ -246,7 +253,9 @@ function AnsweredTables({ questionId, numVersions }) {
                 <td>{traineeStr}</td>
                 <td>{drillName}</td>
                 <td>{assessorStr}</td>
-                <td>{score}</td>
+                <td>
+                    {score} / {question.maxPoints}
+                </td>
                 <td>
                     <Link to={link}>
                         <button

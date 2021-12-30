@@ -63,8 +63,7 @@ function AnsweredTable() {
             } else {
                 assessorStr = question.Assessor.User.username;
             }
-            // shouldn't be null because it's graded, but just in case
-            score = question.score ?? "N/A";
+            score = question.score;
         } else {
             assessorStr = "-";
             score = "-";
@@ -84,7 +83,9 @@ function AnsweredTable() {
                     />
                 </td>
                 <td>{assessorStr}</td>
-                <td>{score}</td>
+                <td>
+                    {score} / {question.maxPoints}
+                </td>
                 <td>
                     <Link to={link}>
                         <button

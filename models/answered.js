@@ -22,6 +22,7 @@ module.exports = (sequelize, DataTypes) => {
                 "traineeId",
                 "traineeDrillId",
                 "highlights",
+                "maxPoints",
             ];
             if (question.hasCodeField) {
                 fields.push("code");
@@ -39,7 +40,8 @@ module.exports = (sequelize, DataTypes) => {
                     Object.assign(question, {
                         autograded: true,
                         graded: true,
-                        score: correct === answer ? 100 : 0,
+                        score: correct === answer ? 1 : 0,
+                        maxPoints: 1,
                     });
                     break;
                 default:
@@ -61,6 +63,7 @@ module.exports = (sequelize, DataTypes) => {
                 "traineeDrillId",
                 "graded",
                 "highlights",
+                "maxPoints",
             ];
             if (question.hasCodeField) {
                 fields.push("code");
@@ -74,6 +77,7 @@ module.exports = (sequelize, DataTypes) => {
                     break;
                 case "Multiple Choice":
                     fields.push("answer", "score");
+                    question.maxPoints = 1;
                     break;
                 default:
                     break;
@@ -131,7 +135,7 @@ module.exports = (sequelize, DataTypes) => {
                     this.setDataValue("highlights", JSON.stringify(value));
                 },
             },
-            // the rubric array as a JSON string
+            // the rubric checked array as a JSON string
             rubric: {
                 type: DataTypes.TEXT,
                 get() {
@@ -142,6 +146,11 @@ module.exports = (sequelize, DataTypes) => {
                 set(value) {
                     this.setDataValue("rubric", JSON.stringify(value));
                 },
+            },
+            maxPoints: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                defaultValue: 1,
             },
             answer: {
                 type: DataTypes.INTEGER,

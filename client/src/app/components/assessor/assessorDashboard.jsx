@@ -99,7 +99,9 @@ function GradedTable({ anonymous }) {
                         version={question.version}
                     />
                 </td>
-                <td>{question.score}</td>
+                <td>
+                    {question.score} / {question.maxPoints}
+                </td>
                 <td>
                     <Link to={regradeLink}>
                         <button

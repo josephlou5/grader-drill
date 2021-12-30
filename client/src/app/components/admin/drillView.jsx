@@ -62,6 +62,12 @@ export default function DrillView() {
             </Link>
             <ExportDrill drill={drill} />
             <TraineeDrillsTable drill={drill} />
+            {drill.TraineeDrills.length > 0 && (
+                <div>
+                    Questions with buttons in red were answered after the due
+                    date.
+                </div>
+            )}
         </React.Fragment>
     );
 }
@@ -82,11 +88,19 @@ function TraineeDrillsTable({ drill }) {
     const rows = drills.map((traineeDrill, index) => {
         const answered = traineeDrill.Answereds;
 
+        let drillScore = 0;
+        let maxScore = 0;
+
         let questions;
         if (answered.length === 0) {
             questions = "No questions";
         } else {
             questions = answered.map((question, i) => {
+                if (question.graded) {
+                    drillScore += question.score;
+                    maxScore += question.maxPoints;
+                }
+
                 const answeredId = question.id;
                 const classes = ["btn"];
                 if (
@@ -116,6 +130,9 @@ function TraineeDrillsTable({ drill }) {
                 <td>{traineeDrill.Trainee.User.username}</td>
                 <td>{traineeDrill.progress}</td>
                 <td>{traineeDrill.completedDate}</td>
+                <td>
+                    {drillScore} / {maxScore}
+                </td>
                 <td>{questions}</td>
             </tr>
         );
@@ -129,6 +146,7 @@ function TraineeDrillsTable({ drill }) {
                     <th>Trainee</th>
                     <th>Progress</th>
                     <th>Completed</th>
+                    <th>Score</th>
                     <th>Questions</th>
                 </tr>
             </thead>

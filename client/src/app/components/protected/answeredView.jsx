@@ -59,9 +59,9 @@ export default function AnsweredView({ user }) {
         );
     }
 
-    let score = null;
+    let score = "-";
     if (answered.graded) {
-        score = <div>Score: {answered.score}</div>;
+        score = answered.score;
     }
 
     let rubricField = null;
@@ -133,7 +133,9 @@ export default function AnsweredView({ user }) {
         <React.Fragment>
             <Title title="Answered" />
             <AnsweredInfo answered={answered} />
-            {score}
+            <div>
+                Score: {score} / {answered.maxPoints}
+            </div>
             {gradeButton}
             {field}
         </React.Fragment>

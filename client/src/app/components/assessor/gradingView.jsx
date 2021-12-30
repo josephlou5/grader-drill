@@ -434,7 +434,7 @@ function GradeQuestion({
                     />
                 </div>
                 <div className="col-6">
-                    {"Score: " + score}
+                    Score: {score} / {answered.maxPoints}
                     <RubricField
                         rubric={rubric}
                         checked={checked}
@@ -449,7 +449,7 @@ function GradeQuestion({
                         <button
                             key={text}
                             type="button"
-                            className={"btn btn-" + variant + " m-1"}
+                            className={"btn btn-" + variant + " me-1"}
                             onClick={onClick}
                         >
                             {text}

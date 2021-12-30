@@ -260,8 +260,7 @@ function DrillsTable({ drills, answered, onAddDrill, onRemoveDrill }) {
                         isGraded = "Graded";
                     }
 
-                    // TODO: need to add `maxScore` field to question and answered
-                    const questionScore = question.rubric.length;
+                    const questionScore = question.maxPoints;
 
                     let score = "-";
                     if (question.score != null) {
@@ -355,6 +354,24 @@ function DrillsTable({ drills, answered, onAddDrill, onRemoveDrill }) {
         );
     });
 
+    const table = (
+        <table className="table table-hover align-middle">
+            <thead className="table-light">
+                <tr>
+                    <th></th>
+                    <th>Drill</th>
+                    <th>Due Date</th>
+                    <th>Progress</th>
+                    <th>Completed</th>
+                    <th>Score</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>{rows}</tbody>
+        </table>
+    );
+
     // could turn this into a toggle button instead of a checkbox
     const hideCompletedToggle = (
         <div className="form-check form-check-inline">
@@ -408,24 +425,6 @@ function DrillsTable({ drills, answered, onAddDrill, onRemoveDrill }) {
                 Collapse All Answered
             </button>
         </div>
-    );
-
-    const table = (
-        <table className="table table-hover align-middle">
-            <thead className="table-light">
-                <tr>
-                    <th></th>
-                    <th>Drill</th>
-                    <th>Due Date</th>
-                    <th>Progress</th>
-                    <th>Completed</th>
-                    <th>Score</th>
-                    <th></th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>{rows}</tbody>
-        </table>
     );
 
     return (
