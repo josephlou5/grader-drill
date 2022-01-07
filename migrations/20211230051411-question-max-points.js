@@ -6,12 +6,14 @@ module.exports = {
             queryInterface.addColumn("Questions", "maxPoints", {
                 type: Sequelize.INTEGER,
                 allowNull: false,
+                defaultValue: 1,
                 onUpdate: "CASCADE",
                 onDelete: "CASCADE",
             }),
             queryInterface.addColumn("Answered", "maxPoints", {
                 type: Sequelize.INTEGER,
                 allowNull: false,
+                defaultValue: 1,
                 onUpdate: "CASCADE",
                 onDelete: "CASCADE",
             }),
