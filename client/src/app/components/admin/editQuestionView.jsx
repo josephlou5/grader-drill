@@ -446,11 +446,8 @@ export default function EditQuestionView({ newQuestion, questionId }) {
                 onTextChange={handleTextChange}
             />
             {canToggleCodeField && (
-                // todo: can change this into a toggle button instead of a checkbox
-                <div
-                    className="form-check form-check-inline"
-                    style={{ marginLeft: "10px" }}
-                >
+                // can change this into a toggle button instead of a checkbox
+                <div className="form-check form-check-inline mt-2">
                     <input
                         type="checkbox"
                         className="form-check-input"
