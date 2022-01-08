@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMountEffect, Title, QuestionType } from "app/shared";
-import { getAllAnswered, getAssessorGraded } from "app/api";
+import { getAssessorGraded } from "app/api";
 
 export default function AssessorDashboard(props) {
     return (
@@ -12,27 +12,41 @@ export default function AssessorDashboard(props) {
                 This is the Assessor dashboard. You can view the questions that
                 you have graded, and potentially regrade any if you need to.
             </div>
-            <Dashboard {...props} />
+            <GradedTable />
         </React.Fragment>
     );
 }
 
-function Dashboard() {
-    const [answered, setAnswered] = useState(null);
+function GradedTable() {
     const [anonymous, setAnonymous] = useState(true);
+    const [graded, setGraded] = useState(null);
 
     function handleToggleAnonymous() {
         setAnonymous(!anonymous);
     }
 
     useMountEffect(() => {
-        getAllAnswered().then((answered) => {
-            setAnswered(answered);
+        getAssessorGraded().then((graded) => {
+            setGraded(graded);
         });
     });
 
-    if (!answered) {
-        return <p>Getting answered...</p>;
+    if (!graded) {
+        return (
+            <React.Fragment>
+                <h2>My Graded</h2>
+                <p>Getting graded...</p>
+            </React.Fragment>
+        );
+    }
+
+    if (graded.length === 0) {
+        return (
+            <React.Fragment>
+                <h2>My Graded</h2>
+                <p>No graded</p>
+            </React.Fragment>
+        );
     }
 
     // could turn this into a toggle button instead of a checkbox
@@ -50,28 +64,6 @@ function Dashboard() {
             </label>
         </div>
     );
-
-    return (
-        <React.Fragment>
-            <div>{anonymousToggle}</div>
-            <GradedTable anonymous={anonymous} />
-            {/* <AnsweredTable answered={answered} anonymous={anonymous} /> */}
-        </React.Fragment>
-    );
-}
-
-function GradedTable({ anonymous }) {
-    const [graded, setGraded] = useState(null);
-
-    useMountEffect(() => {
-        getAssessorGraded().then((graded) => {
-            setGraded(graded);
-        });
-    });
-
-    if (!graded) {
-        return <p>Getting graded...</p>;
-    }
 
     const rows = graded.map((question, index) => {
         const answeredId = question.id;
@@ -144,8 +136,8 @@ function GradedTable({ anonymous }) {
     return (
         <React.Fragment>
             <h2>My Graded</h2>
+            <div>{anonymousToggle}</div>
             {table}
-            {rows.length === 0 && <p>None graded</p>}
         </React.Fragment>
     );
 }

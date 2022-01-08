@@ -23,6 +23,10 @@ export default function TraineeDashboard(props) {
         <React.Fragment>
             <Title title="Trainee Dashboard" />
             <h1>Trainee Dashboard</h1>
+            <div>
+                This is the Trainee Dashboard. You can join a new drill and see
+                and remove the drills you are in.
+            </div>
             <Dashboard {...props} />
         </React.Fragment>
     );
@@ -73,12 +77,14 @@ function Dashboard() {
     }
 
     return (
-        <DrillsTable
-            drills={drills}
-            answered={answered}
-            onAddDrill={handleAddDrill}
-            onRemoveDrill={handleRemoveDrill}
-        />
+        <React.Fragment>
+            <AddDrillInput onAddDrill={handleAddDrill} />
+            <DrillsTable
+                drills={drills}
+                answered={answered}
+                onRemoveDrill={handleRemoveDrill}
+            />
+        </React.Fragment>
     );
 }
 
@@ -150,23 +156,77 @@ function DrillNameCode({ drill: { name, code } }) {
     return <span onClick={handleClick}>{[name, code][showing]}</span>;
 }
 
-function DrillsTable({ drills, answered, onAddDrill, onRemoveDrill }) {
+function DrillsTable({ drills, answered, onRemoveDrill }) {
     const [hideCompleted, setHideCompleted] = useState(false);
     const [hideOverdue, setHideOverdue] = useState(false);
 
+    function toggleHiddenClass(className, hiddenClass, hidden) {
+        const elements = document.getElementsByClassName(className);
+        for (const element of elements) {
+            element.classList.toggle(hiddenClass, hidden);
+        }
+    }
+
     function handleToggleHideCompleted() {
+        toggleHiddenClass("completed", "completed-hidden", !hideCompleted);
         setHideCompleted(!hideCompleted);
     }
 
     function handleToggleHideOverdue() {
+        toggleHiddenClass("overdue", "overdue-hidden", !hideOverdue);
         setHideOverdue(!hideOverdue);
     }
 
-    if (!drills) {
-        return <p>Getting drills...</p>;
+    if (!drills || !answered) {
+        return (
+            <React.Fragment>
+                <h2>My Drills</h2>
+                <p>Getting drills...</p>
+            </React.Fragment>
+        );
     }
 
-    let rowsShowing = 0;
+    if (drills.length === 0) {
+        return (
+            <React.Fragment>
+                <h2>My Drills</h2>
+                <p>No drills</p>
+            </React.Fragment>
+        );
+    }
+
+    // could turn this into a toggle button instead of a checkbox
+    const hideCompletedToggle = (
+        <div className="form-check form-check-inline">
+            <input
+                type="checkbox"
+                className="form-check-input"
+                id="hideCompletedDrills"
+                checked={hideCompleted}
+                onChange={handleToggleHideCompleted}
+            />
+            <label className="form-check-label" htmlFor="hideCompletedDrills">
+                Hide Completed
+            </label>
+        </div>
+    );
+
+    // could turn this into a toggle button instead of a checkbox
+    const hideOverdueToggle = (
+        <div className="form-check form-check-inline">
+            <input
+                type="checkbox"
+                className="form-check-input"
+                id="hideOverdueDrills"
+                checked={hideOverdue}
+                onChange={handleToggleHideOverdue}
+            />
+            <label className="form-check-label" htmlFor="hideOverdueDrills">
+                Hide Overdue
+            </label>
+        </div>
+    );
+
     const rows = drills.map((traineeDrill, index) => {
         const {
             id: traineeDrillId,
@@ -177,13 +237,12 @@ function DrillsTable({ drills, answered, onAddDrill, onRemoveDrill }) {
         const drill = traineeDrill.Drill;
         const { expired } = drill;
 
-        let classes = undefined;
-        let hiding = false;
-        if ((hideCompleted && completedAt) || (hideOverdue && expired)) {
-            classes = "d-none";
-            hiding = true;
-        } else {
-            rowsShowing++;
+        const classes = [];
+        if (completedAt) {
+            classes.push("completed");
+        }
+        if (expired) {
+            classes.push("overdue");
         }
 
         let trainButton;
@@ -212,22 +271,24 @@ function DrillsTable({ drills, answered, onAddDrill, onRemoveDrill }) {
             );
         }
 
-        let drillScore = 0;
-        let maxScore = 0;
-        let toggleAnsweredButton = null;
-        let answeredTable = null;
-        if (!hiding && progress > 0 && answered && answered[traineeDrillId]) {
-            [drillScore, maxScore, toggleAnsweredButton, answeredTable] =
-                createDrillAnsweredTable(
-                    traineeDrill,
-                    7,
-                    answered[traineeDrillId]
-                );
+        const [drillScore, maxScore, toggleAnsweredButton, answeredTable] =
+            createDrillAnsweredTable(
+                traineeDrill,
+                7,
+                answered[traineeDrillId] || [],
+                { tableClasses: classes }
+            );
+
+        let classesStr;
+        if (classes.length === 0) {
+            classesStr = undefined;
+        } else {
+            classesStr = classes.join(" ");
         }
 
         return (
             <React.Fragment key={traineeDrillId}>
-                <tr className={classes}>
+                <tr className={classesStr}>
                     <th>{index + 1}</th>
                     <td>
                         <DrillNameCode drill={drill} />
@@ -277,51 +338,13 @@ function DrillsTable({ drills, answered, onAddDrill, onRemoveDrill }) {
         </table>
     );
 
-    // could turn this into a toggle button instead of a checkbox
-    const hideCompletedToggle = (
-        <div className="form-check form-check-inline">
-            <input
-                type="checkbox"
-                className="form-check-input"
-                id="hideCompletedDrills"
-                checked={hideCompleted}
-                onChange={handleToggleHideCompleted}
-            />
-            <label className="form-check-label" htmlFor="hideCompletedDrills">
-                Hide Completed
-            </label>
-        </div>
-    );
-
-    // could turn this into a toggle button instead of a checkbox
-    const hideOverdueToggle = (
-        <div className="form-check form-check-inline">
-            <input
-                type="checkbox"
-                className="form-check-input"
-                id="hideOverdueDrills"
-                checked={hideOverdue}
-                onChange={handleToggleHideOverdue}
-            />
-            <label className="form-check-label" htmlFor="hideOverdueDrills">
-                Hide Overdue
-            </label>
-        </div>
-    );
-
     return (
         <div>
             <h2>My Drills</h2>
-            <div>
-                You can join a new drill and see and remove the drills you are
-                in.
-            </div>
             {hideCompletedToggle}
             {hideOverdueToggle}
-            <AddDrillInput onAddDrill={onAddDrill} />
             <ExpandCollapseAnswered />
             {table}
-            {rowsShowing === 0 && <p>No drills</p>}
         </div>
     );
 }

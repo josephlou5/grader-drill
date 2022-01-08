@@ -15,6 +15,15 @@ import {
 import { ExportYAML } from "./shared";
 
 export default function QuestionView() {
+    return (
+        <React.Fragment>
+            <Title title="Question" />
+            <Question />
+        </React.Fragment>
+    );
+}
+
+function Question() {
     const [invalid, setInvalid] = useState(false);
     const [versions, setVersions] = useState(null);
 
@@ -22,7 +31,7 @@ export default function QuestionView() {
 
     useEffect(() => {
         getQuestionVersions(questionId).then((questions) => {
-            if (!questions) {
+            if (!questions || questions.length === 0) {
                 setInvalid(true);
                 return;
             }
@@ -42,7 +51,6 @@ export default function QuestionView() {
     if (!versions) {
         return (
             <React.Fragment>
-                <Title title="Question" />
                 <h1>Question</h1>
                 <p>Getting question...</p>
             </React.Fragment>
@@ -56,93 +64,6 @@ export default function QuestionView() {
                 questionId={questionId}
                 numVersions={versions.length}
             />
-        </React.Fragment>
-    );
-}
-
-function ShowQuestionVersion({ questionId, versions }) {
-    const [version, setVersion] = useState(versions.length);
-
-    function handleChangeVersion(version) {
-        setVersion(version);
-    }
-
-    let versionChoice = null;
-    if (versions.length > 1) {
-        versionChoice = versions.map((question, index) => {
-            const versionNum = index + 1;
-            const idFor = "version" + versionNum;
-            return (
-                <React.Fragment key={versionNum}>
-                    <input
-                        type="radio"
-                        className="btn-check"
-                        name="show-version"
-                        id={idFor}
-                        checked={versionNum === version}
-                        onChange={() => handleChangeVersion(versionNum)}
-                    />
-                    <label className="btn btn-outline-success" htmlFor={idFor}>
-                        {versionNum}
-                    </label>
-                </React.Fragment>
-            );
-        });
-        versionChoice = (
-            <React.Fragment>
-                Version:
-                <div className="btn-group btn-group-sm ms-1" role="group">
-                    {versionChoice}
-                </div>
-            </React.Fragment>
-        );
-    }
-
-    const question = versions[version - 1];
-
-    const fieldProps = {
-        question,
-        noChange: true,
-    };
-    let questionView = (
-        <React.Fragment>
-            <p>Question Type: {question.questionType}</p>
-            <QuestionTextField {...fieldProps} />
-            {question.hasCodeField && <CodeField {...fieldProps} />}
-            {question.hasAnswerField && <AnswerField {...fieldProps} />}
-        </React.Fragment>
-    );
-    if (question.questionType !== "Multiple Choice") {
-        questionView = (
-            <div className="row">
-                <div className="col-6">{questionView}</div>
-                <div className="col-6">
-                    <RubricField rubric={question.rubric} previewMode={true} />
-                </div>
-            </div>
-        );
-    }
-
-    const link = "/questions/edit/" + questionId;
-    return (
-        <React.Fragment>
-            <Title title="Question" />
-            <ResizeTextareas />
-
-            <h1>Question {questionId}</h1>
-            <div className="mb-2">
-                <Link to={link}>
-                    <button type="button" className="btn btn-success">
-                        Edit question
-                    </button>
-                </Link>
-                <ExportQuestion
-                    question={question}
-                    numVersions={versions.length}
-                />
-            </div>
-            {versionChoice}
-            {questionView}
         </React.Fragment>
     );
 }
@@ -183,6 +104,92 @@ function ExportQuestion({ question, numVersions }) {
     );
 }
 
+function ShowQuestionVersion({ questionId, versions }) {
+    const [version, setVersion] = useState(versions.length);
+
+    function handleChangeVersion(version) {
+        setVersion(version);
+    }
+
+    let versionChoice = null;
+    if (versions.length > 1) {
+        versionChoice = [];
+        for (let versionNum = 1; versionNum <= versions.length; versionNum++) {
+            const idFor = "version" + versionNum;
+            versionChoice.push(
+                <React.Fragment key={versionNum}>
+                    <input
+                        type="radio"
+                        className="btn-check"
+                        name="show-version"
+                        id={idFor}
+                        checked={versionNum === version}
+                        onChange={() => handleChangeVersion(versionNum)}
+                    />
+                    <label className="btn btn-outline-success" htmlFor={idFor}>
+                        {versionNum}
+                    </label>
+                </React.Fragment>
+            );
+        }
+        versionChoice = (
+            <React.Fragment>
+                Version:
+                <div className="btn-group btn-group-sm ms-1" role="group">
+                    {versionChoice}
+                </div>
+            </React.Fragment>
+        );
+    }
+
+    const question = versions[version - 1];
+
+    const fieldProps = {
+        question,
+        noChange: true,
+    };
+    let questionView = (
+        <React.Fragment>
+            <p>Question Type: {question.questionType}</p>
+            <QuestionTextField {...fieldProps} />
+            {question.hasCodeField && <CodeField {...fieldProps} />}
+            {question.hasAnswerField && <AnswerField {...fieldProps} />}
+        </React.Fragment>
+    );
+    if (question.questionType !== "Multiple Choice") {
+        questionView = (
+            <div className="row">
+                <div className="col-6">{questionView}</div>
+                <div className="col-6">
+                    <RubricField rubric={question.rubric} previewMode={true} />
+                </div>
+            </div>
+        );
+    }
+
+    const link = "/questions/edit/" + questionId;
+
+    return (
+        <React.Fragment>
+            <ResizeTextareas />
+            <h1>Question {questionId}</h1>
+            <div className="mb-2">
+                <Link to={link}>
+                    <button type="button" className="btn btn-success">
+                        Edit question
+                    </button>
+                </Link>
+                <ExportQuestion
+                    question={question}
+                    numVersions={versions.length}
+                />
+            </div>
+            {versionChoice}
+            {questionView}
+        </React.Fragment>
+    );
+}
+
 function AnsweredTable(props) {
     return (
         <React.Fragment>
@@ -209,11 +216,11 @@ function AnsweredTables({ questionId, numVersions }) {
     });
 
     if (!answered) {
-        return "Getting answered...";
+        return <p>Getting answered...</p>;
     }
 
     if (answered.length === 0) {
-        return "No trainees have answered this question.";
+        return <p>No trainees have answered this question.</p>;
     }
 
     function handleDeleteAnswered(answeredId) {
@@ -233,20 +240,18 @@ function AnsweredTables({ questionId, numVersions }) {
         const traineeStr = question.Trainee.User.username;
         const drillName = question.TraineeDrill.Drill.name;
 
-        let assessorStr, score;
-        if (question.graded) {
-            if (question.autograded) {
-                assessorStr = "Auto-graded";
-            } else {
-                assessorStr = question.Assessor.User.username;
-            }
-            score = question.score;
-        } else {
-            assessorStr = "-";
-            score = "-";
+        let assessorStr = "-";
+        if (question.autograded) {
+            assessorStr = "Auto-graded";
+        } else if (question.graded) {
+            assessorStr = question.Assessor.User.username;
         }
 
+        const score = question.graded ? "-" : question.score;
+        const questionScore = question.maxPoints;
+
         const link = "/answered/" + answeredId;
+
         versions[version - 1].push(
             <tr key={answeredId}>
                 <th>{versions[version - 1].length + 1}</th>
@@ -254,7 +259,7 @@ function AnsweredTables({ questionId, numVersions }) {
                 <td>{drillName}</td>
                 <td>{assessorStr}</td>
                 <td>
-                    {score} / {question.maxPoints}
+                    {score} / {questionScore}
                 </td>
                 <td>
                     <Link to={link}>

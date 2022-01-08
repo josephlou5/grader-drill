@@ -4,8 +4,17 @@ import { Title } from "app/shared";
 import { getAnswered, getQuestionVersion } from "app/api";
 import { QuestionView, RubricField } from "../question";
 
-export default function AnsweredView({ user }) {
-    // const admin = user?.role === "Admin" ? user : null;
+export default function AnsweredView(props) {
+    return (
+        <React.Fragment>
+            <Title title="Answered" />
+            <Answered {...props} />
+        </React.Fragment>
+    );
+}
+
+function Answered({ user }) {
+    const admin = user?.role === "Admin" ? user : null;
     const assessor = user?.role === "Assessor" ? user : null;
     const trainee = user?.role === "Trainee" ? user : null;
 
@@ -52,7 +61,6 @@ export default function AnsweredView({ user }) {
     if (!question) {
         return (
             <React.Fragment>
-                <Title title="Answered" />
                 <h1>Answered</h1>
                 <p>Getting answered...</p>
             </React.Fragment>
@@ -81,7 +89,7 @@ export default function AnsweredView({ user }) {
                 const link = "/grading/" + answered.id;
                 gradeButton = (
                     <Link to={link}>
-                        <button type="button" className="btn btn-success m-2">
+                        <button type="button" className="btn btn-success my-2">
                             Regrade
                         </button>
                     </Link>
@@ -94,7 +102,7 @@ export default function AnsweredView({ user }) {
             gradeButton = (
                 <button
                     type="button"
-                    className="btn btn-success m-2"
+                    className="btn btn-success my-2"
                     disabled={disabled}
                 >
                     Grade
@@ -131,8 +139,7 @@ export default function AnsweredView({ user }) {
 
     return (
         <React.Fragment>
-            <Title title="Answered" />
-            <AnsweredInfo answered={answered} />
+            <AnsweredInfo admin={admin} answered={answered} />
             <div>
                 Score: {score} / {answered.maxPoints}
             </div>
@@ -142,8 +149,8 @@ export default function AnsweredView({ user }) {
     );
 }
 
-function AnsweredInfo({ answered }) {
-    const [anonymous, setAnonymous] = useState(true);
+function AnsweredInfo({ admin, answered }) {
+    const [anonymous, setAnonymous] = useState(admin ? false : true);
 
     function handleToggleAnonymous() {
         setAnonymous(!anonymous);

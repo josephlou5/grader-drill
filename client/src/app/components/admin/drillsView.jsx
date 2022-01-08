@@ -5,6 +5,25 @@ import { getAllDrills, importDrills, deleteDrill } from "app/api";
 import { TagsView, ImportYAML } from "./shared";
 
 export default function DrillsView() {
+    return (
+        <React.Fragment>
+            <Title title="Drills" />
+            <h1>Drills</h1>
+            <div>
+                This is the drills view. You can create, view, import, export,
+                and edit drills.
+            </div>
+            <Link to="/drills/new">
+                <button type="button" className="btn btn-success my-2">
+                    New Drill
+                </button>
+            </Link>
+            <Drills />
+        </React.Fragment>
+    );
+}
+
+function Drills() {
     const [{ needsDrills, drills }, setState] = useState({
         needsDrills: true,
     });
@@ -22,27 +41,7 @@ export default function DrillsView() {
 
     return (
         <React.Fragment>
-            <Title title="Drills" />
-            <h1>Drills</h1>
-            <div>
-                This is the drills view. You can create, view, import, export,
-                and edit drills.
-            </div>
-            <Link to="/drills/new">
-                <button type="button" className="btn btn-success my-2">
-                    New Drill
-                </button>
-            </Link>
             <ImportDrills drills={drills} onNeedDrills={handleNeedDrills} />
-            <div>
-                You can import drills with the above button. Only YAML files are
-                accepted, and only files with valid fields will be imported.
-                (Export a drill to see which fields are required.) If a file's
-                contents are detected to be a duplicate of an existing drill, it
-                will not be imported. If a valid drill id is given in a file, it
-                will update that drill. If no drill id is provided or the drill
-                id does not exist, then a new drill will be created.
-            </div>
             <DrillsTable drills={drills} onNeedDrills={handleNeedDrills} />
         </React.Fragment>
     );
@@ -146,23 +145,45 @@ function ImportDrills({ drills, onNeedDrills }) {
     }
 
     return (
-        <ImportYAML
-            name="Drill"
-            extractFields={extractFields}
-            checkExists={checkExists}
-            apiImport={importDrills}
-            onRefresh={onNeedDrills}
-        />
+        <React.Fragment>
+            <h2>Import Drills</h2>
+            <ImportYAML
+                name="Drill"
+                extractFields={extractFields}
+                checkExists={checkExists}
+                apiImport={importDrills}
+                onRefresh={onNeedDrills}
+            />
+            <div>
+                You can import drills with the above button. Only YAML files are
+                accepted, and only files with valid fields will be imported.
+                (Export a drill to see which fields are required.) If a file's
+                contents are detected to be a duplicate of an existing drill, it
+                will not be imported. If a valid drill id is given in a file, it
+                will update that drill. If no drill id is provided or the drill
+                id does not exist, then a new drill will be created.
+            </div>
+        </React.Fragment>
     );
 }
 
 function DrillsTable({ drills, onNeedDrills }) {
     if (!drills) {
-        return <p>Loading...</p>;
+        return (
+            <React.Fragment>
+                <h2>All Drills</h2>
+                <p>Getting drills...</p>
+            </React.Fragment>
+        );
     }
 
     if (drills.length === 0) {
-        return <p>No drills</p>;
+        return (
+            <React.Fragment>
+                <h2>All Drills</h2>
+                <p>No drills</p>
+            </React.Fragment>
+        );
     }
 
     function handleDeleteDrill(drillId) {
@@ -218,7 +239,7 @@ function DrillsTable({ drills, onNeedDrills }) {
         );
     });
 
-    return (
+    const table = (
         <table className="table table-hover align-middle">
             <thead className="table-light">
                 <tr>
@@ -234,5 +255,12 @@ function DrillsTable({ drills, onNeedDrills }) {
             </thead>
             <tbody>{rows}</tbody>
         </table>
+    );
+
+    return (
+        <React.Fragment>
+            <h2>All Drills</h2>
+            {table}
+        </React.Fragment>
     );
 }

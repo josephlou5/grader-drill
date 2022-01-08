@@ -20,14 +20,14 @@ export default function UsersView(props) {
 }
 
 function Users({ admin }) {
-    const [needsUsers, setNeedsUsers] = useState(true);
-    const [users, setUsers] = useState(null);
+    const [{ needsUsers, users }, setState] = useState({
+        needsUsers: true,
+    });
 
     useEffect(() => {
         if (!needsUsers) return;
-        getAllUsers().then((u) => {
-            setNeedsUsers(false);
-            setUsers(u);
+        getAllUsers().then((users) => {
+            setState({ users });
         });
     });
 
@@ -36,7 +36,7 @@ function Users({ admin }) {
     }
 
     function handleRefresh() {
-        setNeedsUsers(true);
+        setState({ needsUsers: true, users });
     }
 
     return (

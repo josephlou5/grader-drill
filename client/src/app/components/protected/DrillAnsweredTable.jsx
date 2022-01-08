@@ -13,6 +13,7 @@ export function ExpandCollapseAnswered() {
     function handleToggleAll(collapse) {
         const rows = document.getElementsByClassName(ANSWERED_TABLE_CLASS);
         for (const element of rows) {
+            if (element.classList.contains("hidden")) continue;
             element.classList.toggle("d-none", collapse);
         }
         // update all buttons
@@ -50,7 +51,7 @@ export function createDrillAnsweredTable(
     answered,
     options = {}
 ) {
-    const { overdueColor = false, dueDate = null } = options;
+    const { overdueColor = false, dueDate = null, tableClasses = [] } = options;
 
     if (overdueColor && !dueDate) {
         throw new Error("drill answered table needs drill due date");
@@ -143,7 +144,8 @@ export function createDrillAnsweredTable(
             </tr>
         );
     });
-    const classes = [ANSWERED_TABLE_CLASS, "d-none"];
+
+    const classes = [ANSWERED_TABLE_CLASS, "d-none", ...tableClasses];
     const answeredTable = (
         <tr id={rowId} className={classes.join(" ")}>
             <td></td>

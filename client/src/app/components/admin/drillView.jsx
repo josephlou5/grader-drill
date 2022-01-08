@@ -9,6 +9,15 @@ import {
 } from "../protected/DrillAnsweredTable";
 
 export default function DrillView() {
+    return (
+        <React.Fragment>
+            <Title title="Drill" />
+            <Drill />
+        </React.Fragment>
+    );
+}
+
+function Drill() {
     const [invalid, setInvalid] = useState(false);
     const [drill, setDrill] = useState(null);
 
@@ -36,7 +45,6 @@ export default function DrillView() {
     if (!drill) {
         return (
             <React.Fragment>
-                <Title title="Drill" />
                 <h1>Drill</h1>
                 <p>Getting drill...</p>
             </React.Fragment>
@@ -45,10 +53,16 @@ export default function DrillView() {
 
     const { name, code, numQuestions, tags } = drill;
     const link = "/drills/edit/" + drillId;
+
     return (
         <React.Fragment>
-            <Title title="Drill" />
             <h1>Drill</h1>
+            <Link to={link}>
+                <button type="button" className="btn btn-success">
+                    Edit Drill
+                </button>
+            </Link>
+            <ExportDrill drill={drill} />
             <div>Name: {name}</div>
             <div>Code: {code}</div>
             <div>Number Questions: {numQuestions}</div>
@@ -56,19 +70,7 @@ export default function DrillView() {
                 Due Date: <DueDate drill={drill} />
             </div>
             <div>Tags: {tags.join(", ") || "None"}</div>
-            <Link to={link}>
-                <button type="button" className="btn btn-success">
-                    Edit Drill
-                </button>
-            </Link>
-            <ExportDrill drill={drill} />
             <TraineeDrillsTable drill={drill} />
-            {drill.TraineeDrills.length > 0 && (
-                <div>
-                    Questions with "View" buttons in red were answered after the
-                    due date.
-                </div>
-            )}
         </React.Fragment>
     );
 }
@@ -83,7 +85,12 @@ function TraineeDrillsTable({ drill }) {
     const drills = drill.TraineeDrills;
 
     if (drills.length === 0) {
-        return <p>No trainees in this drill</p>;
+        return (
+            <React.Fragment>
+                <h2>Trainees in Drill</h2>
+                <p>No trainees in this drill</p>
+            </React.Fragment>
+        );
     }
 
     const { dueDate } = drill;
@@ -95,7 +102,7 @@ function TraineeDrillsTable({ drill }) {
             progress,
             Answereds: answered,
         } = traineeDrill;
-        const trainee = traineeDrill.Trainee.User.username;
+        const traineeStr = traineeDrill.Trainee.User.username;
 
         const [drillScore, maxScore, toggleAnsweredButton, answeredTable] =
             createDrillAnsweredTable(traineeDrill, 5, answered, {
@@ -107,7 +114,7 @@ function TraineeDrillsTable({ drill }) {
             <React.Fragment key={traineeDrillId}>
                 <tr>
                     <th>{index + 1}</th>
-                    <td>{trainee}</td>
+                    <td>{traineeStr}</td>
                     <td>{progress}</td>
                     <td>{completedDate}</td>
                     <td>
@@ -122,6 +129,7 @@ function TraineeDrillsTable({ drill }) {
 
     return (
         <React.Fragment>
+            <h2>Trainees in Drill</h2>
             <ExpandCollapseAnswered />
             <table className="table table-hover align-middle">
                 <thead className="table-light">
@@ -136,6 +144,10 @@ function TraineeDrillsTable({ drill }) {
                 </thead>
                 <tbody>{rows}</tbody>
             </table>
+            <div>
+                Questions with "View" buttons in red were answered after the due
+                date.
+            </div>
         </React.Fragment>
     );
 }

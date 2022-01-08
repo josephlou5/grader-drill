@@ -5,6 +5,28 @@ import { getAllQuestions, importQuestions, deleteQuestion } from "app/api";
 import { TagsView, ImportYAML } from "./shared";
 
 export default function QuestionsView() {
+    return (
+        <React.Fragment>
+            <Title title="Questions" />
+            <h1>Questions</h1>
+            <div>
+                This is the questions view. You can create, view, import,
+                export, and edit questions. Questions use a version system, so
+                every time you edit and make some changes, a new version is
+                automatically created. Each question displays its id, number of
+                versions, and some info about the question.
+            </div>
+            <Link to="/questions/new">
+                <button type="button" className="btn btn-success my-2">
+                    New Question
+                </button>
+            </Link>
+            <Questions />
+        </React.Fragment>
+    );
+}
+
+function Questions() {
     const [{ needsQuestions, questions }, setState] = useState({
         needsQuestions: true,
     });
@@ -22,34 +44,10 @@ export default function QuestionsView() {
 
     return (
         <React.Fragment>
-            <Title title="Questions" />
-            <h1>Questions</h1>
-            <div>
-                This is the questions view. You can create, view, import,
-                export, and edit questions. Questions use a version system, so
-                every time you edit and make some changes, a new version is
-                automatically created. Each question displays its id, number of
-                versions, and some info about the question.
-            </div>
-            <Link to="/questions/new">
-                <button type="button" className="btn btn-success my-2">
-                    New Question
-                </button>
-            </Link>
             <ImportQuestions
                 questions={questions}
                 onNeedsQuestions={handleNeedQuestions}
             />
-            <div>
-                You can import questions with the above button. Only YAML files
-                are accepted, and only files with valid fields will be imported.
-                (Export a question to see which fields are required.) If a
-                file's contents are detected to be a duplicate of an existing
-                question, it will not be imported. If a valid question id is
-                given in a file, it will create a new version for that question.
-                If no question id is provided or the question id does not exist,
-                then a new question will be created.
-            </div>
             <QuestionsTable
                 questions={questions}
                 onNeedsQuestions={handleNeedQuestions}
@@ -354,13 +352,62 @@ function ImportQuestions({ questions, onNeedsQuestions }) {
     }
 
     return (
-        <ImportYAML
-            name="Question"
-            extractFields={extractFields}
-            checkExists={checkExists}
-            apiImport={importQuestions}
-            onRefresh={onNeedsQuestions}
-        />
+        <React.Fragment>
+            <h2>Import Questions</h2>
+            <ImportYAML
+                name="Question"
+                extractFields={extractFields}
+                checkExists={checkExists}
+                apiImport={importQuestions}
+                onRefresh={onNeedsQuestions}
+            />
+            <div>
+                You can import questions with the above button. Only YAML files
+                are accepted, and only files with valid fields will be imported.
+                (Export a question to see which fields are required.) If a
+                file's contents are detected to be a duplicate of an existing
+                question, it will not be imported. If a valid question id is
+                given in a file, it will create a new version for that question.
+                If no question id is provided or the question id does not exist,
+                then a new question will be created.
+            </div>
+        </React.Fragment>
+    );
+}
+
+function FilterTags({ filters, onAddFilter, onChangeFilter, onDeleteFilter }) {
+    const tags = filters.map((tag, index) => (
+        <div key={index}>
+            <input
+                type="text"
+                className="mb-1"
+                placeholder="Tag"
+                value={tag}
+                onChange={(event) => onChangeFilter(index, event.target.value)}
+            />
+            <button
+                type="button"
+                className="btn btn-close"
+                onClick={() => onDeleteFilter(index)}
+            />
+        </div>
+    ));
+
+    return (
+        <React.Fragment>
+            {tags}
+            <button
+                type="button"
+                className="btn btn-success btn-sm"
+                onClick={onAddFilter}
+            >
+                Add filter tag
+            </button>
+            <div>
+                Use the above to filter the questions table with specific tags.
+                The table will show the union of the given tags.
+            </div>
+        </React.Fragment>
     );
 }
 
@@ -368,11 +415,21 @@ function QuestionsTable({ questions, onNeedsQuestions }) {
     const [filters, setFilters] = useState([]);
 
     if (!questions) {
-        return <p>Getting questions...</p>;
+        return (
+            <React.Fragment>
+                <h2>All Questions</h2>
+                <p>Getting questions...</p>
+            </React.Fragment>
+        );
     }
 
     if (questions.length === 0) {
-        return <p>No questions!</p>;
+        return (
+            <React.Fragment>
+                <h2>All Questions</h2>
+                <p>No questions</p>
+            </React.Fragment>
+        );
     }
 
     function handleAddFilter() {
@@ -459,65 +516,33 @@ function QuestionsTable({ questions, onNeedsQuestions }) {
         );
     });
 
+    const table = (
+        <table className="table table-hover align-middle">
+            <thead className="table-light">
+                <tr>
+                    <th>Id</th>
+                    <th>Version</th>
+                    <th>Type</th>
+                    <th>Text</th>
+                    <th>Tags</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>{rows}</tbody>
+        </table>
+    );
+
     return (
         <React.Fragment>
+            <h2>All Questions</h2>
             <FilterTags
                 filters={filters}
                 onAddFilter={handleAddFilter}
                 onChangeFilter={handleChangeFilter}
                 onDeleteFilter={handleDeleteFilter}
             />
-            <div>
-                Use the above to filter the questions table with specific tags.
-                The table will show the union of the given tags.
-            </div>
-            <table className="table table-hover align-middle">
-                <thead className="table-light">
-                    <tr>
-                        <th>Id</th>
-                        <th>Version</th>
-                        <th>Type</th>
-                        <th>Text</th>
-                        <th>Tags</th>
-                        <th></th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>{rows}</tbody>
-            </table>
-        </React.Fragment>
-    );
-}
-
-function FilterTags({ filters, onAddFilter, onChangeFilter, onDeleteFilter }) {
-    const tags = filters.map((tag, index) => (
-        <div key={index}>
-            <input
-                type="text"
-                className="mb-1"
-                placeholder="Tag"
-                value={tag}
-                onChange={(event) => onChangeFilter(index, event.target.value)}
-            />
-            <button
-                type="button"
-                className="btn btn-close"
-                onClick={() => onDeleteFilter(index)}
-            />
-        </div>
-    ));
-
-    return (
-        <React.Fragment>
-            <h3>Filter Tags</h3>
-            {tags}
-            <button
-                type="button"
-                className="btn btn-success btn-sm"
-                onClick={onAddFilter}
-            >
-                Add tag
-            </button>
+            {table}
         </React.Fragment>
     );
 }

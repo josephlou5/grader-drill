@@ -32,7 +32,12 @@ function AnsweredTable() {
     });
 
     if (!answered) {
-        return <p>Getting answered...</p>;
+        return (
+            <React.Fragment>
+                <h2>All Answered</h2>
+                <p>Getting answered...</p>
+            </React.Fragment>
+        );
     }
 
     if (answered.length === 0) {
@@ -107,24 +112,28 @@ function AnsweredTable() {
         );
     });
 
+    const table = (
+        <table className="table table-hover align-middle">
+            <thead className="table-light">
+                <tr>
+                    <th></th>
+                    <th>Trainee</th>
+                    <th>Drill</th>
+                    <th>Question Id</th>
+                    <th>Question Type</th>
+                    <th>Assessor</th>
+                    <th>Score</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>{rows}</tbody>
+        </table>
+    );
+
     return (
         <React.Fragment>
             <h2>All Answered</h2>
-            <table className="table table-hover align-middle">
-                <thead className="table-light">
-                    <tr>
-                        <th></th>
-                        <th>Trainee</th>
-                        <th>Drill</th>
-                        <th>Question Id</th>
-                        <th>Question Type</th>
-                        <th>Assessor</th>
-                        <th>Score</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>{rows}</tbody>
-            </table>
+            {table}
         </React.Fragment>
     );
 }
