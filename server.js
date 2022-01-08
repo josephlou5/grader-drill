@@ -48,20 +48,6 @@ passport.use(
         { casURL: "https://fed.princeton.edu/cas" },
         (username, profile, done) => {
             console.log("Logged in user:", username);
-            // models.User.findOne({ where: { username } })
-            //     .then((user) => {
-            //         return (
-            //             user ||
-            //             models.User.add({ username, roles: ["Trainee"] })
-            //         );
-            //     })
-            //     .then((user) => {
-            //         user = user.toJSON();
-            //         if (user.roles.length === 1) {
-            //             user.role = user.roles[0];
-            //         }
-            //         done(null, user);
-            //     });
             findOrCreateUser(username, ["Trainee"]).then((user) =>
                 done(null, user)
             );
@@ -623,7 +609,6 @@ function addQuestion(question, res) {
             response.message.push(error.message);
             switch (error.type) {
                 case "notNull Violation":
-                    // response.msg = "something is null";
                     response.nullViolation = true;
                     break;
                 default:
@@ -1151,7 +1136,6 @@ app.post("/api/answered", (req, res) => {
                 response.message.push(error.message);
                 switch (error.type) {
                     case "notNull Violation":
-                        // response.msg = "something is null";
                         response.nullViolation = true;
                         break;
                     default:

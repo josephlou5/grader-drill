@@ -30,8 +30,6 @@ export default function TraineeDashboard(props) {
 
 function Dashboard() {
     const [answered, setAnswered] = useState(null);
-    // const [needsDrills, setNeedsDrills] = useState(true);
-    // const [drills, setDrills] = useState(null);
     const [{ needsDrills, drills }, setDrillsState] = useState({
         needsDrills: true,
     });
@@ -54,14 +52,11 @@ function Dashboard() {
     useEffect(() => {
         if (!needsDrills) return;
         getDrillsByTrainee().then((drills) => {
-            // setNeedsDrills(false);
-            // setDrills(d);
             setDrillsState({ drills });
         });
     });
 
     function handleAddDrill() {
-        // setNeedsDrills(true);
         setDrillsState({
             needsDrills: true,
             drills,
@@ -70,7 +65,6 @@ function Dashboard() {
 
     function handleRemoveDrill(traineeDrillId) {
         deleteTraineeDrill(traineeDrillId).then(() => {
-            // setNeedsDrills(true);
             setDrillsState({
                 needsDrills: true,
                 drills,
