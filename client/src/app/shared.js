@@ -108,17 +108,6 @@ export function ButtonHelp({ help }) {
     );
 }
 
-export function collapseToggle(elementId, collapse = null) {
-    const classList = document.getElementById(elementId).classList;
-    if (collapse == null) {
-        // if `collapse` is null, toggle
-        classList.toggle("d-none");
-    } else {
-        // otherwise, force
-        classList.toggle("d-none", collapse);
-    }
-}
-
 export function setValid(element, isValid) {
     element.classList.toggle("is-invalid", !isValid);
 }

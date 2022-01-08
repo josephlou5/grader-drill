@@ -4,10 +4,8 @@ import {
     useMountEffect,
     Title,
     DueDate,
-    QuestionType,
     setElementValid,
     resetValid,
-    collapseToggle,
 } from "app/shared";
 import {
     getTraineeAnswered,
@@ -15,6 +13,10 @@ import {
     getDrillsByTrainee,
     deleteTraineeDrill,
 } from "app/api";
+import {
+    ExpandCollapseAnswered,
+    createDrillAnsweredTable,
+} from "../protected/DrillAnsweredTable";
 
 export default function TraineeDashboard(props) {
     return (
@@ -154,28 +156,6 @@ function DrillNameCode({ drill: { name, code } }) {
     return <span onClick={handleClick}>{[name, code][showing]}</span>;
 }
 
-function ToggleAnswered({ rowId }) {
-    const [hideAnswered, setHideAnswered] = useState(true);
-
-    function handleClick() {
-        collapseToggle(rowId);
-        setHideAnswered(!hideAnswered);
-    }
-
-    return (
-        <button
-            type="button"
-            className="btn btn-success btn-sm"
-            onClick={handleClick}
-        >
-            {/* TODO: added "expand/collapse all" buttons, which have no way
-                of telling this text to update. need to fix. */}
-            {/* {hideAnswered ? "View" : "Hide"} Answered */}
-            Toggle Answered
-        </button>
-    );
-}
-
 function DrillsTable({ drills, answered, onAddDrill, onRemoveDrill }) {
     const [hideCompleted, setHideCompleted] = useState(false);
     const [hideOverdue, setHideOverdue] = useState(false);
@@ -192,7 +172,6 @@ function DrillsTable({ drills, answered, onAddDrill, onRemoveDrill }) {
         return <p>Getting drills...</p>;
     }
 
-    const rowIds = [];
     let rowsShowing = 0;
     const rows = drills.map((traineeDrill, index) => {
         const {
@@ -239,85 +218,17 @@ function DrillsTable({ drills, answered, onAddDrill, onRemoveDrill }) {
             );
         }
 
-        let toggleAnsweredButton = null;
-        let answeredTable = null;
         let drillScore = 0;
         let maxScore = 0;
+        let toggleAnsweredButton = null;
+        let answeredTable = null;
         if (!hiding && progress > 0 && answered && answered[traineeDrillId]) {
-            const rowId = "drill-" + traineeDrillId + "-answered";
-            rowIds.push(rowId);
-            toggleAnsweredButton = <ToggleAnswered rowId={rowId} />;
-
-            // answered for this drill
-            const answeredRows = answered[traineeDrillId].map(
-                (question, index) => {
-                    const answeredId = question.id;
-
-                    let isGraded = "-";
-                    if (question.autograded) {
-                        isGraded = "Auto-graded";
-                    } else if (question.graded) {
-                        isGraded = "Graded";
-                    }
-
-                    const questionScore = question.maxPoints;
-
-                    let score = "-";
-                    if (question.score != null) {
-                        score = question.score;
-                        drillScore += score;
-                        maxScore += questionScore;
-                    }
-
-                    const link = "/answered/" + answeredId;
-                    return (
-                        <tr key={answeredId}>
-                            <th>{index + 1}</th>
-                            <td>{isGraded}</td>
-                            <td>{question.questionId}</td>
-                            <td>
-                                <QuestionType
-                                    questionId={question.questionId}
-                                    version={question.version}
-                                />
-                            </td>
-                            <td>
-                                {score} / {questionScore}
-                            </td>
-                            <td>
-                                <Link to={link}>
-                                    <button
-                                        type="button"
-                                        className="btn btn-primary btn-sm"
-                                    >
-                                        View
-                                    </button>
-                                </Link>
-                            </td>
-                        </tr>
-                    );
-                }
-            );
-            answeredTable = (
-                <tr id={rowId} className="d-none">
-                    <td></td>
-                    <td colSpan={7}>
-                        <table className="table align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>Graded</th>
-                                    <th>Question Id</th>
-                                    <th>Question Type</th>
-                                    <th>Score</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>{answeredRows}</tbody>
-                        </table>
-                    </td>
-                </tr>
-            );
+            [drillScore, maxScore, toggleAnsweredButton, answeredTable] =
+                createDrillAnsweredTable(
+                    traineeDrill,
+                    7,
+                    answered[traineeDrillId]
+                );
         }
 
         return (
@@ -404,29 +315,6 @@ function DrillsTable({ drills, answered, onAddDrill, onRemoveDrill }) {
         </div>
     );
 
-    const collapseAnsweredButtons = (
-        <div className="mb-2">
-            <button
-                type="button"
-                className="btn btn-primary me-1"
-                onClick={() =>
-                    rowIds.forEach((rowId) => collapseToggle(rowId, false))
-                }
-            >
-                Expand All Answered
-            </button>
-            <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() =>
-                    rowIds.forEach((rowId) => collapseToggle(rowId, true))
-                }
-            >
-                Collapse All Answered
-            </button>
-        </div>
-    );
-
     return (
         <div>
             <h2>My Drills</h2>
@@ -437,7 +325,7 @@ function DrillsTable({ drills, answered, onAddDrill, onRemoveDrill }) {
             {hideCompletedToggle}
             {hideOverdueToggle}
             <AddDrillInput onAddDrill={onAddDrill} />
-            {collapseAnsweredButtons}
+            <ExpandCollapseAnswered />
             {table}
             {rowsShowing === 0 && <p>No drills</p>}
         </div>
